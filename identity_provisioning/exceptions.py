@@ -1,0 +1,2 @@
+class DuplicatedCloudIdentityError(Exception):
+    pass
