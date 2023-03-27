@@ -2,7 +2,6 @@ from marshmallow import Schema, fields, post_load
 
 import config
 import entities
-import enums
 
 
 class CamelCaseSchema(Schema):
@@ -29,7 +28,6 @@ class CloudIdentity(CamelCaseSchema):
     email = fields.Str()
     family_name = fields.Str()
     given_name = fields.Str()
-    provisioning_status = fields.Enum(enums.CloudIdentityProvisioningStatus)
 
     @post_load
     def make_cloud_identity(self, data, **kwargs):

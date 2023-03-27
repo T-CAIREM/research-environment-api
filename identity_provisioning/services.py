@@ -1,40 +1,34 @@
+import json
 from typing import Optional
 
 import config
 import entities
 import schemas
-import enums
 import exceptions
 from lib import datastore, secret_manager, google_workspace
 
 
-def provision_cloud_identity(new_cloud_identity: entities.CloudIdentity):
-    cloud_identity = _recover_or_persist_cloud_identity(new_cloud_identity)
-    if cloud_identity.is_initial:
-        cloud_identity = _create_cloud_identity_in_google_workspace(cloud_identity)
+def provision_cloud_identity(cloud_identity: entities.CloudIdentity):
+    try:
+        _persist_cloud_identity(cloud_identity)
+    except exceptions.CloudIdentityAlreadyExistsError:
+        print("Cloud Identity alread in Datastoer")
+        pass
 
-    if cloud_identity.is_created_in_workspace:
-        cloud_identity = _allow_to_create_billing_accounts_billing_account_creator_role(
-            cloud_identity
-        )
+    try:
+        _create_cloud_identity_in_google_workspace(cloud_identity)
+    except exceptions.GoogleWorkspaceUserAlreadyExistsError:
+        print("Yser Exists")
+        pass
+
+    _allow_to_create_billing_accounts(cloud_identity)
 
     return cloud_identity
 
 
-def _recover_or_persist_cloud_identity(
-    new_cloud_identity: entities.CloudIdentity,
-) -> entities.CloudIdentity:
-    existing_cloud_identity = _fetch_persisted_cloud_identity(new_cloud_identity)
-    if existing_cloud_identity:
-        return existing_cloud_identity
-
-    _persist_cloud_identity(new_cloud_identity)
-    return new_cloud_identity
-
-
 def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIdentity):
-    service_account_secret = secret_manager.fetch_secret(
-        config.PROJECT_ID, "cloud-identity-secret", 1
+    service_account_secret = json.loads(
+        secret_manager.fetch_secret(config.PROJECT_ID, "cloud-identity-secret", 1)
     )
     google_admin_credentials = google_workspace.build_service_account_credentials(
         service_account_secret
@@ -45,21 +39,29 @@ def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIde
     serialized_google_workspace_user = schemas.GoogleWorkspaceUser().dump(
         google_workspace_user
     )
-    google_workspace.create_user(
-        google_admin_credentials, serialized_google_workspace_user
-    )
-    _update_cloud_identity_provisioning_status(
-        cloud_identity, enums.CloudIdentityProvisioningStatus.CREATED_IN_WORKSPACE
-    )
+    try:
+        google_workspace.create_user(
+            google_admin_credentials, serialized_google_workspace_user
+        )
+    except google_workspace.UserAlreadyExistsError:
+        raise exceptions.GoogleWorkspaceUserAlreadyExistsError
+
     return cloud_identity
 
 
 def _allow_to_create_billing_accounts(cloud_identity: entities.CloudIdentity):
-    lib.add_user_to_group(cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID)
-    _update_cloud_identity_provisioning_status(
-        cloud_identity, enums.CloudIdentityProvisioningStatus.PROVISIONED
+    google_workspace.add_user_to_group(
+        cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
     )
-    return cloud_identity
+
+
+def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
+    existing_cloud_identity = _fetch_persisted_cloud_identity(cloud_identity)
+    if existing_cloud_identity:
+        raise exceptions.CloudIdentityAlreadyExistsError
+
+    cloud_identity_json = schemas.CloudIdentity().dump(cloud_identity)
+    datastore.persist(config.PROJECT_ID, config.DATASTORE_KIND, cloud_identity_json)
 
 
 def _fetch_persisted_cloud_identity(
@@ -79,17 +81,3 @@ def _fetch_persisted_cloud_identity(
         return None
 
     return schemas.CloudIdentity().load(query_result[0])
-
-
-def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
-    cloud_identity_json = schemas.CloudIdentity().dump(cloud_identity)
-    return datastore.persist(
-        config.PROJECT_ID, config.DATASTORE_KIND, cloud_identity_json
-    )
-
-
-def _update_cloud_identity_provisioning_status(
-    cloud_identity: entities.CloudIdentity,
-    status: enums.CloudIdentityProvisioningStatus,
-):
-    pass

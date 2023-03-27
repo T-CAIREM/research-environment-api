@@ -1,7 +1,6 @@
 from flask import Flask
 
 import schemas
-import enums
 import services
 
 app = Flask(__name__)
