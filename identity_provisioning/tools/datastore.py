@@ -13,6 +13,7 @@ def find_by(project_id: str, kind: str, **filters: dict) -> Iterable[datastore.E
     return query.fetch()
 
 
+# TODO: Add a sensible return value
 def persist(project_id: str, kind: str, data: dict):
     client = datastore.Client(project_id)
     entity_key = client.key(kind)
@@ -21,6 +22,7 @@ def persist(project_id: str, kind: str, data: dict):
     client.put(entity)
 
 
+# TODO: Add a sensible return value
 def update(project_id: str, kind: str, data: dict):
     client = datastore.Client(project_id)
     entity_key = client.key(kind)
