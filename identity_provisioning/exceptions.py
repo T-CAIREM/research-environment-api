@@ -8,3 +8,7 @@ class DuplicatedCloudIdentityError(Exception):
 
 class GoogleWorkspaceUserAlreadyExistsError(Exception):
     pass
+
+
+class BillingCreatorGroupMembershipAlreadyExistsError(Exception):
+    pass

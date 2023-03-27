@@ -5,10 +5,12 @@ import config
 import entities
 import schemas
 import exceptions
-from tools import datastore, secret_manager, google_workspace
+from tools import datastore, google_workspace
 
 
-def provision_cloud_identity(cloud_identity: entities.CloudIdentity) -> entities.CloudIdentity:
+def provision_cloud_identity(
+    cloud_identity: entities.CloudIdentity,
+) -> entities.CloudIdentity:
     try:
         _persist_cloud_identity(cloud_identity)
     except exceptions.CloudIdentityAlreadyExistsError:
@@ -19,7 +21,10 @@ def provision_cloud_identity(cloud_identity: entities.CloudIdentity) -> entities
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
         pass
 
-    _allow_to_create_billing_accounts(cloud_identity)
+    try:
+        _allow_to_create_billing_accounts(cloud_identity)
+    except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
+        pass
 
     return cloud_identity
 
@@ -68,6 +73,9 @@ def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIde
 
 
 def _allow_to_create_billing_accounts(cloud_identity: entities.CloudIdentity):
-    google_workspace.add_user_to_group(
-        cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
-    )
+    try:
+        google_workspace.add_user_to_group(
+            cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
+        )
+    except google_workspace.MembershipAlreadyExistsError:
+        raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
