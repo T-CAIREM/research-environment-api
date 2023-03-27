@@ -12,13 +12,7 @@ class MembershipAlreadyExistsError(Exception):
 
 
 def create_user(body: dict) -> dict:
-    admin_service = build(
-        "admin",
-        "directory_v1",
-        client_options={
-            "scopes": ["https://www.googleapis.com/auth/admin.directory.user"]
-        },
-    )
+    admin_service = build("admin", "directory_v1")
     try:
         created_user = admin_service.users().insert(body=body).execute()
         return created_user
