@@ -1,1 +1,1 @@
-from camel_case_schema import CamelCaseSchema
+from .camel_case_schema import CamelCaseSchema

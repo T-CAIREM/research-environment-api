@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, post_load
 
 from identity_provisioning import core
+from identity_provisioning.common import CamelCaseSchema
 
 
 class CloudIdentityCreation(CamelCaseSchema):
