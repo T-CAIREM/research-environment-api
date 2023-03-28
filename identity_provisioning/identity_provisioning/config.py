@@ -1,6 +1,5 @@
 from os import environ
 
-
 PROJECT_ID = environ["PROJECT_ID"]
 BILLING_ACCOUNT_CREATOR_GROUP_ID = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
 
