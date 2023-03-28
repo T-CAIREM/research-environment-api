@@ -1,7 +1,7 @@
 from flask import Flask
 
-import schemas
-import services
+from identity_provisioning.web import schemas
+from identity_provisioning import core
 
 app = Flask(__name__)
 
@@ -12,6 +12,6 @@ def entrypoint():
     cloud_identity_creation_schema = schemas.CloudIdentityCreation()
     new_cloud_identity = cloud_identity_schema.load(**body)
 
-    services.provision_cloud_identity(new_cloud_identity)
+    core.services.provision_cloud_identity(new_cloud_identity)
 
     return cloud_identity_schema.dump(cloud_identity), 201

@@ -1,11 +1,9 @@
 import json
 from typing import Optional
 
-import config
-import entities
-import schemas
-import exceptions
-from tools import datastore, google_workspace
+from identity_provisioning import config
+from identity_provisioning.core import entities, schemas, exceptions
+from identity_provisioning.core.tooling import datastore, google_workspace
 
 
 def provision_cloud_identity(
