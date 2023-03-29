@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 
 from identity_provisioning.web import schemas
 from identity_provisioning import core
