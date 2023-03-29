@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields
+from marshmallow import fields, post_load
 
 from identity_provisioning.common import CamelCaseSchema
 from identity_provisioning.core import entities
