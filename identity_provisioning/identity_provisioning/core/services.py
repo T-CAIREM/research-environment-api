@@ -63,9 +63,8 @@ def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIde
     )
     try:
         google_workspace.create_user(serialized_google_workspace_user)
-    except errors.HttpError as error:
-        if error.status_code == 409:
-            raise exceptions.GoogleWorkspaceUserAlreadyExistsError
+    except google_workspace.UserAlreadyExistsError:
+        raise exceptions.GoogleWorkspaceUserAlreadyExistsError
 
     return cloud_identity
 
@@ -75,6 +74,5 @@ def _allow_to_create_billing_accounts(cloud_identity: entities.CloudIdentity):
         google_workspace.add_user_to_group(
             cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
         )
-    except errors.HttpError as error:
-        if error.status_code == 409:
-            raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
+    except google_workspace.GroupMembershipAlreadyExistsError:
+        raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError

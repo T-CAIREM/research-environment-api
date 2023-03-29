@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, post_load
 
-from identity_provisioning import core
 from identity_provisioning.common import CamelCaseSchema
+from identity_provisioning.core import entities
 
 
 class CloudIdentityCreation(CamelCaseSchema):
@@ -11,4 +11,4 @@ class CloudIdentityCreation(CamelCaseSchema):
 
     @post_load
     def make_cloud_identity(self, data, **kwargs):
-        return core.entities.CloudIdentity.from_platform_data(**data)
+        return entities.CloudIdentity.from_platform_data(**data)

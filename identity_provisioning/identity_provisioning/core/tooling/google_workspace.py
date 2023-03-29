@@ -3,6 +3,14 @@ from googleapiclient import errors
 from googleapiclient.discovery import build
 
 
+class UserAlreadyExistsError(Exception):
+    pass
+
+
+class GroupMembershipAlreadyExistsError(Exception):
+    pass
+
+
 def create_user(body: dict) -> dict:
     admin_service = build("admin", "directory_v1")
     try:
@@ -18,10 +26,14 @@ def add_user_to_group(user_email: str, group_id: str) -> dict:
     cloud_identity_service = build("cloudidentity", "v1")
     body = {"preferredMemberKey": {"id": user_email}, "roles": {"name": "MEMBER"}}
     group_id = f"groups/{group_id}"
-    created_policy = (
-        cloud_identity_service.groups()
-        .memberships()
-        .create(parent=group_id, body=body)
-        .execute()
-    )
-    return created_policy
+    try:
+        created_policy = (
+            cloud_identity_service.groups()
+            .memberships()
+            .create(parent=group_id, body=body)
+            .execute()
+        )
+        return created_policy
+    except errors.HttpError as error:
+        if error.status_code == 409:
+            raise GroupMembershipAlreadyExistsError
