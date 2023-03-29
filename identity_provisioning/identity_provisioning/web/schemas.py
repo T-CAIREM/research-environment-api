@@ -12,3 +12,9 @@ class CloudIdentityCreation(CamelCaseSchema):
     @post_load
     def make_cloud_identity(self, data, **kwargs):
         return entities.CloudIdentity.from_platform_data(**data)
+
+
+class CloudIdentity(CamelCaseSchema):
+    email = fields.Str()
+    family_name = fields.Str()
+    given_name = fields.Str()

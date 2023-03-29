@@ -12,6 +12,8 @@ def entrypoint():
     cloud_identity_creation_schema = schemas.CloudIdentityCreation()
     new_cloud_identity = cloud_identity_creation_schema.load(body)
 
-    services.provision_cloud_identity(new_cloud_identity)
+    provisioned_cloud_identity = services.provision_cloud_identity(new_cloud_identity)
+    cloud_identity_schema = schemas.CloudIdentity()
+    serialized_cloud_identity = cloud_identity_schema.dump(provisioned_cloud_identity)
 
-    return cloud_identity_creation_schema.dump(new_cloud_identity), 201
+    return serialized_cloud_identity, 201
