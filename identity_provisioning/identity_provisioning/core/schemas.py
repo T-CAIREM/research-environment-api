@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields
 
 from identity_provisioning.common import CamelCaseSchema
+from identity_provisioning.core import entities
 
 
 class GoogleWorkspaceUser(CamelCaseSchema):
