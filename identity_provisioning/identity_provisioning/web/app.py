@@ -1,3 +1,4 @@
+import marshmallow
 from flask import Flask, request
 
 from identity_provisioning.web import schemas
@@ -17,3 +18,8 @@ def entrypoint():
     serialized_cloud_identity = cloud_identity_schema.dump(provisioned_cloud_identity)
 
     return serialized_cloud_identity, 201
+
+
+@app.errorhandler(marshmallow.exceptions.ValidationError)
+def handle_validation_error(error):
+    return error.messages_dict, 422
