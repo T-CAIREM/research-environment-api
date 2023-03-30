@@ -1,10 +1,8 @@
 import marshmallow
-from flask import Flask, request
+from flask import request
 
-from identity_provisioning.web import schemas
+from identity_provisioning.web import app, schemas
 from identity_provisioning.core import services
-
-app = Flask(__name__)
 
 
 @app.route("/", methods=["POST"])

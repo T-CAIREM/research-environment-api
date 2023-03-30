@@ -1,8 +1,11 @@
+import logging
 from typing import Optional
 
 from identity_provisioning import config
 from identity_provisioning.core import entities, schemas, exceptions
 from identity_provisioning.core.tooling import datastore, google_workspace
+
+logger = logging.getLogger("identity_provisioning.web.app")
 
 
 def provision_cloud_identity(
@@ -11,17 +14,17 @@ def provision_cloud_identity(
     try:
         _persist_cloud_identity(cloud_identity)
     except exceptions.CloudIdentityAlreadyExistsError:
-        pass
+        logger.warning(f"{cloud_identity.email} already persisted in Datastore")
 
     try:
         _create_cloud_identity_in_google_workspace(cloud_identity)
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
-        pass
+        logger.warning(f"{cloud_identity.email} already created in Google Workspace")
 
     try:
         _allow_to_create_billing_accounts(cloud_identity)
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
-        pass
+        logger.warning(f"{cloud_identity.email} already a member of the billing account creator group")
 
     return cloud_identity
 
