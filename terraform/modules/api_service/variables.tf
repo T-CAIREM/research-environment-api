@@ -23,3 +23,8 @@ variable "max_scale" {
   type    = string
   default = "100"
 }
+
+variable "env" {
+  type    = list(object({ name = string, value = string }))
+  default = []
+}
