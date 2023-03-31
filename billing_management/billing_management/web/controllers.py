@@ -16,6 +16,11 @@ def link_billing_account():
     return created_billing_account, 200
 
 
+@app.route("/unlink", methods=["DELETE"])
+def unlink_billing_account():
+    return "Unimplemented", 501
+
+
 @app.errorhandler(marshmallow.exceptions.ValidationError)
 def handle_validation_error(error):
     return error.messages_dict, 422
