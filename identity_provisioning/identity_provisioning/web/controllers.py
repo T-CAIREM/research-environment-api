@@ -5,8 +5,8 @@ from identity_provisioning.web import app, schemas
 from identity_provisioning.core import services
 
 
-@app.route("/", methods=["POST"])
-def entrypoint():
+@app.route("/create", methods=["POST"])
+def create_cloud_identity():
     body = request.get_json()
     cloud_identity_creation_schema = schemas.CloudIdentityCreation()
     new_cloud_identity = cloud_identity_creation_schema.load(body)
