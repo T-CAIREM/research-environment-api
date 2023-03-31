@@ -24,7 +24,9 @@ def provision_cloud_identity(
     try:
         _allow_to_create_billing_accounts(cloud_identity)
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
-        logger.warning(f"{cloud_identity.email} already a member of the billing account creator group")
+        logger.warning(
+            f"{cloud_identity.email} already a member of the billing account creator group"
+        )
 
     return cloud_identity
 
