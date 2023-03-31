@@ -8,12 +8,13 @@ from billing_management.web import app, schemas
 def link_billing_account():
     body = request.get_json()
     billing_account_creation_schema = schemas.BillingAccountCreation()
-    new_billing_account = billing_account_creation_schema.load(body)
+    billing_account = billing_account_creation_schema.load(body)
 
+    linked_billing_account = services.link_billing_account(billing_account)
     billing_account_schema = schemas.BillingAccount()
-    created_billing_account = billing_account_schema.dump({})
+    serialized_billing_account = billing_account_schema.dump(linked_billing_account)
 
-    return created_billing_account, 200
+    return serialized_billing_account, 200
 
 
 @app.route("/unlink", methods=["DELETE"])
