@@ -18,6 +18,17 @@ def create_cloud_identity():
     return serialized_cloud_identity, 201
 
 
+@app.route("/reset_password", methods=["POST"])
+def reset_user_password():
+    body = request.get_json()
+    cloud_identity_creation_schema = schemas.CloudIdentityCreation()
+    cloud_identity = cloud_identity_creation_schema.load(body)
+
+    changed_cloud_identity = services.reset_user_password(cloud_identity)
+
+    return changed_cloud_identity, 200
+
+
 @app.errorhandler(marshmallow.exceptions.ValidationError)
 def handle_validation_error(error):
     return error.messages_dict, 422
