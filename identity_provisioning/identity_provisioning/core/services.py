@@ -31,6 +31,24 @@ def provision_cloud_identity(
     return cloud_identity
 
 
+def reset_user_password(cloud_identity: entities.CloudIdentity):
+    google_workspace_user = entities.GoogleWorkspaceUser.from_cloud_identity(
+        cloud_identity
+    )
+
+    google_workspace_user.set_temporary_password()
+    serialized_google_workspace_user = schemas.GoogleWorkspaceUser().dump(
+        google_workspace_user
+    )
+
+    updated_user = google_workspace.reset_password(
+        user_key=google_workspace_user.primary_email,
+        body=serialized_google_workspace_user
+    )
+
+    return updated_user
+
+
 def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
     existing_cloud_identity = _fetch_persisted_cloud_identity(cloud_identity)
     if existing_cloud_identity:

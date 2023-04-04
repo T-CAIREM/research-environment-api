@@ -22,6 +22,15 @@ def create_user(body: dict) -> dict:
         raise error
 
 
+def reset_user_password(user_key: str, body: dict) -> dict:
+    admin_service = build("admin", "directory_v1")
+    try:
+        updated_user = admin_service.users().update(userKey=user_key, body=body).execute()
+        return updated_user
+    except errors.HttpError as error:
+        raise error
+
+
 def add_user_to_group(user_email: str, group_id: str) -> dict:
     cloud_identity_service = build("cloudidentity", "v1")
     body = {"preferredMemberKey": {"id": user_email}, "roles": {"name": "MEMBER"}}

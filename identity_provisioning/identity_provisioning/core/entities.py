@@ -31,10 +31,14 @@ class GoogleWorkspaceUser:
     change_password_at_next_login: bool = False
 
     @classmethod
-    def from_cloud_identity(cls, cloud_identity: CloudIdentity, password: str) -> Self:
+    def from_cloud_identity(cls, cloud_identity: CloudIdentity, password) -> Self:
         name = {
             "family_name": cloud_identity.family_name,
             "given_name": cloud_identity.given_name,
         }
         primary_email = cloud_identity.email
         return cls(name=name, primary_email=primary_email, password=password)
+
+    def set_temporary_password(self):
+        self.password = secrets.token_urlsafe(config.DEFAULT_PASSWORD_LENGTH)
+        self.change_password_at_next_login = True
