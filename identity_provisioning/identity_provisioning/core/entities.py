@@ -27,21 +27,14 @@ class CloudIdentity:
 class GoogleWorkspaceUser:
     name: dict
     primary_email: str
-    password: str = field(init=False)
-    change_password_at_next_login: bool = True
-
-    def __post_init__(self):
-        self.password = self.generate_password()
+    password: str
+    change_password_at_next_login: bool = False
 
     @classmethod
-    def from_cloud_identity(cls, cloud_identity: CloudIdentity) -> Self:
+    def from_cloud_identity(cls, cloud_identity: CloudIdentity, password: str) -> Self:
         name = {
             "family_name": cloud_identity.family_name,
             "given_name": cloud_identity.given_name,
         }
         primary_email = cloud_identity.email
-        return cls(name=name, primary_email=primary_email)
-
-    @staticmethod
-    def generate_password() -> str:
-        return secrets.token_urlsafe(config.DEFAULT_PASSWORD_LENGTH)
+        return cls(name=name, primary_email=primary_email, password=password)
