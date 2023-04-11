@@ -11,7 +11,6 @@ class CloudIdentity:
     password: str
     family_name: str
     given_name: str
-    change_password_at_next_login: bool = False
 
     @classmethod
     def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str) -> Self:
@@ -32,7 +31,7 @@ class GoogleWorkspaceUser:
     change_password_at_next_login: bool = False
 
     @classmethod
-    def from_cloud_identity(cls,  cloud_identity: CloudIdentity) -> Self:
+    def from_cloud_identity(cls, cloud_identity: CloudIdentity) -> Self:
         name = {
             "family_name": cloud_identity.family_name,
             "given_name": cloud_identity.given_name,
@@ -51,7 +50,7 @@ class StoredCloudIdentityData:
     given_name: str
 
     @classmethod
-    def from_cloud_identity(cls,  cloud_identity: CloudIdentity) -> Self:
+    def from_cloud_identity(cls, cloud_identity: CloudIdentity) -> Self:
         return cls(
             email=cloud_identity.email,
             family_name=cloud_identity.family_name,
