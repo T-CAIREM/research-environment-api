@@ -4,25 +4,6 @@ from dataclasses import dataclass, field
 
 from identity_provisioning import config
 
-
-@dataclass
-class CloudIdentity:
-    email: str
-    family_name: str
-    given_name: str
-
-    @classmethod
-    def from_platform_data(
-        cls, user_name: str, family_name: str, given_name: str
-    ) -> Self:
-        email = f"{user_name}@{config.ORGANIZATION_DOMAIN}"
-        return cls(
-            email=email,
-            family_name=family_name,
-            given_name=given_name,
-        )
-
-
 @dataclass
 class GoogleWorkspaceUser:
     name: dict
@@ -31,10 +12,31 @@ class GoogleWorkspaceUser:
     change_password_at_next_login: bool = False
 
     @classmethod
-    def from_cloud_identity(cls, cloud_identity: CloudIdentity, password: str) -> Self:
+    def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str) -> Self:
         name = {
-            "family_name": cloud_identity.family_name,
-            "given_name": cloud_identity.given_name,
+            "family_name": family_name,
+            "given_name": given_name,
         }
-        primary_email = cloud_identity.email
-        return cls(name=name, primary_email=primary_email, password=password)
+        email = f"{user_name}@{config.ORGANIZATION_DOMAIN}"
+        return cls(
+            name=name,
+            primary_email=email,
+            password=password
+        )
+
+
+@dataclass
+class CloudIdentity:
+    email: str
+    family_name: str
+    given_name: str
+
+    @classmethod
+    def from_google_workspace_user(cls, google_workspace_user: GoogleWorkspaceUser):
+        return cls(
+            email=google_workspace_user.primary_email,
+            family_name=google_workspace_user.name.get("family_name"),
+            given_name=google_workspace_user.name.get("given_name")
+        )
+
+

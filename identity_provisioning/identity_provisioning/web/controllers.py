@@ -8,10 +8,10 @@ from identity_provisioning.core import services
 @app.route("/create", methods=["POST"])
 def create_cloud_identity():
     body = request.get_json()
-    cloud_identity_creation_schema = schemas.CloudIdentityCreation()
-    cloud_identity = cloud_identity_creation_schema.load(body)
+    google_workspace_user_creation_schema = schemas.GoogleWorkspaceUserCreation()
+    google_workspace_user = google_workspace_user_creation_schema.load(body)
 
-    provisioned_cloud_identity = services.provision_cloud_identity(cloud_identity, body["password"])
+    provisioned_cloud_identity = services.provision_cloud_identity(google_workspace_user)
     cloud_identity_schema = schemas.CloudIdentity()
     serialized_cloud_identity = cloud_identity_schema.dump(provisioned_cloud_identity)
 

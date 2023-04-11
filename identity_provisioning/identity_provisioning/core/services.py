@@ -9,17 +9,18 @@ logger = logging.getLogger("identity_provisioning.web.app")
 
 
 def provision_cloud_identity(
-    cloud_identity: entities.CloudIdentity, password: str
+    google_workspace_user: entities.GoogleWorkspaceUser, password: str
 ) -> entities.CloudIdentity:
+    cloud_identity = entities.CloudIdentity.from_google_workspace_user(google_workspace_user)
     try:
         _persist_cloud_identity(cloud_identity)
     except exceptions.CloudIdentityAlreadyExistsError:
         logger.warning(f"{cloud_identity.email} already persisted in Datastore")
 
     try:
-        _create_cloud_identity_in_google_workspace(cloud_identity, password)
+        _create_cloud_identity_in_google_workspace(google_workspace_user)
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
-        logger.warning(f"{cloud_identity.email} already created in Google Workspace")
+        logger.warning(f"{google_workspace_user.primary_email} already created in Google Workspace")
 
     try:
         _allow_to_create_billing_accounts(cloud_identity)
@@ -59,11 +60,7 @@ def _fetch_persisted_cloud_identity(
     return schemas.CloudIdentity().load(query_result[0])
 
 
-def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIdentity, password: str):
-    google_workspace_user = entities.GoogleWorkspaceUser.from_cloud_identity(
-        cloud_identity,
-        password
-    )
+def _create_cloud_identity_in_google_workspace(google_workspace_user: entities.GoogleWorkspaceUser):
     serialized_google_workspace_user = schemas.GoogleWorkspaceUser().dump(
         google_workspace_user
     )
@@ -72,7 +69,7 @@ def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIde
     except google_workspace.UserAlreadyExistsError:
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
 
-    return cloud_identity
+    return google_workspace_user
 
 
 def _allow_to_create_billing_accounts(cloud_identity: entities.CloudIdentity):
