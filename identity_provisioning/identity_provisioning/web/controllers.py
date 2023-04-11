@@ -8,12 +8,12 @@ from identity_provisioning.core import services
 @app.route("/create", methods=["POST"])
 def create_cloud_identity():
     body = request.get_json()
-    google_workspace_user_creation_schema = schemas.GoogleWorkspaceUserCreation()
-    google_workspace_user = google_workspace_user_creation_schema.load(body)
+    identity_provisioning_request_schema = schemas.IdentityProvisioningRequest()
+    identity_provisioning_request = identity_provisioning_request_schema.load(body)
 
-    provisioned_cloud_identity = services.provision_cloud_identity(google_workspace_user)
-    cloud_identity_schema = schemas.CloudIdentity()
-    serialized_cloud_identity = cloud_identity_schema.dump(provisioned_cloud_identity)
+    provisioned_cloud_identity = services.provision_cloud_identity(identity_provisioning_request)
+    provisioned_identity_schema = schemas.ProvisionedIdentity()
+    serialized_cloud_identity = provisioned_identity_schema.dump(provisioned_cloud_identity)
 
     return serialized_cloud_identity, 201
 

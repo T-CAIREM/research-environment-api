@@ -26,9 +26,21 @@ class GoogleWorkspaceUser(CamelCaseSchema):
 
 class CloudIdentity(CamelCaseSchema):
     email = fields.Str()
+    password = fields.Str()
     family_name = fields.Str()
     given_name = fields.Str()
+    change_password_at_next_login = fields.Bool()
 
     @post_load
     def make_cloud_identity(self, data, **kwargs):
         return entities.CloudIdentity(**data)
+
+
+class StoredCloudIdentityData:
+    email = fields.Str()
+    family_name = fields.Str()
+    given_name = fields.Str()
+
+    @post_load
+    def make_stored_cloud_identity_data(self, data, **kwargs):
+        return entities.StoredCloudIdentityData(**data)

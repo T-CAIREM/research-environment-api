@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, post_load
 from identity_provisioning.core import entities
 
 
-class GoogleWorkspaceUserCreation(Schema):
+class IdentityProvisioningRequest(Schema):
     class Name(Schema):
         family_name = fields.Str()
         given_name = fields.Str()
@@ -14,8 +14,8 @@ class GoogleWorkspaceUserCreation(Schema):
     change_password_at_next_login = fields.Bool()
 
     @post_load
-    def make_google_workspace_user(self, data, **kwargs):
-        return entities.GooleWorkspaceUser.from_platform_data(**data)
+    def make_cloud_identity(self, data, **kwargs):
+        return entities.CloudIdentity.from_platform_data(**data)
 
 
 class GoogleWorkspaceUser(Schema):
@@ -29,7 +29,7 @@ class GoogleWorkspaceUser(Schema):
     change_password_at_next_login = fields.Bool()
 
 
-class CloudIdentity(Schema):
+class ProvisionedIdentity(Schema):
     email = fields.Str()
     family_name = fields.Str()
     given_name = fields.Str()

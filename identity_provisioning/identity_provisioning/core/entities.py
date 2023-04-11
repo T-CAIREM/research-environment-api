@@ -4,6 +4,26 @@ from dataclasses import dataclass, field
 
 from identity_provisioning import config
 
+
+@dataclass
+class CloudIdentity:
+    email: str
+    password: str
+    family_name: str
+    given_name: str
+    change_password_at_next_login: bool = False
+
+    @classmethod
+    def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str) -> Self:
+        email = f"{user_name}@{config.ORGANIZATION_DOMAIN}"
+        return cls(
+            email=email,
+            password=password,
+            family_name=family_name,
+            given_name=given_name
+        )
+
+
 @dataclass
 class GoogleWorkspaceUser:
     name: dict
@@ -12,31 +32,28 @@ class GoogleWorkspaceUser:
     change_password_at_next_login: bool = False
 
     @classmethod
-    def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str) -> Self:
+    def from_cloud_identity(cls,  cloud_identity: CloudIdentity) -> Self:
         name = {
-            "family_name": family_name,
-            "given_name": given_name,
+            "family_name": cloud_identity.family_name,
+            "given_name": cloud_identity.given_name,
         }
-        email = f"{user_name}@{config.ORGANIZATION_DOMAIN}"
         return cls(
             name=name,
-            primary_email=email,
-            password=password
+            primary_email=cloud_identity.email,
+            password=cloud_identity.password
         )
 
 
 @dataclass
-class CloudIdentity:
+class StoredCloudIdentityData:
     email: str
     family_name: str
     given_name: str
 
     @classmethod
-    def from_google_workspace_user(cls, google_workspace_user: GoogleWorkspaceUser):
+    def from_cloud_identity(cls,  cloud_identity: CloudIdentity) -> Self:
         return cls(
-            email=google_workspace_user.primary_email,
-            family_name=google_workspace_user.name.get("family_name"),
-            given_name=google_workspace_user.name.get("given_name")
+            email=cloud_identity.email,
+            family_name=cloud_identity.family_name,
+            given_name=cloud_identity.given_name
         )
-
-
