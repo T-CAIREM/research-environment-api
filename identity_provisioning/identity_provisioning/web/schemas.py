@@ -8,6 +8,7 @@ class IdentityProvisioningRequest(Schema):
     given_name = fields.Str()
     user_name = fields.Str()
     password = fields.Str()
+    recovery_email = fields.Str()
 
     @post_load
     def make_cloud_identity(self, data, **kwargs):
@@ -16,5 +17,6 @@ class IdentityProvisioningRequest(Schema):
 
 class ProvisionedIdentity(Schema):
     email = fields.Str()
+    recovery_email = fields.Str()
     family_name = fields.Str()
     given_name = fields.Str()

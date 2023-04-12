@@ -8,15 +8,17 @@ from identity_provisioning import config
 @dataclass
 class CloudIdentity:
     email: str
+    recovery_email: str
     password: str
     family_name: str
     given_name: str
 
     @classmethod
-    def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str) -> Self:
+    def from_platform_data(cls, user_name: str, family_name: str, given_name: str, password: str, recovery_email: str) -> Self:
         email = f"{user_name}@{config.ORGANIZATION_DOMAIN}"
         return cls(
             email=email,
+            recovery_email=recovery_email,
             password=password,
             family_name=family_name,
             given_name=given_name
@@ -27,6 +29,7 @@ class CloudIdentity:
 class GoogleWorkspaceUser:
     name: dict
     primary_email: str
+    recovery_email: str
     password: str
     change_password_at_next_login: bool = False
 
@@ -39,6 +42,7 @@ class GoogleWorkspaceUser:
         return cls(
             name=name,
             primary_email=cloud_identity.email,
+            recovery_email=cloud_identity.recovery_email,
             password=cloud_identity.password
         )
 
@@ -46,6 +50,7 @@ class GoogleWorkspaceUser:
 @dataclass
 class StoredCloudIdentityData:
     email: str
+    recovery_email: str
     family_name: str
     given_name: str
 
@@ -53,6 +58,7 @@ class StoredCloudIdentityData:
     def from_cloud_identity(cls, cloud_identity: CloudIdentity) -> Self:
         return cls(
             email=cloud_identity.email,
+            recovery_email=cloud_identity.recovery_email,
             family_name=cloud_identity.family_name,
             given_name=cloud_identity.given_name
         )
