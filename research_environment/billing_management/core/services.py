@@ -5,3 +5,9 @@ def link_billing_account(
     billing_account: entities.BillingAccount,
 ) -> entities.BillingAccount:
     pass
+
+
+def _verify_billing_account(
+    billing_account: entities.BillingAccount,
+):
+    pass

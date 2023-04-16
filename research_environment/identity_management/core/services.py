@@ -1,11 +1,14 @@
 import logging
 from typing import Optional
 
-from identity_provisioning import config
-from identity_provisioning.core import entities, schemas, exceptions
-from identity_provisioning.core.tooling import datastore, google_workspace
+from research_environment.identity_management import config
+from research_environment.identity_management.core import entities, schemas, exceptions
+from research_environment.tooling import (
+    datastore,
+    google_workspace,
+)
 
-logger = logging.getLogger("identity_provisioning.web.app")
+logger = logging.getLogger("research_environment.app")
 
 
 def provision_cloud_identity(

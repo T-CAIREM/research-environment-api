@@ -9,10 +9,13 @@ class BillingAccountCreation(Schema):
 
     @post_load
     def make_billing_account(self, data, **kwargs):
-        return entities.BillingAccount(**data)
+        return entities.BillingAccount(
+            cloud_identity_id=data["cloud_identity_id"],
+            account_number=data["billing_account_number"],
+        )
 
 
-class BillingAccount(Schema):
+class CreatedBillingAccount(Schema):
     cloud_identity_id = fields.Str()
     billing_account_id = fields.Str()
     billing_account_number = fields.Str()

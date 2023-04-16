@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, post_load
 
-from identity_provisioning.core import entities
+from research_environment.identity_management.core import entities
 
 
 class CamelCaseSchema(Schema):
