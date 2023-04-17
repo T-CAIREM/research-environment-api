@@ -8,7 +8,7 @@ from research_environment_api.modules.shared import (
     google_workspace,
 )
 
-logger = logging.getLogger("research_environment.app")
+logger = logging.getLogger("research_environment_api.web.wsgi")
 
 
 def provision_cloud_identity(
