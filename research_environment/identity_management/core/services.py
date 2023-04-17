@@ -3,7 +3,7 @@ from typing import Optional
 
 from research_environment.identity_management import config
 from research_environment.identity_management.core import entities, schemas, exceptions
-from research_environment.tooling import (
+from research_environment.library import (
     datastore,
     google_workspace,
 )
