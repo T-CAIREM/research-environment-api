@@ -3,7 +3,7 @@ from typing import Optional
 
 from research_environment.identity_management import config
 from research_environment.identity_management.core import entities, schemas, exceptions
-from research_environment.library import (
+from research_environment.utils import (
     datastore,
     google_workspace,
 )
@@ -40,7 +40,6 @@ def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
         raise exceptions.CloudIdentityAlreadyExistsError
 
     cloud_identity_json = schemas.StoredCloudIdentityData().dump(cloud_identity)
-    datastore.persist(config.PROJECT_ID, config.DATASTORE_KIND, cloud_identity_json)
 
 
 def _fetch_persisted_cloud_identity(
