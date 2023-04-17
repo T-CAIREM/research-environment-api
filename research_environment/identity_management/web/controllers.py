@@ -20,12 +20,16 @@ def fetch_cloud_identity(identity_id):
 @identity_management_bp.route("/identity/create", methods=["POST"])
 def create_cloud_identity():
     body = request.get_json()
-    cloud_identity_creation_schema = schemas.CloudIdentityCreation()
-    cloud_identity = cloud_identity_creation_schema.load(body)
+    identity_provisioning_request_schema = schemas.IdentityProvisioningRequest()
+    identity_provisioning_request = identity_provisioning_request_schema.load(body)
 
-    provisioned_cloud_identity = services.provision_cloud_identity(cloud_identity)
-    cloud_identity_schema = schemas.CloudIdentity()
-    serialized_cloud_identity = cloud_identity_schema.dump(provisioned_cloud_identity)
+    provisioned_cloud_identity = services.provision_cloud_identity(
+        identity_provisioning_request
+    )
+    provisioned_identity_schema = schemas.ProvisionedIdentity()
+    serialized_cloud_identity = provisioned_identity_schema.dump(
+        provisioned_cloud_identity
+    )
 
     return serialized_cloud_identity, 201
 

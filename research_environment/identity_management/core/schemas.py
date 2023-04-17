@@ -24,11 +24,11 @@ class GoogleWorkspaceUser(CamelCaseSchema):
     change_password_at_next_login = fields.Bool()
 
 
-class CloudIdentity(CamelCaseSchema):
+class StoredCloudIdentityData(CamelCaseSchema):
     email = fields.Str()
     family_name = fields.Str()
     given_name = fields.Str()
 
     @post_load
-    def make_cloud_identity(self, data, **kwargs):
-        return entities.CloudIdentity(**data)
+    def make_cloud_identity_data(self, data, **kwargs):
+        return entities.StoredCloudIdentityData(**data)
