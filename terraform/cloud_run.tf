@@ -1,19 +1,12 @@
-resource "google_cloud_run_service" "api_service" {
-  name                       = var.service_name
+resource "google_cloud_run_service" "api" {
+  name                       = "${var.service_name}_${workspace.name}"
   location                   = var.region
   autogenerate_revision_name = true
 
   template {
     spec {
       containers {
-        image = var.image
-        dynamic "env" {
-          for_each = var.env
-          content {
-            name  = env.value.name
-            value = env.value.value
-          }
-        }
+        image = "${var.image_repository}:${var.image_tag}"
       }
       service_account_name = var.service_account_name
     }
