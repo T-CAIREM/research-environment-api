@@ -39,7 +39,7 @@ def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
     if existing_cloud_identity:
         raise exceptions.CloudIdentityAlreadyExistsError
 
-    cloud_identity_json = schemas.CloudIdentity().dump(cloud_identity)
+    cloud_identity_json = schemas.StoredCloudIdentityData().dump(cloud_identity)
     datastore.persist(config.PROJECT_ID, config.DATASTORE_KIND, cloud_identity_json)
 
 
