@@ -1,11 +1,8 @@
 import marshmallow
 from flask import request
 
-from research_environment.identity_management.web import (
-    identity_management_bp,
-    schemas,
-)
-from research_environment.identity_management.core import services
+from research_environment_api.web.identity_management import identity_management_bp, schemas
+from research_environment_api.modules.identity_management import services
 
 
 @identity_management_bp.route("/identity/<identity_id>", methods=["GET"])

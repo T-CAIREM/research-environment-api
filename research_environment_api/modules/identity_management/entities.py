@@ -2,7 +2,7 @@ import secrets
 from typing import Self, Optional
 from dataclasses import dataclass, field
 
-from research_environment.identity_management import config
+from research_environment_api.modules.identity_management import config
 
 
 @dataclass
