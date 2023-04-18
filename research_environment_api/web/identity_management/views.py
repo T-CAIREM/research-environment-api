@@ -5,29 +5,21 @@ from research_environment_api.web.identity_management import (
     identity_management_bp,
     schemas,
 )
-from research_environment_api.modules.identity_management import services
+from research_environment_api.modules.identity_management import services, entities
 
 
-@identity_management_bp.route("/identity/<identity_id>", methods=["GET"])
-def fetch_cloud_identity(identity_id):
-    cloud_identity = services.fetch_cloud_identity(identity_id)
-    cloud_identity_schema = schemas.CloudIdentity()
-    serialized_cloud_identity = cloud_identity_schema.dump(cloud_identity)
-
-    return serialized_cloud_identity, 201
-
-
-@identity_management_bp.route("/identity/create", methods=["POST"])
+@identity_management_bp.post("/create")
 def create_cloud_identity():
     body = request.get_json()
-    identity_provisioning_request_schema = schemas.IdentityProvisioningRequest()
-    identity_provisioning_request = identity_provisioning_request_schema.load(body)
+    identity_provisioning_request = schemas.IdentityProvisioningRequest().load(body)
+    cloud_identity_creation_dto = entities.CloudIdentityCreation(
+        **identity_provisioning_request
+    )
 
     provisioned_cloud_identity = services.provision_cloud_identity(
-        identity_provisioning_request
+        cloud_identity_creation_dto
     )
-    provisioned_identity_schema = schemas.ProvisionedIdentity()
-    serialized_cloud_identity = provisioned_identity_schema.dump(
+    serialized_cloud_identity = schemas.ProvisionedIdentity().dump(
         provisioned_cloud_identity
     )
 

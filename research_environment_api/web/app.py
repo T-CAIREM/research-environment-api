@@ -12,6 +12,6 @@ def create_app(config_object: str):
     db.init_app(app)
     migrate.init_app(app)
 
-    app.register_blueprint(identity_management_bp)
+    app.register_blueprint(identity_management_bp, url_prefix="/cloud_identity")
 
     return app

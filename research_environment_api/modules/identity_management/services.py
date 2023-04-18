@@ -1,89 +1,38 @@
 import logging
-from typing import Optional
 
-from research_environment_api.modules.identity_management import config
+import sqlalchemy.exc
+
 from research_environment_api.modules.identity_management import (
     entities,
-    schemas,
     exceptions,
-)
-from research_environment_api.modules.shared import (
-    datastore,
-    google_workspace,
+    internal,
 )
 
 logger = logging.getLogger("research_environment_api.web.wsgi")
 
 
 def provision_cloud_identity(
-    cloud_identity: entities.CloudIdentity,
-) -> entities.CloudIdentity:
+    cloud_identity_dto: entities.CloudIdentityCreation,
+) -> entities.CloudIdentityCreation:
     try:
-        _persist_cloud_identity(cloud_identity)
-    except exceptions.CloudIdentityAlreadyExistsError:
-        logger.warning(f"{cloud_identity.email} already persisted in Datastore")
+        internal.persist_cloud_identity(cloud_identity_dto)
+    except exceptions.DuplicatedCloudIdentityError:
+        logger.warning(
+            f"{cloud_identity_dto.primary_email} already persisted in database"
+        )
 
     try:
-        _create_cloud_identity_in_google_workspace(cloud_identity)
+        internal.create_cloud_identity_in_google_workspace(cloud_identity_dto)
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
         logger.warning(f"{cloud_identity.email} already created in Google Workspace")
 
     try:
-        _allow_to_create_billing_accounts(cloud_identity)
+        internal.allow_to_create_billing_accounts(cloud_identity_dto)
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
         logger.warning(
             f"{cloud_identity.email} already a member of the billing account creator group"
         )
 
-    return cloud_identity
-
-
-def _persist_cloud_identity(cloud_identity: entities.CloudIdentity):
-    existing_cloud_identity = _fetch_persisted_cloud_identity(cloud_identity)
-    if existing_cloud_identity:
-        raise exceptions.CloudIdentityAlreadyExistsError
-
-    cloud_identity_json = schemas.StoredCloudIdentityData().dump(cloud_identity)
-
-
-def _fetch_persisted_cloud_identity(
-    cloud_identity: entities.CloudIdentity,
-) -> Optional[entities.CloudIdentity]:
-    query_result = list(
-        datastore.find_by(
-            config.PROJECT_ID, config.DATASTORE_KIND, email=cloud_identity.email
-        )
-    )
-    result_length = len(query_result)
-
-    if result_length > 1:
-        raise exceptions.DuplicatedCloudIdentityError
-
-    if result_length == 0:
-        return None
-
-    return schemas.CloudIdentity().load(query_result[0])
-
-
-def _create_cloud_identity_in_google_workspace(cloud_identity: entities.CloudIdentity):
-    google_workspace_user = entities.GoogleWorkspaceUser.from_cloud_identity(
-        cloud_identity
-    )
-    serialized_google_workspace_user = schemas.GoogleWorkspaceUser().dump(
-        google_workspace_user
-    )
-    try:
-        google_workspace.create_user(serialized_google_workspace_user)
-    except google_workspace.UserAlreadyExistsError:
-        raise exceptions.GoogleWorkspaceUserAlreadyExistsError
+    internal.mark_cloud_identity_as_configured(cloud_identity_dto)
 
     return cloud_identity
-
-
-def _allow_to_create_billing_accounts(cloud_identity: entities.CloudIdentity):
-    try:
-        google_workspace.add_user_to_group(
-            cloud_identity.email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
-        )
-    except google_workspace.GroupMembershipAlreadyExistsError:
-        raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
