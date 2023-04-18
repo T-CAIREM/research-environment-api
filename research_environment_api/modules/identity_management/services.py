@@ -10,7 +10,7 @@ from research_environment_api.modules.identity_management import (
 def provision_cloud_identity(
     cloud_identity_dto: entities.CloudIdentityCreation,
 ) -> entities.CloudIdentityCreation:
-    cloud_identity = _fetch_or_create_cloud_identity(cloud_identity_dto)
+    cloud_identity = _fetch_partial_or_create_cloud_identity(cloud_identity_dto)
     _create_google_workspace_user(cloud_identity_dto)
     _allow_to_create_billing_accounts(cloud_identity_dto)
     internal.mark_cloud_identity_as_configured(cloud_identity)
@@ -18,7 +18,7 @@ def provision_cloud_identity(
     return cloud_identity_dto
 
 
-def _fetch_or_create_cloud_identity(
+def _fetch_partial_or_create_cloud_identity(
     cloud_identity_dto: entities.CloudIdentityCreation,
 ) -> models.CloudIdentity:
     cloud_identity = internal.fetch_cloud_identity(cloud_identity_dto)
