@@ -1,14 +1,11 @@
-import logging
-
 import sqlalchemy.exc
 
+from research_environment_api.modules.identity_management.logger import logger
 from research_environment_api.modules.identity_management import (
     entities,
     exceptions,
     internal,
 )
-
-logger = logging.getLogger("research_environment_api.web.wsgi")
 
 
 def provision_cloud_identity(
