@@ -2,7 +2,11 @@ import logging
 from typing import Optional
 
 from research_environment_api.modules.identity_management import config
-from research_environment_api.modules.identity_management import entities, schemas, exceptions
+from research_environment_api.modules.identity_management import (
+    entities,
+    schemas,
+    exceptions,
+)
 from research_environment_api.modules.shared import (
     datastore,
     google_workspace,

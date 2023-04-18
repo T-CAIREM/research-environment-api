@@ -1,7 +1,10 @@
 import marshmallow
 from flask import request
 
-from research_environment_api.web.identity_management import identity_management_bp, schemas
+from research_environment_api.web.identity_management import (
+    identity_management_bp,
+    schemas,
+)
 from research_environment_api.modules.identity_management import services
 
 
