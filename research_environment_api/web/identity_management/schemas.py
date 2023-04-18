@@ -2,15 +2,15 @@ from marshmallow import Schema, fields
 
 
 class IdentityProvisioningRequest(Schema):
-    user_name = fields.Str()
-    password = fields.Str()
-    recovery_email = fields.Str()
-    family_name = fields.Str()
-    given_name = fields.Str()
+    user_name = fields.Str(required=True)
+    password = fields.Str(required=True)
+    recovery_email = fields.Str(required=True)
+    family_name = fields.Str(required=True)
+    given_name = fields.Str(required=True)
 
 
 class ProvisionedIdentity(Schema):
-    email = fields.Str()
-    recovery_email = fields.Str()
-    family_name = fields.Str()
-    given_name = fields.Str()
+    email = fields.Str(required=True)
+    recovery_email = fields.Str(required=True)
+    family_name = fields.Str(required=True)
+    given_name = fields.Str(required=True)

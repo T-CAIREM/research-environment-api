@@ -1,4 +1,3 @@
-import marshmallow
 from flask import request
 
 from research_environment_api.web.identity_management import (
@@ -25,7 +24,3 @@ def create_cloud_identity():
 
     return serialized_cloud_identity, 201
 
-
-@identity_management_bp.errorhandler(marshmallow.exceptions.ValidationError)
-def handle_validation_error(error):
-    return error.messages_dict, 422

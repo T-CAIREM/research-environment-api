@@ -1,4 +1,4 @@
-from research_environment_api.modules.model import BaseModel
+from research_environment_api.modules.model import db, BaseModel
 
 
 class CloudIdentity(BaseModel):

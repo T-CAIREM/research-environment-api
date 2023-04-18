@@ -1,3 +1,5 @@
+from typing import Optional
+
 import sqlalchemy.exc
 
 from research_environment_api.modules.model import db
@@ -6,9 +8,21 @@ from research_environment_api.modules.identity_management import (
     entities,
     exceptions,
     models,
-    schemas,
 )
 from research_environment_api.modules.shared import google_workspace
+
+
+def fetch_cloud_identity(
+    cloud_identity_dto: entities.CloudIdentityCreation,
+) -> Optional[models.CloudIdentity]:
+    try:
+        return (
+            db.session.query(models.CloudIdentity)
+            .filter_by(primary_email=cloud_identity_dto.primary_email)
+            .one()
+        )
+    except sqlalchemy.exc.NoResultFound:
+        return None
 
 
 def persist_cloud_identity(
@@ -18,21 +32,15 @@ def persist_cloud_identity(
         primary_email=cloud_identity_dto.primary_email
     )
     db.session.add(cloud_identity)
+    db.session.commit()
 
-    try:
-        db.session.commit()
-        return cloud_identity
-    except sqlalchemy.exc.IntegrityError as e:
-        db.session.rollback()
-        raise exceptions.DuplicatedCloudIdentityError
+    return cloud_identity
 
 
 def mark_cloud_identity_as_configured(
-    cloud_identity_dto: entities.CloudIdentityCreation,
+    cloud_identity: models.CloudIdentity,
 ):
-    db.session.query(models.CloudIdentity).filter(
-        models.CloudIdentity.primary_email == cloud_identity_dtoprimary_email
-    ).update({"is_configured": True})
+    cloud_identity.is_configured = True
     db.session.commit()
 
 

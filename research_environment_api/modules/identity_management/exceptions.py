@@ -1,8 +1,4 @@
-class CloudIdentityAlreadyExistsError(Exception):
-    pass
-
-
-class DuplicatedCloudIdentityError(Exception):
+class CloudIdentityAlreadyConfiguredError(Exception):
     pass
 
 
