@@ -23,4 +23,3 @@ def create_cloud_identity():
     )
 
     return serialized_cloud_identity, 201
-
