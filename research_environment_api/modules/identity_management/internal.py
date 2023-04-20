@@ -9,7 +9,7 @@ from research_environment_api.modules.identity_management import (
     exceptions,
     models,
 )
-from research_environment_api.modules.shared import google_workspace
+from research_environment_api.library.google import workspace as google_workspace
 
 
 def fetch_cloud_identity(
