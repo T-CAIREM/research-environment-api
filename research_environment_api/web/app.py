@@ -1,7 +1,5 @@
 from flask import Flask
 
-from research_environment_api.web.identity_management import identity_management_bp
-
 
 def create_app(config_object: str):
     app = Flask(__name__)
@@ -12,6 +10,10 @@ def create_app(config_object: str):
     db.init_app(app)
     migrate.init_app(app)
 
-    app.register_blueprint(identity_management_bp, url_prefix="/cloud_identity")
+    from research_environment_api.web.identity_management import identity_management_bp
+    from research_environment_api.web.billing_management import billing_management_bp
+
+    app.register_blueprint(identity_management_bp, url_prefix="/identity")
+    app.register_blueprint(billing_management_bp, url_prefix="/billing")
 
     return app
