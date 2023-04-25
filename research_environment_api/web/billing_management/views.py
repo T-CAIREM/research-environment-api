@@ -16,7 +16,6 @@ def list_billing_accounts():
     credentials = current_app.config["SERVICE_ACCOUNT_CREDENTIALS"]
 
     billing_accounts = services.list_billing_accounts_for(user_email, credentials)
-    print(billing_accounts)
     serialized_billing_accounts = schemas.BillingAccount(many=True).dump(
         billing_accounts
     )
