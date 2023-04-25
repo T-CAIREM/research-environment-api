@@ -1,8 +1,8 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
 
 class ListBillingAccountsRequest(Schema):
-    email = fields.Str(required=True)
+    email = fields.Str(required=True, validate=validate.Email())
 
 
 class BillingAccount(Schema):
