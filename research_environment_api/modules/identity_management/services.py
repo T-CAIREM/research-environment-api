@@ -36,7 +36,9 @@ def _create_google_workspace_user(cloud_identity_dto: entities.CloudIdentityCrea
     try:
         internal.create_cloud_identity_in_google_workspace(cloud_identity_dto)
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
-        logger.warning(f"{cloud_identity_dto.email} already created in Google Workspace")
+        logger.warning(
+            f"{cloud_identity_dto.email} already created in Google Workspace"
+        )
 
 
 def _allow_to_create_billing_accounts(cloud_identity_dto):
