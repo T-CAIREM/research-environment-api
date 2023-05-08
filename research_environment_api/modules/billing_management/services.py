@@ -1,7 +1,7 @@
 import google.oauth2.service_account as service_account
 
 import research_environment_api.library.google.iam as iam_api
-import research_environment_api.modules.billing_management.enums as enums
+from research_environment_api.modules.billing_management import enums, exceptions
 
 BILLING_ACCOUNT_RESOURCE = "resource://cloudbilling.googleapis.com/billingAccounts"
 
@@ -54,4 +54,4 @@ def verify_billing_account_ownership(
     )[enums.IamBillingRole.OWNER]
 
     if billing_account_resource_name not in owned_billing_accounts:
-        raise Exception
+        raise exceptions.InsufficientPermissionError
