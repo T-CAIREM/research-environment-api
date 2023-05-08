@@ -41,6 +41,9 @@ def share_billing_account_to(
     verify_billing_account_ownership(
         credentials, owner_email, organization_id, billing_account_resource_name
     )
+    iam_api.create_membership_binding_for_billing_account(
+        credentials, user_email, "", billing_account_resource_name
+    )
 
 
 def verify_billing_account_ownership(
