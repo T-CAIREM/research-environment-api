@@ -1,15 +1,9 @@
-from enum import StrEnum
-
 import google.oauth2.service_account as service_account
 
 import research_environment_api.library.google.iam as iam_api
+import research_environment_api.modules.billing_management.enums as enums
 
 BILLING_ACCOUNT_RESOURCE = "resource://cloudbilling.googleapis.com/billingAccounts"
-
-
-class IamBillingRole(StrEnum):
-    OWNER = "roles/billing.admin"
-    SHARED_USER = "roles/billing.user"
 
 
 def list_billing_accounts_for(
@@ -22,7 +16,7 @@ def list_billing_accounts_for(
         BILLING_ACCOUNT_RESOURCE,
     )
 
-    supported_roles = [e for e in IamBillingRole]
+    supported_roles = [e for e in enums.IamBillingRole]
     billing_accounts_by_role = {role: [] for role in supported_roles}
 
     for billing_iam_policy in billing_iam_policies:
