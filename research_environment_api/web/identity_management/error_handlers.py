@@ -11,4 +11,4 @@ def handle_validation_error(error):
 
 @identity_management_bp.errorhandler(exceptions.CloudIdentityAlreadyConfiguredError)
 def handle_validation_error(error):
-    return "Cloud Identity already configured.", 422
+    return error.message, 422
