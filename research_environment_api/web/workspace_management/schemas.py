@@ -8,3 +8,4 @@ class WorkspaceCreationRequest(Schema):
     region = fields.Str(
         required=True, validate=validate.OneOf([r.value for r in Region])
     )
+    billing_account_resource_name = fields.Str(required=True)
