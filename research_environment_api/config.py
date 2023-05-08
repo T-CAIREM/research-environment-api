@@ -19,4 +19,4 @@ class Config(object):
 class DevelopmentConfig(Config):
     """Development config"""
 
-    SQLALCHEMY_DATABASE_URI = "postgresql://localhost:5432/tubeorca_dev"
+    SQLALCHEMY_DATABASE_URI = "postgresql://localhost:5432/research_environment_api_dev"
