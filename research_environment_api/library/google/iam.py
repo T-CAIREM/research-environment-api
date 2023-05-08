@@ -4,9 +4,9 @@ from google.cloud import asset
 from google.oauth2 import service_account
 
 
-def list_organization_policies(
-    email: str,
+def list_iam_policies(
     credentials: service_account.Credentials,
+    email: str,
     organization_id: str,
     resource: str,
 ):
