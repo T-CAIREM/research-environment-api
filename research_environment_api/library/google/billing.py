@@ -1,5 +1,12 @@
+from enum import StrEnum
+
 from google.cloud import asset, billing
 from google.oauth2 import service_account
+
+
+class IamBillingRole(StrEnum):
+    ADMIN = "roles/billing.admin"
+    USER = "roles/billing.user"
 
 
 def list_billing_account_iam_policies(
@@ -25,6 +32,22 @@ def get_iam_policy_for_billing_account(
 def create_membership_binding_for_billing_account(
     credentials: service_account.Credentials,
     billing_account_resource_name: str,
+    member: str,
 ):
     client = billing.CloudBillingClient(credentials=credentials)
-    return client.set_iam_policy(resource=billing_account_resource_name)
+    policy = get_iam_policy_for_billing_account(
+        credentials, billing_account_resource_name
+    )
+    user_binding_members = next(
+        filter(lambda binding: binding.role == IamBillingRole.USER, policy.bindings),
+        None,
+    )
+
+    if user_binding_members is not None:
+        user_binding_members.append(member)
+    else:
+        # No binding for "roles/billing.user" exists yet.
+        user_binding = {"role": IamBillingRole.USER, "members": [member]}
+        policy.bindings.append(user_binding)
+
+    return client.set_iam_policy(policy=policy, resource=billing_account_resource_name)

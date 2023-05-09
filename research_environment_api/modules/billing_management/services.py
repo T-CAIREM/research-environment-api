@@ -1,7 +1,7 @@
 import google.oauth2.service_account as service_account
 
 import research_environment_api.library.google.billing as billing_api
-from research_environment_api.modules.billing_management import enums, exceptions
+from research_environment_api.modules.billing_management import exceptions
 
 
 def list_billing_accounts_for(
@@ -13,7 +13,7 @@ def list_billing_accounts_for(
         user_email,
     )
 
-    supported_roles = [e for e in enums.IamBillingRole]
+    supported_roles = [e for e in billing_api.IamBillingRole]
     billing_accounts_by_role = {role: [] for role in supported_roles}
 
     for billing_iam_policy in billing_iam_policies:
@@ -51,7 +51,7 @@ def verify_billing_account_ownership(
 ):
     owned_billing_accounts = list_billing_accounts_for(
         credentials, user_email, organization_id
-    )[enums.IamBillingRole.OWNER]
+    )[billing_api.IamBillingRole.OWNER]
 
     if billing_account_resource_name not in owned_billing_accounts:
         raise exceptions.InsufficientPermissionError
