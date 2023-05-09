@@ -1,19 +1,16 @@
 import google.oauth2.service_account as service_account
 
-import research_environment_api.library.google.iam as iam_api
+import research_environment_api.library.google.billing as billing_api
 from research_environment_api.modules.billing_management import enums, exceptions
-
-BILLING_ACCOUNT_RESOURCE = "resource://cloudbilling.googleapis.com/billingAccounts"
 
 
 def list_billing_accounts_for(
     credentials: service_account.Credentials, organization_id: str, user_email: str
 ):
-    billing_iam_policies = iam_api.list_iam_policies(
+    billing_iam_policies = billing_api.list_billing_account_iam_policies(
         credentials,
         organization_id,
         user_email,
-        BILLING_ACCOUNT_RESOURCE,
     )
 
     supported_roles = [e for e in enums.IamBillingRole]
@@ -41,7 +38,7 @@ def share_billing_account_to(
     verify_billing_account_ownership(
         credentials, owner_email, organization_id, billing_account_resource_name
     )
-    iam_api.create_membership_binding_for_billing_account(
+    billing_api.create_membership_binding_for_billing_account(
         credentials, user_email, "", billing_account_resource_name
     )
 

@@ -2,15 +2,14 @@ from google.cloud import asset, billing
 from google.oauth2 import service_account
 
 
-def list_iam_policies(
+def list_billing_account_iam_policies(
     credentials: service_account.Credentials,
     organization_id: str,
     email: str,
-    resource: str,
 ):
     client = asset.AssetServiceClient(credentials=credentials)
     scope = f"organizations/{organization_id}"
-    query = f"{resource} policy: {email}"
+    query = f"resource://cloudbilling.googleapis.com/billingAccounts policy: {email}"
 
     return client.search_all_iam_policies(request={"scope": scope, "query": query})
 
