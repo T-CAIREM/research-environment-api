@@ -1,4 +1,4 @@
-import google.auth
+from google.oauth2 import service_account
 from googleapiclient import errors
 from googleapiclient.discovery import build
 
@@ -11,8 +11,8 @@ class GroupMembershipAlreadyExistsError(Exception):
     pass
 
 
-def create_user(body: dict) -> dict:
-    admin_service = build("admin", "directory_v1")
+def create_user(credentials: service_account.Credentials, body: dict) -> dict:
+    admin_service = build("admin", "directory_v1", credentials=credentials)
     try:
         created_user = admin_service.users().insert(body=body).execute()
         return created_user
@@ -22,8 +22,10 @@ def create_user(body: dict) -> dict:
         raise error
 
 
-def add_user_to_group(user_email: str, group_id: str) -> dict:
-    cloud_identity_service = build("cloudidentity", "v1")
+def add_user_to_group(
+    credentials: service_account.Credentials, user_email: str, group_id: str
+) -> dict:
+    cloud_identity_service = build("cloudidentity", "v1", credentials=credentials)
     body = {"preferredMemberKey": {"id": user_email}, "roles": {"name": "MEMBER"}}
     group_id = f"groups/{group_id}"
     try:

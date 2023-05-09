@@ -1,8 +1,9 @@
-from os import environ
+from functools import cache
 
-PROJECT_ID = environ["PROJECT_ID"]
-BILLING_ACCOUNT_CREATOR_GROUP_ID = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
+from flask import current_app
 
-DATASTORE_KIND = "cloud_identity"
-ORGANIZATION_DOMAIN = "healthdatanexus.ai"
-DEFAULT_PASSWORD_LENGTH = 20
+
+@cache
+def app_config():
+    """Single dependence between modules and web."""
+    return current_app.config

@@ -13,4 +13,6 @@ class CloudIdentityCreation:
     given_name: str
 
     def __post_init__(self):
-        self.primary_email = f"{self.user_name}@{config.ORGANIZATION_DOMAIN}"
+        self.primary_email = (
+            f"{self.user_name}@{config.app_config()['ORGANIZATION_DOMAIN']}"
+        )

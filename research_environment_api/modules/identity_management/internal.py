@@ -52,13 +52,15 @@ def create_cloud_identity_in_google_workspace(
             "givenName": cloud_identity_dto.given_name,
             "familyName": cloud_identity_dto.family_name,
         },
-        "primaryEmail": cloud_identity_dto.recovery_email,
+        "primaryEmail": cloud_identity_dto.primary_email,
         "recoveryEmail": cloud_identity_dto.recovery_email,
         "password": cloud_identity_dto.password,
     }
 
     try:
-        google_workspace.create_user(google_workspace_user)
+        google_workspace.create_user(
+            config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"], google_workspace_user
+        )
     except google_workspace.UserAlreadyExistsError:
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
 
@@ -68,7 +70,9 @@ def allow_to_create_billing_accounts(
 ):
     try:
         google_workspace.add_user_to_group(
-            cloud_identity_dto.primary_email, config.BILLING_ACCOUNT_CREATOR_GROUP_ID
+            config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"],
+            cloud_identity_dto.primary_email,
+            config.app_config()["BILLING_ACCOUNT_CREATOR_GROUP_ID"],
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
         raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
