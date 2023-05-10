@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from enums import Region
-from constants import GOOGLE_REGIONS_SHORTCUTS
+from research_environment_api.modules.workspace_management.enums import Region
+from research_environment_api.modules.workspace_management.constants import GOOGLE_REGIONS_SHORTCUTS
 import random
 import string
 

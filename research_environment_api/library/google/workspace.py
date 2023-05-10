@@ -1,7 +1,6 @@
 from google.oauth2 import service_account
 from googleapiclient import errors
 from googleapiclient.discovery import build
-from google.cloud.devtools import cloudbuild_v1
 
 
 class UserAlreadyExistsError(Exception):

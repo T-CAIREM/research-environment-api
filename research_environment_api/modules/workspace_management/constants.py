@@ -1,4 +1,4 @@
-from enums import Region
+from research_environment_api.modules.workspace_management.enums import Region
 
 GOOGLE_REGIONS_SHORTCUTS = {
     Region.US_CENTRAL: "us-c1",
