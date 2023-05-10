@@ -32,7 +32,10 @@ def list_billing_accounts_by_role(
                 continue
 
             mapped_role = IAM_ROLE_MAPPING[role_binding.role]
-            billing_accounts_by_role[mapped_role].append(billing_iam_policy.resource)
+            formatted_resource_name = format_billing_account_resource_name(
+                billing_iam_policy.resource
+            )
+            billing_accounts_by_role[mapped_role].append(formatted_resource_name)
 
     return billing_accounts_by_role
 
@@ -56,3 +59,8 @@ def is_owner_of_billing_account(
     owned_billing_accounts = list_billing_accounts_by_role(user_email)[owner_role]
 
     return billing_account_resource_name in owned_billing_accounts
+
+
+def format_billing_account_resource_name(billing_account_resource_name: str) -> str:
+    # Raw format: //cloudbilling.googleapis.com/billingAccounts/<billing_account_id>
+    return billing_account_resource_name.removeprefix("//cloudbilling.googleapis.com/")
