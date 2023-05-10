@@ -3,7 +3,7 @@ import os
 from google.oauth2 import service_account
 
 
-class Config(object):
+class Config:
     """Base config"""
 
     SQLALCHEMY_DATABASE_URI = os.environ["SQLALCHEMY_DATABASE_URI"]
