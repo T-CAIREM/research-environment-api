@@ -38,3 +38,19 @@ def share_billing_account():
     )
 
     return "", 200
+
+
+@billing_management_bp.post("/revoke_access")
+def revoke_billing_account_access():
+    body = request.get_json()
+    revoke_billing_account_access_request = (
+        schemas.RevokeBillingAccountAccessRequest().load(body)
+    )
+
+    owner_email = revoke_billing_account_access_request["owner_email"]
+    user_email = revoke_billing_account_access_request["user_email"]
+    billing_account_resource_name = revoke_billing_account_access_request[
+        "resource_name"
+    ]
+
+    return "", 501
