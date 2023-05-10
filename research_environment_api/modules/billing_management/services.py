@@ -43,7 +43,7 @@ def share_billing_account_to(
         credentials, owner_email, organization_id, billing_account_resource_name
     )
     billing_api.create_membership_binding_for_billing_account(
-        credentials, user_email, "", billing_account_resource_name
+        credentials, billing_account_resource_name, user_email
     )
 
 

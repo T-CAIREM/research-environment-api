@@ -38,16 +38,19 @@ def create_membership_binding_for_billing_account(
     policy = get_iam_policy_for_billing_account(
         credentials, billing_account_resource_name
     )
-    user_binding_members = next(
+    user_binding = next(
         filter(lambda binding: binding.role == IamBillingRole.USER, policy.bindings),
         None,
     )
 
-    if user_binding_members is not None:
-        user_binding_members.append(member)
-    else:
+    user_member = f"user:{member}"
+    if user_binding is None:
         # No binding for "roles/billing.user" exists yet.
-        user_binding = {"role": IamBillingRole.USER, "members": [member]}
+        user_binding = {"role": IamBillingRole.USER, "members": [user_member]}
         policy.bindings.append(user_binding)
+    else:
+        # A binding for "roles/billing.user" already exists.
+        user_binding.members.append(user_member)
 
-    return client.set_iam_policy(policy=policy, resource=billing_account_resource_name)
+    request = {"policy": policy, "resource": billing_account_resource_name}
+    return client.set_iam_policy(request=request)
