@@ -12,7 +12,9 @@ IAM_ROLE_MAPPING = {
 
 
 # FIXME: Provide a concrete type for the mapping's values
-def list_billing_accounts_by_role(user_email: str) -> Mapping[enums.BillingAccountRole, Any]:
+def list_billing_accounts_by_role(
+    user_email: str,
+) -> Mapping[enums.BillingAccountRole, Any]:
     credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
     organization_id = config.app_config()["ORGANIZATION_ID"]
 
@@ -50,8 +52,7 @@ def is_owner_of_billing_account(
     user_email: str,
     billing_account_resource_name: str,
 ) -> bool:
-    owned_billing_accounts = list_billing_accounts_by_role(user_email)[
-        billing_api.IamBillingRole.OWNER
-    ]
+    owner_role = enums.BillingAccountRole.OWNER
+    owned_billing_accounts = list_billing_accounts_by_role(user_email)[owner_role]
 
     return billing_account_resource_name in owned_billing_accounts

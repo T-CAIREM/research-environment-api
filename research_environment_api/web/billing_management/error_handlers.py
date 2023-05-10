@@ -11,4 +11,4 @@ def handle_validation_error(error):
 
 @billing_management_bp.errorhandler(exceptions.InsufficientPermissionError)
 def handle_insufficient_permission_error(error):
-    return error.message, 403
+    return str(error), 403

@@ -24,7 +24,9 @@ def _fetch_partial_or_create_cloud_identity(
     cloud_identity = internal.fetch_cloud_identity(cloud_identity_dto)
 
     if cloud_identity and cloud_identity.is_configured:
-        raise exceptions.CloudIdentityAlreadyConfiguredError()
+        raise exceptions.CloudIdentityAlreadyConfiguredError(
+            "Cloud identity already configured."
+        )
 
     if not cloud_identity:
         cloud_identity = internal.persist_cloud_identity(cloud_identity_dto)

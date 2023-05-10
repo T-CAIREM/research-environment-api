@@ -8,7 +8,9 @@ from research_environment_api.modules.billing_management import (
 
 
 # FIXME: Provide a concrete type for the mapping's values
-def list_billing_accounts_for(user_email: str) -> Mapping[enums.BillingAccountRole, Any]:
+def list_billing_accounts_for(
+    user_email: str,
+) -> Mapping[enums.BillingAccountRole, Any]:
     return internal.list_billing_accounts_by_role(user_email)
 
 
@@ -17,12 +19,12 @@ def share_billing_account_to(
     user_email: str,
     billing_account_resource_name: str,
 ):
-    is_owner = internal.verify_billing_account_ownership(
+    is_owner = internal.is_owner_of_billing_account(
         owner_email, billing_account_resource_name
     )
 
     if not is_owner:
-        raise exceptions.InsufficientPermissionError
+        raise exceptions.InsufficientPermissionError("Insufficient permission.")
 
     return internal.give_user_billing_account_permission(
         user_email, billing_account_resource_name
