@@ -1,10 +1,10 @@
 from typing import Optional
 
 import sqlalchemy.exc
+from research_environment_api.modules import config
 
 from research_environment_api.modules.model import db
 from research_environment_api.modules.identity_management import (
-    config,
     entities,
     exceptions,
     models,

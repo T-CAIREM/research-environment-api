@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from research_environment_api.modules.identity_management import config
+from research_environment_api.modules import config
 
 
 @dataclass

@@ -13,9 +13,8 @@ def list_billing_accounts():
     list_billing_accounts_request = schemas.ListBillingAccountsRequest().load(body)
 
     user_email = list_billing_accounts_request["email"]
-    credentials = current_app.config["SERVICE_ACCOUNT_CREDENTIALS"]
 
-    billing_accounts = services.list_billing_accounts_for(credentials, user_email)
+    billing_accounts = services.list_billing_accounts_for(user_email)
     serialized_billing_accounts = schemas.BillingAccount(many=True).dump(
         billing_accounts
     )
@@ -31,12 +30,8 @@ def share_billing_account():
     owner_email = share_billing_account_request["owner_email"]
     user_email = share_billing_account_request["user_email"]
     billing_account_resource_name = share_billing_account_request["resource_name"]
-    credentials = current_app.config["SERVICE_ACCOUNT_CREDENTIALS"]
-    organization_id = current_app.config["ORGANIZATION_ID"]
 
     services.share_billing_account_to(
-        credentials,
-        organization_id,
         owner_email,
         user_email,
         billing_account_resource_name,
