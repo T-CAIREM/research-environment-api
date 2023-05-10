@@ -6,6 +6,7 @@ from google.oauth2 import service_account
 class Config(object):
     """Base config"""
 
+    SQLALCHEMY_DATABASE_URI = os.environ["SQLALCHEMY_DATABASE_URI"]
     PROJECT_ID = os.environ["PROJECT_ID"]
     BILLING_ACCOUNT_CREATOR_GROUP_ID = os.environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
     SERVICE_ACCOUNT_CREDENTIALS = service_account.Credentials.from_service_account_file(
@@ -18,6 +19,6 @@ class Config(object):
 class DevelopmentConfig(Config):
     """Development config"""
 
-    SQLALCHEMY_DATABASE_URI = (
-        "postgresql://postgres:password@localhost:5432/research_environment_api_dev"
-    )
+
+class ProductionConfig(Config):
+    """Production config"""
