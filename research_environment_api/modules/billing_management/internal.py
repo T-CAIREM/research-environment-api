@@ -1,4 +1,4 @@
-from typing import Mapping
+from typing import Mapping, Any
 
 import research_environment_api.library.google.billing as billing_api
 from research_environment_api.modules import config
@@ -11,7 +11,8 @@ IAM_ROLE_MAPPING = {
 }
 
 
-def list_billing_accounts_by_role(user_email: str) -> Mapping[enums.BillingAccountRole]:
+# FIXME: Provide a concrete type for the mapping's values
+def list_billing_accounts_by_role(user_email: str) -> Mapping[enums.BillingAccountRole, Any]:
     credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
     organization_id = config.app_config()["ORGANIZATION_ID"]
 

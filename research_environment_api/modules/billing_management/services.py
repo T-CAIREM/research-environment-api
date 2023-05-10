@@ -1,6 +1,5 @@
-from typing import Mapping
+from typing import Mapping, Any
 
-from research_environment_api.modules import config
 from research_environment_api.modules.billing_management import (
     internal,
     exceptions,
@@ -8,7 +7,8 @@ from research_environment_api.modules.billing_management import (
 )
 
 
-def list_billing_accounts_for(user_email: str) -> Mapping[enums.BillingAccountRole]:
+# FIXME: Provide a concrete type for the mapping's values
+def list_billing_accounts_for(user_email: str) -> Mapping[enums.BillingAccountRole, Any]:
     return internal.list_billing_accounts_by_role(user_email)
 
 
