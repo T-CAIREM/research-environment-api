@@ -17,10 +17,10 @@ def create_workspace():
 
     created_google_workspace = services.create_workspace(google_workspace_dto)
 
-    return created_google_workspace, 201
+    return created_google_workspace.text, 201
 
 
-@workspace_management_bp.post("/list")
+@workspace_management_bp.get("/list")
 def list_active_workspaces():
     body = request.get_json()
     list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(body)

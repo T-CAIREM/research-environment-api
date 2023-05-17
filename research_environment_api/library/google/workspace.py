@@ -1,6 +1,11 @@
 from google.oauth2 import service_account
 from googleapiclient import errors
 from googleapiclient.discovery import build
+from requests import Request
+import os
+from research_environment_api.library.google.decorators import api_request
+
+CLOUD_RESEARCH_ENVIRONMENT_API_URL = os.environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
 
 
 class UserAlreadyExistsError(Exception):
@@ -17,7 +22,6 @@ class ProjectAlreadyExistsError(Exception):
 
 class ProjectsPerBillingAccountExceededError(Exception):
     pass
-
 
 
 def create_user(credentials: service_account.Credentials, body: dict) -> dict:
@@ -50,43 +54,23 @@ def add_user_to_group(
             raise GroupMembershipAlreadyExistsError
 
 
-def create_workspace(project_name: str, region: str):
-    cloud_build_service = build("cloudbuild", "v1")
-    parent_path = f"projects/{project_name}/locations/{region}"
-
-    try:
-        created_project = cloud_build_service.projects().locations().builds().create(
-            projectId=project_name, parent=parent_path
-        )
-        return created_project
-    except errors.HttpError as error:
-        if error.status_code == 409:
-            raise ProjectAlreadyExistsError
+@api_request
+def create_workspace(
+        gcp_user_id: str, region: str, billing_account_id: str
+):
+    json = {"userid": gcp_user_id, "billingid": billing_account_id, "region": region}
+    request = Request("POST", url=f"{CLOUD_RESEARCH_ENVIRONMENT_API_URL}/workspace/create", json=json)
+    return request
 
 
-def attach_billing_to_project(project_name: str, billing_account_resource_name: str):
-    cloud_build_service = build("cloudbuild", "v1")
-    project_path = f"projects/{project_name}"
-    body = {"billingAccountName": f"billingAccounts/{billing_account_resource_name}"}
-
-    try:
-        project_billing_info = cloud_build_service.projects().updateBillingInfo(
-            name=project_path, body=body
-        )
-        return project_billing_info
-    except errors.HttpError as error:
-        if error.status_code == 429:
-            raise ProjectsPerBillingAccountExceededError
-
-
-def list_workspaces(family_name: str):
+def list_workspaces(username: str):
     cloud_resource_manager = build("cloudresourcemanager", "v1")
-    filtering_query = f"name:{family_name[:15]}* lifecycleState:ACTIVE"
+    filtering_query = f"name:{username[:15]}* lifecycleState:ACTIVE"
 
     try:
         workspaces_list = cloud_resource_manager.projects().list(
             filter=filtering_query
-        )
+        ).execute()
         return workspaces_list
     except errors.HttpError as error:
         raise error
