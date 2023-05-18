@@ -11,7 +11,11 @@ def list_billing_accounts_for(
 ) -> list:
     billing_accounts_by_role = internal.list_billing_accounts_by_role(user_email)
     return [
-        {"id": billing_account_id, "is_owner": role == enums.BillingAccountRole.OWNER}
+        {
+            "id": billing_account_id,
+            "cloud_link": internal.billing_account_cloud_link(billing_account_id),
+            "is_owner": role == enums.BillingAccountRole.OWNER,
+        }
         for role, billing_account_ids in billing_accounts_by_role.items()
         for billing_account_id in billing_account_ids
     ]

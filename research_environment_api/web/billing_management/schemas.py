@@ -19,4 +19,5 @@ class RevokeBillingAccountAccessRequest(Schema):
 
 class BillingAccount(Schema):
     id = fields.Str(required=True)
+    cloud_link = fields.Url(schemes=["https"], required=True)
     is_owner = fields.Bool(required=True)

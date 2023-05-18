@@ -61,6 +61,10 @@ def is_owner_of_billing_account(
     return billing_account_resource_name in owned_billing_accounts
 
 
+def billing_account_cloud_link(billing_account_id: str) -> str:
+    return f"https://console.cloud.google.com/billing/{billing_account_id}"
+
+
 def format_billing_account_resource_name(billing_account_resource_name: str) -> str:
     # Raw format: //cloudbilling.googleapis.com/billingAccounts/<billing_account_id>
     return billing_account_resource_name.removeprefix(
