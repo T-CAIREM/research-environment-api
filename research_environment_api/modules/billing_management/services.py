@@ -1,5 +1,3 @@
-from typing import Mapping, Any
-
 from research_environment_api.modules.billing_management import (
     internal,
     exceptions,
@@ -10,8 +8,13 @@ from research_environment_api.modules.billing_management import (
 # FIXME: Provide a concrete type for the mapping's values
 def list_billing_accounts_for(
     user_email: str,
-) -> Mapping[enums.BillingAccountRole, Any]:
-    return internal.list_billing_accounts_by_role(user_email)
+) -> list:
+    billing_accounts_by_role = internal.list_billing_accounts_by_role(user_email)
+    return [
+        {"id": billing_account_id, "is_owner": role == enums.BillingAccountRole.OWNER}
+        for role, billing_account_ids in billing_accounts_by_role.items()
+        for billing_account_id in billing_account_ids
+    ]
 
 
 def share_billing_account_to(

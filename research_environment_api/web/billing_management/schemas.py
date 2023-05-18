@@ -18,5 +18,5 @@ class RevokeBillingAccountAccessRequest(Schema):
 
 
 class BillingAccount(Schema):
-    display_name = fields.Str(required=True)
-    resource_name = fields.Str(required=True, attribute="name")
+    id = fields.Str(required=True)
+    is_owner = fields.Bool(required=True)

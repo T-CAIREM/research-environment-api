@@ -1,4 +1,4 @@
-from flask import current_app, request
+from flask import request
 
 from research_environment_api.web.billing_management import (
     billing_management_bp,
