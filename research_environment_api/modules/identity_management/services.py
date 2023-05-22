@@ -25,7 +25,7 @@ def _fetch_partial_or_create_cloud_identity(
 
     if cloud_identity and cloud_identity.is_configured:
         raise exceptions.CloudIdentityAlreadyConfiguredError(
-            "Cloud identity already configured."
+            "Cloud identity already configured"
         )
 
     if not cloud_identity:

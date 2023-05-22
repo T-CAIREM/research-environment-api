@@ -31,7 +31,7 @@ def share_billing_account_to(
     )
 
     if not is_owner:
-        raise exceptions.InsufficientPermissionError("Insufficient permission.")
+        raise exceptions.InsufficientPermissionError("Insufficient permission")
 
     return internal.give_user_billing_account_permission(
         user_email, billing_account_resource_name
