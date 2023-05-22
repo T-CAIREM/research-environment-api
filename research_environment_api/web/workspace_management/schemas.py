@@ -12,4 +12,4 @@ class WorkspaceCreationRequest(Schema):
 
 
 class ListActiveWorkspacesRequest(Schema):
-    username = fields.Str(required=True)
+    email = fields.Str(required=True)

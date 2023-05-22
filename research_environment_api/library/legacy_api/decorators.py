@@ -5,6 +5,8 @@ import os
 
 from requests import Request, Response, Session
 
+CLOUD_RESEARCH_ENVIRONMENT_API_URL = os.environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
+
 
 def load_jwt_credentials() -> jwt.Credentials:
     credentials = jwt.Credentials.from_service_account_file(
@@ -24,7 +26,7 @@ def api_request(request_creator_callable: Callable[..., Request]) -> Callable:
     def wrapper(*args, **kwargs) -> Response:
         session = Session()
         request = request_creator_callable(*args, **kwargs)
-        request.url = request.url
+        request.url = f"{CLOUD_RESEARCH_ENVIRONMENT_API_URL}{request.url}"
         prepped = request.prepare()
         apply_api_credentials(prepped)
         return session.send(prepped)

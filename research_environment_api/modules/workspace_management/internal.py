@@ -20,10 +20,7 @@ def create_google_workspace(google_workspace_dto: entities.GoogleWorkspaceCreati
 
 
 def list_active_workspaces(google_workspace_list_dto: entities.GoogleWorkspaceListing):
-    try:
-        workspaces_list = google_workspace.list_workspaces(
-            username=google_workspace_list_dto.username
-        )
-        return workspaces_list
-    except errors.HttpError as error:
-        raise error
+    workspaces_list = google_workspace.list_workspaces(
+        username=google_workspace_list_dto.username
+    )
+    return workspaces_list
