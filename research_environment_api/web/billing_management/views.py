@@ -29,12 +29,12 @@ def share_billing_account():
 
     owner_email = share_billing_account_request["owner_email"]
     user_email = share_billing_account_request["user_email"]
-    billing_account_resource_name = share_billing_account_request["resource_name"]
+    billing_account_id = share_billing_account_request["billing_account_id"]
 
     services.share_billing_account_to(
         owner_email,
         user_email,
-        billing_account_resource_name,
+        billing_account_id,
     )
 
     return "", 200

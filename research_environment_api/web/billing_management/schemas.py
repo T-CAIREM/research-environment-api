@@ -8,7 +8,7 @@ class ListBillingAccountsRequest(Schema):
 class ShareBillingAccountRequest(Schema):
     owner_email = fields.Str(required=True, validate=validate.Email())
     user_email = fields.Str(required=True, validate=validate.Email())
-    resource_name = fields.Str(required=True)
+    billing_account_id = fields.Str(required=True)
 
 
 class RevokeBillingAccountAccessRequest(Schema):

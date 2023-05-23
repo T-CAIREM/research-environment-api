@@ -24,15 +24,13 @@ def list_billing_accounts_for(
 def share_billing_account_to(
     owner_email: str,
     user_email: str,
-    billing_account_resource_name: str,
+    billing_account_id: str,
 ):
-    is_owner = internal.is_owner_of_billing_account(
-        owner_email, billing_account_resource_name
-    )
+    is_owner = internal.is_owner_of_billing_account(owner_email, billing_account_id)
 
     if not is_owner:
-        raise exceptions.InsufficientPermissionError("Insufficient permission")
+        raise exceptions.InsufficientPermissionError(
+            "Owner email does not have the permission to manage the specified billing account"
+        )
 
-    return internal.give_user_billing_account_permission(
-        user_email, billing_account_resource_name
-    )
+    return internal.give_user_billing_account_permission(user_email, billing_account_id)
