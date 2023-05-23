@@ -31,10 +31,11 @@ def get_iam_policy_for_billing_account(
 
 def create_membership_binding_for_billing_account(
     credentials: service_account.Credentials,
-    billing_account_resource_name: str,
+    billing_account_id: str,
     member: str,
 ):
     client = billing.CloudBillingClient(credentials=credentials)
+    billing_account_resource_name = f"billingAccounts/{billing_account_id}"
     policy = get_iam_policy_for_billing_account(
         credentials, billing_account_resource_name
     )

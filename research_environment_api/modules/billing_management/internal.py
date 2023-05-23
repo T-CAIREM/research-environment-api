@@ -42,12 +42,12 @@ def list_billing_accounts_by_role(
 
 def give_user_billing_account_permission(
     user_email: str,
-    billing_account_resource_name: str,
+    billing_account_id: str,
 ):
     credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
 
     return billing_api.create_membership_binding_for_billing_account(
-        credentials, billing_account_resource_name, user_email
+        credentials, billing_account_id, user_email
     )
 
 
