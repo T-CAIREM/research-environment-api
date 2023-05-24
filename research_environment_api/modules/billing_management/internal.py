@@ -51,6 +51,17 @@ def give_user_billing_account_permission(
     )
 
 
+def remove_user_billing_account_permission(
+    user_email: str,
+    billing_account_id: str,
+):
+    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
+
+    return billing_api.remove_membership_binding_for_billing_account(
+        credentials, billing_account_id, user_email
+    )
+
+
 def is_owner_of_billing_account(
     user_email: str,
     billing_account_resource_name: str,

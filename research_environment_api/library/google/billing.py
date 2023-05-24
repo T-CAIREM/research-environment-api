@@ -39,10 +39,7 @@ def create_membership_binding_for_billing_account(
     policy = get_iam_policy_for_billing_account(
         credentials, billing_account_resource_name
     )
-    user_binding = next(
-        filter(lambda binding: binding.role == IamBillingRole.USER, policy.bindings),
-        None,
-    )
+    user_binding = _get_policy_user_binding(policy)
 
     user_member = f"user:{member}"
     if user_binding is None:
@@ -55,3 +52,29 @@ def create_membership_binding_for_billing_account(
 
     request = {"policy": policy, "resource": billing_account_resource_name}
     return client.set_iam_policy(request=request)
+
+
+def remove_membership_binding_for_billing_account(
+    credentials: service_account.Credentials,
+    billing_account_id: str,
+    member: str,
+):
+    client = billing.CloudBillingClient(credentials=credentials)
+    billing_account_resource_name = f"billingAccounts/{billing_account_id}"
+    policy = get_iam_policy_for_billing_account(
+        credentials, billing_account_resource_name
+    )
+    user_binding = _get_policy_user_binding(policy)
+
+    user_member = f"user:{member}"
+    user_binding.members.remove(user_member)
+
+    request = {"policy": policy, "resource": billing_account_resource_name}
+    return client.set_iam_policy(request=request)
+
+
+def _get_policy_user_binding(policy):
+    return next(
+        filter(lambda binding: binding.role == IamBillingRole.USER, policy.bindings),
+        None,
+    )
