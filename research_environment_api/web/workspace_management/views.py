@@ -11,7 +11,7 @@ from research_environment_api.modules.workspace_management import services, enti
 def create_workspace():
     body = request.get_json()
     workspace_creation_request = schemas.WorkspaceCreationRequest().load(body)
-    google_workspace_dto = entities.GoogleWorkspaceCreation(
+    google_workspace_dto = entities.WorkspaceCreation(
         **workspace_creation_request
     )
 
@@ -24,7 +24,7 @@ def create_workspace():
 def list_active_workspaces():
     body = request.get_json()
     list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(body)
-    google_workspace_list_dto = entities.GoogleWorkspaceListing(
+    google_workspace_list_dto = entities.WorkspaceListQuery(
         **list_active_workspaces_request
     )
 

@@ -11,14 +11,6 @@ class GroupMembershipAlreadyExistsError(Exception):
     pass
 
 
-class ProjectAlreadyExistsError(Exception):
-    pass
-
-
-class ProjectsPerBillingAccountExceededError(Exception):
-    pass
-
-
 def create_user(credentials: service_account.Credentials, body: dict) -> dict:
     admin_service = build("admin", "directory_v1", credentials=credentials)
     try:
