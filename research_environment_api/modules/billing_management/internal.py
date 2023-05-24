@@ -15,11 +15,10 @@ IAM_ROLE_MAPPING = {
 def list_billing_accounts_by_role(
     user_email: str,
 ) -> Mapping[enums.BillingAccountRole, Any]:
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
-    organization_id = config.app_config()["ORGANIZATION_ID"]
+    billing_client = config.app_config().google_billing_client
+    organization_id = config.app_config().organization_id
 
-    billing_iam_policies = billing_api.list_billing_account_iam_policies(
-        credentials,
+    billing_iam_policies = billing_client.list_billing_account_iam_policies(
         organization_id,
         user_email,
     )
@@ -44,10 +43,10 @@ def give_user_billing_account_permission(
     user_email: str,
     billing_account_id: str,
 ):
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
+    billing_client = config.app_config().google_billing_client
 
-    return billing_api.create_membership_binding_for_billing_account(
-        credentials, billing_account_id, user_email
+    return billing_client.create_membership_binding_for_billing_account(
+        billing_account_id, user_email
     )
 
 
@@ -55,10 +54,10 @@ def remove_user_billing_account_permission(
     user_email: str,
     billing_account_id: str,
 ):
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
+    billing_client = config.app_config().google_billing_client
 
-    return billing_api.remove_membership_binding_for_billing_account(
-        credentials, billing_account_id, user_email
+    return billing_client.remove_membership_binding_for_billing_account(
+        billing_account_id, user_email
     )
 
 

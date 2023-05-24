@@ -59,7 +59,7 @@ def create_cloud_identity_in_google_workspace(
 
     try:
         google_workspace.create_user(
-            config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"], google_workspace_user
+            config.app_config().service_account_credentials, google_workspace_user
         )
     except google_workspace.UserAlreadyExistsError:
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
@@ -70,9 +70,9 @@ def allow_to_create_billing_accounts(
 ):
     try:
         google_workspace.add_user_to_group(
-            config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"],
+            config.app_config().service_account_credentials,
             cloud_identity_dto.primary_email,
-            config.app_config()["BILLING_ACCOUNT_CREATOR_GROUP_ID"],
+            config.app_config().billing_account_creator_group_id,
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
         raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
