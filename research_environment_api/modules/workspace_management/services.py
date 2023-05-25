@@ -5,9 +5,7 @@ from research_environment_api.modules.workspace_management import (
 
 
 def create_workspace(google_workspace_dto: entities.WorkspaceCreation):
-    created_google_workspace = internal.create_google_workspace(
-        google_workspace_dto
-    )
+    created_google_workspace = internal.create_google_workspace(google_workspace_dto)
     return created_google_workspace
 
 
