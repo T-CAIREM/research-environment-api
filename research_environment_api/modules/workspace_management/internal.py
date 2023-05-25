@@ -19,7 +19,8 @@ def create_google_workspace(google_workspace_dto: entities.WorkspaceCreation):
 def list_active_workspaces(google_workspace_list_dto: entities.WorkspaceListQuery):
     cloud_resource_client = config.app_config().google_cloud_resource_client
 
-    workspaces_list = cloud_resource_client.list_workspaces(
-        username=google_workspace_list_dto.username
+    project_prefix = google_workspace_list_dto.username[:15]
+    workspaces_list = cloud_resource_client.list_projects_by_name_prefix(
+        project_prefix=project_prefix
     )
     return workspaces_list

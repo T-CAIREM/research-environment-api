@@ -8,8 +8,8 @@ class CloudResourceClient:
             "cloudresourcemanager", "v1", credentials=credentials
         )
 
-    def list_projects(self, username: str):
-        filtering_query = f"name:{username[:15]}* lifecycleState:ACTIVE"
+    def list_projects_by_name_prefix(self, project_prefix: str):
+        filtering_query = f"name:{project_prefix}* lifecycleState:ACTIVE"
 
         workspaces_list = (
             self.cloud_resource_client.projects().list(filter=filtering_query).execute()
