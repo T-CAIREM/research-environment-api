@@ -3,6 +3,7 @@ from dataclasses import dataclass, field, fields
 
 from flask import current_app
 from google.oauth2 import service_account
+import google.auth.jwt as jwt
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
@@ -18,6 +19,9 @@ class Config:
     organization_domain: str
     service_account_credentials: service_account.Credentials
     billing_account_creator_group_id: str
+    legacy_workspace_api_url: str
+    legacy_workspace_api_credentials: jwt.Credentials
+
     google_billing_client: BillingClient = field(init=False)
     google_workspace_client: WorkspaceClient = field(init=False)
     google_cloud_resource_client: CloudResourceClient = field(init=False)
@@ -34,7 +38,8 @@ class Config:
             credentials=self.service_account_credentials
         )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
-            credentials=self.service_account_credentials
+            credentials=self.legacy_workspace_api_credentials,
+            api_url=self.legacy_workspace_api_url
         )
 
     @classmethod
