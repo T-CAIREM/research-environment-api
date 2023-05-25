@@ -1,4 +1,4 @@
-from flask import current_app, request
+from flask import request
 
 from research_environment_api.web.billing_management import (
     billing_management_bp,
@@ -29,12 +29,32 @@ def share_billing_account():
 
     owner_email = share_billing_account_request["owner_email"]
     user_email = share_billing_account_request["user_email"]
-    billing_account_resource_name = share_billing_account_request["resource_name"]
+    billing_account_id = share_billing_account_request["billing_account_id"]
 
     services.share_billing_account_to(
         owner_email,
         user_email,
-        billing_account_resource_name,
+        billing_account_id,
     )
 
-    return "", 200
+    return {}, 200
+
+
+@billing_management_bp.post("/revoke_access")
+def revoke_billing_account_access():
+    body = request.get_json()
+    revoke_billing_account_access_request = (
+        schemas.RevokeBillingAccountAccessRequest().load(body)
+    )
+
+    owner_email = revoke_billing_account_access_request["owner_email"]
+    user_email = revoke_billing_account_access_request["user_email"]
+    billing_account_id = revoke_billing_account_access_request["billing_account_id"]
+
+    services.revoke_billing_account_access(
+        owner_email,
+        user_email,
+        billing_account_id,
+    )
+
+    return {}, 200

@@ -1,63 +1,53 @@
-import research_environment_api.library.google.billing as billing_api
-from research_environment_api.modules import config
-from research_environment_api.modules.billing_management import enums, exceptions
+from research_environment_api.modules.billing_management import (
+    internal,
+    exceptions,
+    enums,
+)
 
 
-IAM_ROLE_MAPPING = {
-    billing_api.IamBillingRole.ADMIN: enums.BillingAccountRole.OWNER,
-    billing_api.IamBillingRole.USER: enums.BillingAccountRole.SHARED_USER,
-}
-
-
-def list_billing_accounts_for(user_email: str):
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
-    organization_id = config.app_config()["ORGANIZATION_ID"]
-
-    billing_iam_policies = billing_api.list_billing_account_iam_policies(
-        credentials,
-        organization_id,
-        user_email,
-    )
-
-    billing_accounts_by_role = {role: [] for role in enums.BillingAccountRole}
-
-    for billing_iam_policy in billing_iam_policies:
-        for role_binding in billing_iam_policy.policy.bindings:
-            if role_binding.role not in IAM_ROLE_MAPPING:
-                continue
-
-            mapped_role = IAM_ROLE_MAPPING[role_binding.role]
-            billing_accounts_by_role[mapped_role].append(billing_iam_policy.resource)
-
-    return billing_accounts_by_role
+# FIXME: Provide a concrete type for the mapping's values
+def list_billing_accounts_for(
+    user_email: str,
+) -> list:
+    billing_accounts_by_role = internal.list_billing_accounts_by_role(user_email)
+    return [
+        {
+            "id": billing_account_id,
+            "cloud_link": internal.billing_account_cloud_link(billing_account_id),
+            "is_owner": role == enums.BillingAccountRole.OWNER,
+        }
+        for role, billing_account_ids in billing_accounts_by_role.items()
+        for billing_account_id in billing_account_ids
+    ]
 
 
 def share_billing_account_to(
     owner_email: str,
     user_email: str,
-    billing_account_resource_name: str,
+    billing_account_id: str,
 ):
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
-    organization_id = config.app_config()["ORGANIZATION_ID"]
+    is_owner = internal.is_owner_of_billing_account(owner_email, billing_account_id)
 
-    verify_billing_account_ownership(
-        credentials, owner_email, organization_id, billing_account_resource_name
-    )
-    billing_api.create_membership_binding_for_billing_account(
-        credentials, billing_account_resource_name, user_email
-    )
+    if not is_owner:
+        raise exceptions.InsufficientPermissionError(
+            "Owner email does not have the permission to manage the specified billing account"
+        )
+
+    return internal.give_user_billing_account_permission(user_email, billing_account_id)
 
 
-def verify_billing_account_ownership(
+def revoke_billing_account_access(
+    owner_email: str,
     user_email: str,
-    billing_account_resource_name: str,
+    billing_account_id: str,
 ):
-    credentials = config.app_config()["SERVICE_ACCOUNT_CREDENTIALS"]
-    organization_id = config.app_config()["ORGANIZATION_ID"]
+    is_owner = internal.is_owner_of_billing_account(owner_email, billing_account_id)
 
-    owned_billing_accounts = list_billing_accounts_for(
-        credentials, user_email, organization_id
-    )[billing_api.IamBillingRole.OWNER]
+    if not is_owner:
+        raise exceptions.InsufficientPermissionError(
+            "Owner email does not have the permission to manage the specified billing account"
+        )
 
-    if billing_account_resource_name not in owned_billing_accounts:
-        raise exceptions.InsufficientPermissionError
+    return internal.remove_user_billing_account_permission(
+        user_email, billing_account_id
+    )

@@ -10,7 +10,7 @@ class IdentityProvisioningRequest(Schema):
 
 
 class ProvisionedIdentity(Schema):
-    email = fields.Str(required=True)
+    primary_email = fields.Str(required=True)
     recovery_email = fields.Str(required=True, validate=validate.Email())
     family_name = fields.Str(required=True)
     given_name = fields.Str(required=True)
