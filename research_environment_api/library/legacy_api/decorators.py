@@ -1,8 +1,8 @@
+import os
 from functools import wraps
 from typing import Callable
-import google.auth.jwt as jwt
-import os
 
+import google.auth.jwt as jwt
 from requests import Request, Response, Session
 
 CLOUD_RESEARCH_ENVIRONMENT_API_URL = os.environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]

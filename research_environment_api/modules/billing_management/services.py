@@ -1,5 +1,3 @@
-import google.oauth2.service_account as service_account
-
 import research_environment_api.library.google.billing as billing_api
 from research_environment_api.modules import config
 from research_environment_api.modules.billing_management import enums, exceptions
