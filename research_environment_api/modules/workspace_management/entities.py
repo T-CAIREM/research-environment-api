@@ -1,9 +1,10 @@
+import random
+import string
 from dataclasses import dataclass, field
+
 from research_environment_api.modules.workspace_management.constants import (
     GOOGLE_REGIONS_SHORTCUTS,
 )
-import random
-import string
 
 
 @dataclass
