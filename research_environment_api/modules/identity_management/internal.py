@@ -1,7 +1,4 @@
-from typing import Optional
-
 from research_environment_api.modules import config
-
 from research_environment_api.modules.identity_management import (
     entities,
     exceptions,
