@@ -1,47 +1,12 @@
 from typing import Optional
 
-import sqlalchemy.exc
 from research_environment_api.modules import config
 
-from research_environment_api.modules.model import db
 from research_environment_api.modules.identity_management import (
     entities,
     exceptions,
-    models,
 )
 from research_environment_api.library.google import workspace as google_workspace
-
-
-def fetch_cloud_identity(
-    cloud_identity_dto: entities.CloudIdentityCreation,
-) -> Optional[models.CloudIdentity]:
-    try:
-        return (
-            db.session.query(models.CloudIdentity)
-            .filter_by(primary_email=cloud_identity_dto.primary_email)
-            .one()
-        )
-    except sqlalchemy.exc.NoResultFound:
-        return None
-
-
-def persist_cloud_identity(
-    cloud_identity_dto: entities.CloudIdentityCreation,
-) -> models.CloudIdentity:
-    cloud_identity = models.CloudIdentity(
-        primary_email=cloud_identity_dto.primary_email
-    )
-    db.session.add(cloud_identity)
-    db.session.commit()
-
-    return cloud_identity
-
-
-def mark_cloud_identity_as_configured(
-    cloud_identity: models.CloudIdentity,
-):
-    cloud_identity.is_configured = True
-    db.session.commit()
 
 
 def create_cloud_identity_in_google_workspace(
