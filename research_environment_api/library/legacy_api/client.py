@@ -20,12 +20,15 @@ class WorkspaceControllerApiClient:
     def _make_api_request(self, request: requests.Request) -> requests.Response:
         session = requests.Session()
         request.url = f"{self.api_url}{request.url}"
-        prepped = request.prepare()
+        prepared_request = request.prepare()
         self.credentials.before_request(
-            None, request.method, request.url, request.headers
+            None,
+            prepared_request.method,
+            prepared_request.url,
+            prepared_request.headers,
         )
 
-        response = session.send(prepped)
+        response = session.send(prepared_request)
         response.raise_for_status()
 
         return response
