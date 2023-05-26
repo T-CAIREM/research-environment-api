@@ -9,6 +9,8 @@ from research_environment_api.library.google import workspace as google_workspac
 def create_cloud_identity_in_google_workspace(
     cloud_identity_dto: entities.CloudIdentityCreation,
 ):
+    google_workspace_client = config.app_config().google_workspace_client
+
     google_workspace_user = {
         "name": {
             "givenName": cloud_identity_dto.given_name,
@@ -20,9 +22,7 @@ def create_cloud_identity_in_google_workspace(
     }
 
     try:
-        google_workspace.create_user(
-            config.app_config().service_account_credentials, google_workspace_user
-        )
+        google_workspace_client.create_user(google_workspace_user)
     except google_workspace.UserAlreadyExistsError:
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
 
@@ -30,9 +30,10 @@ def create_cloud_identity_in_google_workspace(
 def allow_to_create_billing_accounts(
     cloud_identity_dto: entities.CloudIdentityCreation,
 ):
+    google_workspace_client = config.app_config().google_workspace_client
+
     try:
-        google_workspace.add_user_to_group(
-            config.app_config().service_account_credentials,
+        google_workspace_client.add_user_to_group(
             cloud_identity_dto.primary_email,
             config.app_config().billing_account_creator_group_id,
         )
