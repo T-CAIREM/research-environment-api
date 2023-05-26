@@ -25,4 +25,7 @@ class WorkspaceControllerApiClient:
             None, request.method, request.url, request.headers
         )
 
-        return session.send(prepped)
+        response = session.send(prepped)
+        response.raise_for_status()
+
+        return response
