@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+RUN apt-get update -y && apt-get upgrade -y && apt-get install build-essential -y
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
