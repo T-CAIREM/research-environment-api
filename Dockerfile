@@ -1,6 +1,7 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-WORKDIR /app
+ENV APP_HOME /app
+WORKDIR $APP_HOME
 
 RUN apt-get update -y && apt-get upgrade -y && apt-get install build-essential -y
 
