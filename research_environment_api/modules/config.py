@@ -1,3 +1,4 @@
+from typing import Optional
 from functools import cache
 from dataclasses import dataclass, field, fields
 
@@ -17,7 +18,7 @@ from research_environment_api.library.legacy_api.client import (
 class Config:
     organization_id: str
     organization_domain: str
-    service_account_credentials: service_account.Credentials
+    service_account_credentials: Optional[service_account.Credentials] = None # Use Application Default credentials if None
     billing_account_creator_group_id: str
     legacy_workspace_api_url: str
     legacy_workspace_api_credentials: jwt.Credentials
