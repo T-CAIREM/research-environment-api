@@ -29,5 +29,8 @@ class WorkspaceCreation:
 
 @dataclass
 class WorkspaceListQuery:
-    def __init__(self, email):
-        self.username, domain = email.split("@")
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
