@@ -18,7 +18,9 @@ from research_environment_api.library.legacy_api.client import (
 class Config:
     organization_id: str
     organization_domain: str
-    service_account_credentials: Optional[service_account.Credentials] = None # Use Application Default credentials if None
+    service_account_credentials: Optional[
+        service_account.Credentials
+    ] = None  # Use Application Default credentials if None
     billing_account_creator_group_id: str
     legacy_workspace_api_url: str
     legacy_workspace_api_credentials: jwt.Credentials
@@ -40,7 +42,7 @@ class Config:
         )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
             credentials=self.legacy_workspace_api_credentials,
-            api_url=self.legacy_workspace_api_url
+            api_url=self.legacy_workspace_api_url,
         )
 
     @classmethod
