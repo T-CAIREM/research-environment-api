@@ -11,12 +11,12 @@ from research_environment_api.modules.identity_management import services, entit
 def create_cloud_identity():
     body = request.get_json()
     identity_provisioning_request = schemas.IdentityProvisioningRequest().load(body)
-    cloud_identity_creation_dto = entities.CloudIdentityCreation(
+    cloud_identity_creation_entity = entities.CloudIdentityCreation(
         **identity_provisioning_request
     )
 
     provisioned_cloud_identity = services.provision_cloud_identity(
-        cloud_identity_creation_dto
+        cloud_identity_creation_entity
     )
     serialized_cloud_identity = schemas.ProvisionedIdentity().dump(
         provisioned_cloud_identity
