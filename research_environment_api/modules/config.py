@@ -2,9 +2,9 @@ from typing import Optional
 from functools import cache
 from dataclasses import dataclass, field, fields
 
+import google.auth.jwt as jwt
 from flask import current_app
 from google.oauth2 import service_account
-import google.auth.jwt as jwt
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
