@@ -5,11 +5,6 @@ def create_app(config_object: str):
     app = Flask(__name__)
     app.config.from_object(config_object)
 
-    from research_environment_api.modules.model import db, migrate
-
-    db.init_app(app)
-    migrate.init_app(app)
-
     from research_environment_api.web.identity_management import identity_management_bp
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.workspace_management import (
