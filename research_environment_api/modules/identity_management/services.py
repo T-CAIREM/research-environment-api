@@ -7,27 +7,29 @@ from research_environment_api.modules.identity_management import (
 
 
 def provision_cloud_identity(
-    cloud_identity_dto: entities.CloudIdentityCreation,
+    cloud_identity_creation: entities.CloudIdentityCreation,
 ) -> entities.CloudIdentityCreation:
-    _create_google_workspace_user(cloud_identity_dto)
-    _allow_to_create_billing_accounts(cloud_identity_dto)
+    _create_google_workspace_user(cloud_identity_creation)
+    _allow_to_create_billing_accounts(cloud_identity_creation)
 
-    return cloud_identity_dto
+    return cloud_identity_creation
 
 
-def _create_google_workspace_user(cloud_identity_dto: entities.CloudIdentityCreation):
+def _create_google_workspace_user(
+    cloud_identity_creation: entities.CloudIdentityCreation,
+):
     try:
-        internal.create_cloud_identity_in_google_workspace(cloud_identity_dto)
+        internal.create_cloud_identity_in_google_workspace(cloud_identity_creation)
     except exceptions.GoogleWorkspaceUserAlreadyExistsError:
         logger.warning(
-            f"{cloud_identity_dto.primary_email} already created in Google Workspace"
+            f"{cloud_identity_creation.primary_email} already created in Google Workspace"
         )
 
 
-def _allow_to_create_billing_accounts(cloud_identity_dto):
+def _allow_to_create_billing_accounts(cloud_identity_creation):
     try:
-        internal.allow_to_create_billing_accounts(cloud_identity_dto)
+        internal.allow_to_create_billing_accounts(cloud_identity_creation)
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
         logger.warning(
-            f"{cloud_identity_dto.primary_email} already a member of the billing account creator group"
+            f"{cloud_identity_creation.primary_email} already a member of the billing account creator group"
         )

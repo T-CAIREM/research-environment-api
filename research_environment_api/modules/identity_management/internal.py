@@ -7,18 +7,18 @@ from research_environment_api.library.google import workspace as google_workspac
 
 
 def create_cloud_identity_in_google_workspace(
-    cloud_identity_dto: entities.CloudIdentityCreation,
+    cloud_identity_creation: entities.CloudIdentityCreation,
 ):
     google_workspace_client = config.app_config().google_workspace_client
 
     google_workspace_user = {
         "name": {
-            "givenName": cloud_identity_dto.given_name,
-            "familyName": cloud_identity_dto.family_name,
+            "givenName": cloud_identity_creation.given_name,
+            "familyName": cloud_identity_creation.family_name,
         },
-        "primaryEmail": cloud_identity_dto.primary_email,
-        "recoveryEmail": cloud_identity_dto.recovery_email,
-        "password": cloud_identity_dto.password,
+        "primaryEmail": cloud_identity_creation.primary_email,
+        "recoveryEmail": cloud_identity_creation.recovery_email,
+        "password": cloud_identity_creation.password,
     }
 
     try:
@@ -28,13 +28,13 @@ def create_cloud_identity_in_google_workspace(
 
 
 def allow_to_create_billing_accounts(
-    cloud_identity_dto: entities.CloudIdentityCreation,
+    cloud_identity_creation: entities.CloudIdentityCreation,
 ):
     google_workspace_client = config.app_config().google_workspace_client
 
     try:
         google_workspace_client.add_user_to_group(
-            cloud_identity_dto.primary_email,
+            cloud_identity_creation.primary_email,
             config.app_config().billing_account_creator_group_id,
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
