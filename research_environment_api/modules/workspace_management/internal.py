@@ -8,8 +8,9 @@ def create_google_project(workspace_creation: entities.WorkspaceCreation):
     workspace_controller_client = config.app_config().legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.create_workspace(
-        region=workspace_creation.region,
         gcp_user_id=workspace_creation.username,
+        email=workspace_creation.email,
+        region=workspace_creation.region,
         billing_account_id=workspace_creation.billing_account_id,
     )
 
