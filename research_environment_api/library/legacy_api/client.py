@@ -6,7 +6,9 @@ class WorkspaceControllerApiClient:
         self.api_url = api_url
         self.credentials = credentials
 
-    def create_workspace(self, gcp_user_id: str, email: str, region: str, billing_account_id: str):
+    def create_workspace(
+        self, gcp_user_id: str, email: str, region: str, billing_account_id: str
+    ):
         json = {
             "userid": gcp_user_id,
             "email_id": email,
