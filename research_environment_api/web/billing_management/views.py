@@ -7,11 +7,11 @@ from research_environment_api.web.billing_management import (
 from research_environment_api.modules.billing_management import services
 
 
-@billing_management_bp.get("/list")
-def list_billing_accounts():
-    body = request.get_json()
-    list_billing_accounts_request = schemas.ListBillingAccountsRequest().load(body)
-
+@billing_management_bp.get("/<email>")
+def list_billing_accounts(email: str):
+    list_billing_accounts_request = schemas.ListBillingAccountsRequest().load(
+        {"email": email}
+    )
     user_email = list_billing_accounts_request["email"]
 
     billing_accounts = services.list_billing_accounts_for(user_email)
