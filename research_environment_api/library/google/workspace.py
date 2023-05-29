@@ -45,3 +45,4 @@ class WorkspaceClient:
         except errors.HttpError as error:
             if error.status_code == 409:
                 raise GroupMembershipAlreadyExistsError
+            raise error
