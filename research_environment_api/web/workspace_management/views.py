@@ -18,10 +18,11 @@ def create_workspace():
     return created_google_workspace.text, 201
 
 
-@workspace_management_bp.get("/list")
-def list_active_workspaces():
-    body = request.get_json()
-    list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(body)
+@workspace_management_bp.get("/<email>")
+def list_active_workspaces(email: str):
+    list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
+        {"email": email}
+    )
     workspace_list_query_entity = entities.WorkspaceListQuery(
         **list_active_workspaces_request
     )
