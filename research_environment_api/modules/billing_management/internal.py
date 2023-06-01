@@ -70,7 +70,7 @@ def give_user_billing_account_permission(
     billing_client = config.app_config().google_billing_client
 
     return billing_client.create_membership_binding_for_billing_account(
-        billing_account_id, user_email
+        billing_account_id=billing_account_id, member=user_email
     )
 
 
@@ -81,7 +81,7 @@ def remove_user_billing_account_permission(
     billing_client = config.app_config().google_billing_client
 
     return billing_client.remove_membership_binding_for_billing_account(
-        billing_account_id, user_email
+        billing_account_id=billing_account_id, member=user_email
     )
 
 

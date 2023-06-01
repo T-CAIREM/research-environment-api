@@ -34,7 +34,9 @@ def share_billing_account_to(
             "Owner email does not have the permission to manage the specified billing account"
         )
 
-    return internal.give_user_billing_account_permission(user_email, billing_account_id)
+    return internal.give_user_billing_account_permission(
+        user_email=user_email, billing_account_id=billing_account_id
+    )
 
 
 def revoke_billing_account_access(
@@ -50,5 +52,5 @@ def revoke_billing_account_access(
         )
 
     return internal.remove_user_billing_account_permission(
-        user_email, billing_account_id
+        user_email=user_email, billing_account_id=billing_account_id
     )

@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+from google import protobuf
 from google.cloud import asset, billing
 from google.oauth2 import service_account
 
@@ -36,8 +37,8 @@ class BillingClient:
 
     def create_membership_binding_for_billing_account(
         self,
-        billing_account_id: str,
         member: str,
+        billing_account_id: str,
     ):
         resource = self._billing_account_resource_name(billing_account_id)
         policy = self._get_iam_policy_for_resource(resource)
@@ -46,15 +47,21 @@ class BillingClient:
         user_member = f"user:{member}"
         if user_binding is None:
             # No binding for "roles/billing.user" exists yet.
+            policy_keys = ["members", "bindings"]
+            # Filter out gRPC keys (version, etag)
+            policy = {
+                key: value
+                for key, value in protobuf.json_format.MessageToDict(policy).items()
+                if key in policy_keys
+            }
             user_binding = {"role": IamBillingRole.USER, "members": [user_member]}
-            policy.bindings.append(user_binding)
+            policy["bindings"].append(user_binding)
         else:
             # A binding for "roles/billing.user" already exists.
             user_binding.members.append(user_member)
 
-        return self.cloud_billing_client.set_iam_policy(
-            policy=policy, resource=resource
-        )
+        request = {"policy": policy, "resource": resource}
+        return self.cloud_billing_client.set_iam_policy(request=request)
 
     def remove_membership_binding_for_billing_account(
         self,
@@ -68,16 +75,15 @@ class BillingClient:
         user_member = f"user:{member}"
         user_binding.members.remove(user_member)
 
-        return self.cloud_billing_client.set_iam_policy(
-            policy=policy, resource=resource
-        )
+        request = {"policy": policy, "resource": resource}
+        return self.cloud_billing_client.set_iam_policy(request=request)
 
     def _get_iam_policy_for_resource(self, resource: str):
         return self.cloud_billing_client.get_iam_policy(resource=resource)
 
     @staticmethod
     def _billing_account_resource_name(billing_account_id: str) -> str:
-        return f"billingsAccounts/{billing_account_id}"
+        return f"billingAccounts/{billing_account_id}"
 
     @staticmethod
     def _get_policy_user_binding(policy):
