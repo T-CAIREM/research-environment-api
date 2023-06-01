@@ -10,30 +10,28 @@ class IamBillingRole(StrEnum):
 
 
 class BillingClient:
-    def __init__(self, credentials: service_account.Credentials):
+    def __init__(self, credentials: service_account.Credentials, organization_id: str):
         self.asset_service_client = asset.AssetServiceClient(credentials=credentials)
         self.cloud_billing_client = billing.CloudBillingClient(credentials=credentials)
+        self.organization_scope = f"organizations/{organization_id}"
 
-    def list_billing_account_iam_policies(
-        self,
-        organization_id: str,
-        email: str,
-    ):
-        scope = f"organizations/{organization_id}"
+    def list_billing_account_iam_policies(self, email: str):
         query = (
             f"resource://cloudbilling.googleapis.com/billingAccounts policy: {email}"
         )
 
         return self.asset_service_client.search_all_iam_policies(
-            request={"scope": scope, "query": query}
+            scope=self.organization_scope, query=query
         )
 
-    def get_iam_policy_for_billing_account(
-        self,
-        billing_account_resource_name: str,
-    ):
-        return self.cloud_billing_client.get_iam_policy(
-            resource=billing_account_resource_name
+    def list_active_billing_accounts(self):
+        asset_types = ["cloudbilling.googleapis.com/BillingAccount"]
+        query = "state: ACTIVE"
+
+        return self.asset_service_client.search_all_resources(
+            scope=self.organization_scope,
+            asset_types=asset_types,
+            query=query,
         )
 
     def create_membership_binding_for_billing_account(
@@ -41,8 +39,8 @@ class BillingClient:
         billing_account_id: str,
         member: str,
     ):
-        billing_account_resource_name = f"billingAccounts/{billing_account_id}"
-        policy = self.get_iam_policy_for_billing_account(billing_account_resource_name)
+        resource = self._billing_account_resource_name(billing_account_id)
+        policy = self._get_iam_policy_for_resource(resource)
         user_binding = self._get_policy_user_binding(policy)
 
         user_member = f"user:{member}"
@@ -54,23 +52,32 @@ class BillingClient:
             # A binding for "roles/billing.user" already exists.
             user_binding.members.append(user_member)
 
-        request = {"policy": policy, "resource": billing_account_resource_name}
-        return self.cloud_billing_client.set_iam_policy(request=request)
+        return self.cloud_billing_client.set_iam_policy(
+            policy=policy, resource=resource
+        )
 
     def remove_membership_binding_for_billing_account(
         self,
         billing_account_id: str,
         member: str,
     ):
-        billing_account_resource_name = f"billingAccounts/{billing_account_id}"
-        policy = self.get_iam_policy_for_billing_account(billing_account_resource_name)
+        resource = self._billing_account_resource_name(billing_account_id)
+        policy = self._get_iam_policy_for_resource(resource)
         user_binding = self._get_policy_user_binding(policy)
 
         user_member = f"user:{member}"
         user_binding.members.remove(user_member)
 
-        request = {"policy": policy, "resource": billing_account_resource_name}
-        return self.cloud_billing_client.set_iam_policy(request=request)
+        return self.cloud_billing_client.set_iam_policy(
+            policy=policy, resource=resource
+        )
+
+    def _get_iam_policy_for_resource(self, resource: str):
+        return self.cloud_billing_client.get_iam_policy(resource=resource)
+
+    @staticmethod
+    def _billing_account_resource_name(billing_account_id: str) -> str:
+        return f"billingsAccounts/{billing_account_id}"
 
     @staticmethod
     def _get_policy_user_binding(policy):

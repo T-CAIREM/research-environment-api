@@ -32,7 +32,8 @@ class Config:
 
     def __post_init__(self):
         self.google_billing_client = BillingClient(
-            credentials=self.service_account_credentials
+            credentials=self.service_account_credentials,
+            organization_id=self.organization_id,
         )
         self.google_workspace_client = WorkspaceClient(
             credentials=self.service_account_credentials
