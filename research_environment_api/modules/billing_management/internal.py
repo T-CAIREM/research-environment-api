@@ -55,10 +55,12 @@ def list_billing_account_resources_by_role(user_email: str) -> Mapping[Any, Any]
         policy.resource: policy for policy in billing_iam_policies_future.result()
     }
     billing_account_resources = billing_accounts_resources_future.result()
+    # Immediately consume the entire list to avoid issues with paging
+    billing_account_resources = [resource for resource in billing_account_resources]
 
     return [
         {"resource": resource, "policy": billing_iam_policies[resource.name]}
-        for resource in billing_account_resources.results
+        for resource in billing_account_resources
         if resource.name in billing_iam_policies
     ]
 
