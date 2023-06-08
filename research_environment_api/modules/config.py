@@ -1,8 +1,7 @@
-from typing import Optional
 from functools import cache
 from dataclasses import dataclass, field, fields
 
-import google.auth.jwt as jwt
+import google.auth
 from flask import current_app
 from google.oauth2 import service_account
 
@@ -17,12 +16,10 @@ from research_environment_api.library.legacy_api.client import (
 @dataclass(kw_only=True)
 class Config:
     organization_domain: str
-    service_account_credentials: Optional[
-        service_account.Credentials
-    ] = None  # Use Application Default credentials if None
+    service_account_credentials: service_account.Credentials = google.auth.default()
     billing_account_creator_group_id: str
     legacy_workspace_api_url: str
-    legacy_workspace_api_credentials: jwt.Credentials
+    legacy_workspace_api_credentials: google.auth.jwt.Credentials
 
     google_billing_client: BillingClient = field(init=False)
     google_workspace_client: WorkspaceClient = field(init=False)
