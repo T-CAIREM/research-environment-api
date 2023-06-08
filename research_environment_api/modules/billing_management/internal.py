@@ -1,5 +1,4 @@
-import concurrent
-from typing import Mapping, Any
+from typing import Mapping, Optional
 from collections import namedtuple
 
 import research_environment_api.library.google.billing as billing_api
@@ -12,78 +11,64 @@ IAM_ROLE_MAPPING = {
     billing_api.IamBillingRole.USER: enums.BillingAccountRole.SHARED_USER,
 }
 
-BillingAccount = namedtuple("BillingAccount", ["id", "name"])
+BillingAccount = namedtuple("BillingAccount", ["id", "name", "role"])
 
 
-def list_billing_accounts_by_role(
+def list_billing_accounts(
     user_email: str,
 ) -> Mapping[enums.BillingAccountRole, BillingAccount]:
-    billing_account_resources = list_billing_account_resources_by_role(user_email)
-    billing_accounts_by_role = {role: [] for role in enums.BillingAccountRole}
-
-    for billing_account_resource in billing_account_resources:
-        for role_binding in billing_account_resource["policy"].policy.bindings:
-            if role_binding.role not in IAM_ROLE_MAPPING:
-                continue
-
-            billing_account_id = format_billing_account_resource_name(
-                billing_account_resource["policy"].resource
-            )
-            billing_account_name = billing_account_resource["resource"].display_name
-
-            billing_account = BillingAccount(
-                id=billing_account_id, name=billing_account_name
-            )
-            mapped_role = IAM_ROLE_MAPPING[role_binding.role]
-            billing_accounts_by_role[mapped_role].append(billing_account)
-
-    return billing_accounts_by_role
-
-
-def list_billing_account_resources_by_role(user_email: str) -> Mapping[Any, Any]:
     billing_client = config.app_config().google_billing_client
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        billing_iam_policies_future = executor.submit(
-            billing_client.list_billing_account_iam_policies, user_email
-        )
-        billing_accounts_resources_future = executor.submit(
-            billing_client.list_active_billing_accounts
-        )
-
-    billing_iam_policies = {
-        policy.resource: policy for policy in billing_iam_policies_future.result()
-    }
-    billing_account_resources = billing_accounts_resources_future.result()
-    # Immediately consume the entire list to avoid issues with paging
-    billing_account_resources = [resource for resource in billing_account_resources]
+    billing_account_list = billing_client.list_active_billing_accounts(
+        user_email=user_email
+    )
 
     return [
-        {"resource": resource, "policy": billing_iam_policies[resource.name]}
-        for resource in billing_account_resources
-        if resource.name in billing_iam_policies
+        BillingAccount(id=account.name, name=account.display_name, role=role)
+        for account in billing_account_list
+        if (role := billing_account_role_for(user_email, account.name))
     ]
 
 
+def billing_account_role_for(
+    user_email: str, billing_account_id: str
+) -> Optional[enums.BillingAccountRole]:
+    billing_client = config.app_config().google_billing_client
+    iam_policy = billing_client.get_iam_policy_for_billing_account(
+        user_email=user_email, billing_account_id=billing_account_id
+    )
+    binding_member = f"user:{user_email}"
+    role_policy = next(
+        filter(lambda binding: binding_member in binding.members, iam_policy.bindings),
+    )
+
+    return IAM_ROLE_MAPPING.get(role_policy.role, None)
+
+
 def give_user_billing_account_permission(
+    owner_email: str,
     user_email: str,
     billing_account_id: str,
 ):
     billing_client = config.app_config().google_billing_client
 
     return billing_client.create_membership_binding_for_billing_account(
-        billing_account_id=billing_account_id, member=user_email
+        owner_email=owner_email,
+        user_email=user_email,
+        billing_account_id=billing_account_id,
     )
 
 
 def remove_user_billing_account_permission(
+    owner_email: str,
     user_email: str,
     billing_account_id: str,
 ):
     billing_client = config.app_config().google_billing_client
 
     return billing_client.remove_membership_binding_for_billing_account(
-        billing_account_id=billing_account_id, member=user_email
+        owner_email=owner_email,
+        user_email=user_email,
+        billing_account_id=billing_account_id,
     )
 
 
@@ -92,8 +77,11 @@ def is_owner_of_billing_account(
     billing_account_id: str,
 ) -> bool:
     owner_role = enums.BillingAccountRole.OWNER
-    owned_billing_accounts = list_billing_accounts_by_role(user_email)[owner_role]
-    owned_billing_account_ids = map(lambda account: account.id, owned_billing_accounts)
+    owned_billing_account_ids = [
+        billing_account.id
+        for billing_account in list_billing_accounts(user_email)
+        if billing_account.role == owner_role
+    ]
 
     return billing_account_id in owned_billing_account_ids
 

@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 from research_environment_api.modules.billing_management import (
     internal,
     exceptions,
@@ -8,16 +10,15 @@ from research_environment_api.modules.billing_management import (
 # FIXME: Provide a concrete type for the mapping's values
 def list_billing_accounts_for(
     user_email: str,
-) -> list:
-    billing_accounts_by_role = internal.list_billing_accounts_by_role(user_email)
+) -> List[Dict]:
+    billing_accounts = internal.list_billing_accounts(user_email)
     return [
         {
             "id": billing_account.id,
             "name": billing_account.name,
             "cloud_link": internal.billing_account_cloud_link(billing_account.id),
-            "is_owner": role == enums.BillingAccountRole.OWNER,
+            "is_owner": billing_account.role == enums.BillingAccountRole.OWNER,
         }
-        for role, billing_accounts in billing_accounts_by_role.items()
         for billing_account in billing_accounts
     ]
 
@@ -35,7 +36,9 @@ def share_billing_account_to(
         )
 
     return internal.give_user_billing_account_permission(
-        user_email=user_email, billing_account_id=billing_account_id
+        owner_email=owner_email,
+        user_email=user_email,
+        billing_account_id=billing_account_id,
     )
 
 
