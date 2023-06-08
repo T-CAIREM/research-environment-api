@@ -18,7 +18,7 @@ from research_environment_api.library.legacy_api.client import (
 class Config:
     organization_domain: str
     billing_account_creator_group_id: str
-    service_account_credentials: Optional[service_account.Credentials] = None
+    service_account_credentials: service_account.Credentials
     legacy_workspace_api_url: str
     legacy_workspace_api_credentials: google.auth.jwt.Credentials
 
@@ -28,9 +28,6 @@ class Config:
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
 
     def __post_init__(self):
-        if not self.service_account_credentials:
-            self.service_account_credentials, _ = google.auth.default()
-
         self.google_billing_client = BillingClient(
             credentials=self.service_account_credentials,
         )

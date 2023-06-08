@@ -18,11 +18,8 @@ class Config:
         audience=os.environ["GATEWAY_AUDIENCE"],
     )
 
-    # Use Application Default credentials if None
-    credentials = os.environ.get("SERVICE_ACCOUNT_CREDENTIALS_PATH")
-    SERVICE_ACCOUNT_CREDENTIALS = (
-        credentials
-        and service_account.Credentials.from_service_account_file(credentials)
+    SERVICE_ACCOUNT_CREDENTIALS = service_account.Credentials.from_service_account_file(
+        os.environ["SERVICE_ACCOUNT_CREDENTIALS_PATH"]
     )
 
 
