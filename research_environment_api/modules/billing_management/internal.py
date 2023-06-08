@@ -23,7 +23,11 @@ def list_billing_accounts(
     )
 
     return [
-        BillingAccount(id=account.name, name=account.display_name, role=role)
+        BillingAccount(
+            id=format_billing_account_resource_name(account.name),
+            name=account.display_name,
+            role=role,
+        )
         for account in billing_account_list
         if (role := billing_account_role_for(user_email, account.name))
     ]
@@ -91,7 +95,5 @@ def billing_account_cloud_link(billing_account_id: str) -> str:
 
 
 def format_billing_account_resource_name(billing_account_resource_name: str) -> str:
-    # Raw format: //cloudbilling.googleapis.com/billingAccounts/<billing_account_id>
-    return billing_account_resource_name.removeprefix(
-        "//cloudbilling.googleapis.com/billingAccounts/"
-    )
+    # Raw format: billingAccounts/<billing_account_id>
+    return billing_account_resource_name.removeprefix("billingAccounts/")
