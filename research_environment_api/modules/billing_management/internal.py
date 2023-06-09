@@ -76,20 +76,6 @@ def remove_user_billing_account_permission(
     )
 
 
-def is_owner_of_billing_account(
-    user_email: str,
-    billing_account_id: str,
-) -> bool:
-    owner_role = enums.BillingAccountRole.OWNER
-    owned_billing_account_ids = [
-        billing_account.id
-        for billing_account in list_billing_accounts(user_email)
-        if billing_account.role == owner_role
-    ]
-
-    return billing_account_id in owned_billing_account_ids
-
-
 def billing_account_cloud_link(billing_account_id: str) -> str:
     return f"https://console.cloud.google.com/billing/{billing_account_id}"
 

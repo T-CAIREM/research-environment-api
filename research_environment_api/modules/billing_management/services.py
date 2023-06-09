@@ -2,7 +2,6 @@ from typing import List, Dict
 
 from research_environment_api.modules.billing_management import (
     internal,
-    exceptions,
     enums,
 )
 
@@ -28,13 +27,6 @@ def share_billing_account_to(
     user_email: str,
     billing_account_id: str,
 ):
-    is_owner = internal.is_owner_of_billing_account(owner_email, billing_account_id)
-
-    if not is_owner:
-        raise exceptions.InsufficientPermissionError(
-            "Owner email does not have the permission to manage the specified billing account"
-        )
-
     return internal.give_user_billing_account_permission(
         owner_email=owner_email,
         user_email=user_email,
@@ -47,13 +39,8 @@ def revoke_billing_account_access(
     user_email: str,
     billing_account_id: str,
 ):
-    is_owner = internal.is_owner_of_billing_account(owner_email, billing_account_id)
-
-    if not is_owner:
-        raise exceptions.InsufficientPermissionError(
-            "Owner email does not have the permission to manage the specified billing account"
-        )
-
     return internal.remove_user_billing_account_permission(
-        user_email=user_email, billing_account_id=billing_account_id
+        owner_email=owner_email,
+        user_email=user_email,
+        billing_account_id=billing_account_id,
     )
