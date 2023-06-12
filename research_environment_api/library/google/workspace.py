@@ -1,3 +1,5 @@
+import google_auth_httplib2
+import httplib2
 from google.oauth2 import service_account
 from googleapiclient import errors
 from googleapiclient.discovery import build
@@ -13,11 +15,16 @@ class GroupMembershipAlreadyExistsError(Exception):
 
 class WorkspaceClient:
     def __init__(self, credentials: service_account.Credentials):
+        # Ensure thread-safety: https://googleapis.github.io/google-api-python-client/docs/thread_safety.html
+        admin_directory_authorized_http = google_auth_httplib2.AuthorizedHttp(credentials, http=httplib2.Http())
         self.admin_directory_client = build(
-            "admin", "directory_v1", credentials=credentials
+            "admin", "directory_v1", http=admin_directory_authorized_http,
         )
+
+        # Ensure thread-safety: https://googleapis.github.io/google-api-python-client/docs/thread_safety.html
+        cloud_identity_authorized_http = google_auth_httplib2.AuthorizedHttp(credentials, http=httplib2.Http())
         self.cloud_identity_client = build(
-            "cloudidentity", "v1", credentials=credentials
+            "cloudidentity", "v1", http=cloud_identity_authorized_http,
         )
 
     def create_user(self, body: dict) -> dict:
