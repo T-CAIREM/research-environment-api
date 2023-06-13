@@ -43,6 +43,7 @@ def billing_account_role_for(
     binding_member = f"user:{user_email}"
     role_policy = next(
         filter(lambda binding: binding_member in binding.members, iam_policy.bindings),
+        None,  # Role won't be found for billing accounts accessible via inherited permission (project/organisation level)
     )
 
     return IAM_ROLE_MAPPING.get(role_policy.role, None)
