@@ -65,12 +65,13 @@ class BillingClient:
         resource = self._billing_account_resource_name(billing_account_id)
         policy = delegated_billing_client.get_iam_policy(resource=resource)
         new_policy = self._copy_policy(policy)
-
         user_binding = self._get_policy_user_binding(new_policy)
         if not user_binding:
             return
 
         user_member = f"user:{user_email}"
+        if user_member not in user_binding["members"]:
+            return
         user_binding["members"].remove(user_member)
 
         request = {"policy": new_policy, "resource": resource}
