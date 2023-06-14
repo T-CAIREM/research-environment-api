@@ -46,7 +46,7 @@ def billing_account_role_for(
         None,  # Role won't be found for billing accounts accessible via inherited permission (project/organisation level)
     )
 
-    return IAM_ROLE_MAPPING.get(role_policy.role, None)
+    return role_policy and IAM_ROLE_MAPPING.get(role_policy.role, None)
 
 
 def give_user_billing_account_permission(
