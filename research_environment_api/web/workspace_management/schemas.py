@@ -11,5 +11,9 @@ class WorkspaceCreationRequest(Schema):
     billing_account_id = fields.Str(required=True)
 
 
+class WorkspaceDeletionRequest(Schema):
+    gcp_project_id = fields.Str(required=True)
+
+
 class ListActiveWorkspacesRequest(Schema):
     email = fields.Str(required=True, validate=validate.Email())

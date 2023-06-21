@@ -18,6 +18,17 @@ def create_workspace():
     return created_google_workspace.text, 201
 
 
+@workspace_management_bp.delete("/delete")
+def delete_workspace():
+    body = request.get_json()
+    workspace_deletion_request = schemas.WorkspaceDeletionRequest().load(body)
+    workspace_deletion_entity = entities.WorkspaceDeletion(**workspace_deletion_request)
+
+    deleted_google_workspace = services.delete_workspace(workspace_deletion_entity)
+
+    return deleted_google_workspace.text, 201
+
+
 @workspace_management_bp.get("/<email>")
 def list_active_workspaces(email: str):
     list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
