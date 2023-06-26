@@ -21,7 +21,7 @@ def delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
     workspace_controller_client = config.app_config().legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.delete_workspace(
-        gcp_project_id=workspace_deletion.gcp_project_id,
+        gcp_project_id=workspace_deletion.workspace_id,
         gcp_user_id=workspace_deletion.username,
     )
 

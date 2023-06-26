@@ -29,7 +29,7 @@ class WorkspaceCreation:
 
 @dataclass
 class WorkspaceDeletion:
-    gcp_project_id: str
+    workspace_id: str
     email: str
     username: str = field(init=False)
 
