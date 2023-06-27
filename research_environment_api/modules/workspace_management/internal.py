@@ -17,6 +17,17 @@ def create_google_project(workspace_creation: entities.WorkspaceCreation):
     return created_workspace
 
 
+def delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
+    workspace_controller_client = config.app_config().legacy_workspace_controller_client
+
+    created_workspace = workspace_controller_client.delete_workspace(
+        gcp_project_id=workspace_deletion.workspace_id,
+        gcp_user_id=workspace_deletion.username,
+    )
+
+    return created_workspace
+
+
 def list_active_google_projects(workspace_list_query: entities.WorkspaceListQuery):
     cloud_resource_client = config.app_config().google_cloud_resource_client
 

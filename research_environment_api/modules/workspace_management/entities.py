@@ -28,6 +28,16 @@ class WorkspaceCreation:
 
 
 @dataclass
+class WorkspaceDeletion:
+    workspace_id: str
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
+
+
+@dataclass
 class WorkspaceListQuery:
     email: str
     username: str = field(init=False)

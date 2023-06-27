@@ -20,6 +20,22 @@ class WorkspaceControllerApiClient:
         )
         return self._make_api_request(create_workspace_request)
 
+    def delete_workspace(
+        self,
+        gcp_project_id: str,
+        gcp_user_id: str,
+    ):
+        params = {
+            "user_id": gcp_user_id,
+            "gcp_project_id": gcp_project_id,
+        }
+        delete_workspace_request = requests.Request(
+            "DELETE",
+            url=f"/workspace/delete",
+            params=params,
+        )
+        return self._make_api_request(delete_workspace_request)
+
     def _make_api_request(self, request: requests.Request) -> requests.Response:
         session = requests.Session()
         request.url = f"{self.api_url}{request.url}"
