@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from research_environment_api.modules import config
+from research_environment_api.modules.config import config
 
 
 @dataclass
@@ -13,5 +13,5 @@ class CloudIdentityCreation:
     given_name: str
 
     def __post_init__(self):
-        organization_domain = config.app_config().organization_domain
+        organization_domain = config.organization_domain
         self.primary_email = f"{self.user_name}@{organization_domain}"

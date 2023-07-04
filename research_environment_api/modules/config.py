@@ -1,9 +1,8 @@
-from functools import cache
-from dataclasses import dataclass, field, fields
+from os import environ
+from dataclasses import dataclass, field
 
 import google.auth
 from google.oauth2 import service_account
-from flask import current_app
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
@@ -16,12 +15,13 @@ from research_environment_api.library.legacy_api.client import (
 
 @dataclass(kw_only=True)
 class Config:
-    organization_domain: str
-    billing_account_creator_group_id: str
-    service_account_credentials: service_account.Credentials
-    legacy_workspace_api_url: str
-    legacy_workspace_api_credentials: google.auth.jwt.Credentials
+    project_id: str = environ["PROJECT_ID"]
+    organization_domain: str = environ["ORGANIZATION_ID"]
+    billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
+    legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
 
+    legacy_workspace_api_credentials: google.auth.jwt.Credentials = field(init=False)
+    service_account_credentials: service_account.Credentials = field(init=False)
     google_billing_client: BillingClient = field(init=False)
     google_workspace_client: WorkspaceClient = field(init=False)
     google_cloud_resource_client: CloudResourceClient = field(init=False)
@@ -29,6 +29,17 @@ class Config:
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
 
     def __post_init__(self):
+        self.legacy_workspace_api_credentials = (
+            google.auth.jwt.Credentials.from_service_account_file(
+                environ["GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"],
+                audience=environ["GATEWAY_AUDIENCE"],
+            )
+        )
+        self.service_account_credentials = (
+            service_account.Credentials.from_service_account_file(
+                environ["SERVICE_ACCOUNT_CREDENTIALS_PATH"]
+            )
+        )
         self.google_billing_client = BillingClient(
             credentials=self.service_account_credentials,
         )
@@ -46,16 +57,5 @@ class Config:
             api_url=self.legacy_workspace_api_url,
         )
 
-    @classmethod
-    def from_flask_config(cls, config):
-        config_fields = [field.name for field in fields(cls)]
-        lowercase_config = {
-            k.lower(): v for k, v in config.items() if k.lower() in config_fields
-        }
-        return cls(**lowercase_config)
 
-
-@cache
-def app_config():
-    """Single dependence between modules and web."""
-    return Config.from_flask_config(current_app.config)
+config = Config()

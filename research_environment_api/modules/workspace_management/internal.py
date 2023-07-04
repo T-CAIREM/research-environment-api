@@ -1,11 +1,11 @@
-from research_environment_api.modules import config
+from research_environment_api.modules.config import config
 from research_environment_api.modules.workspace_management import (
     entities,
 )
 
 
 def create_google_project(workspace_creation: entities.WorkspaceCreation):
-    workspace_controller_client = config.app_config().legacy_workspace_controller_client
+    workspace_controller_client = config.legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.create_workspace(
         gcp_user_id=workspace_creation.username,
@@ -18,7 +18,7 @@ def create_google_project(workspace_creation: entities.WorkspaceCreation):
 
 
 def delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
-    workspace_controller_client = config.app_config().legacy_workspace_controller_client
+    workspace_controller_client = config.legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.delete_workspace(
         gcp_project_id=workspace_deletion.workspace_id,
@@ -29,7 +29,7 @@ def delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
 
 
 def list_active_google_projects(workspace_list_query: entities.WorkspaceListQuery):
-    cloud_resource_client = config.app_config().google_cloud_resource_client
+    cloud_resource_client = config.google_cloud_resource_client
 
     project_prefix = workspace_list_query.username[:15]
     project_list = cloud_resource_client.list_projects_by_name_prefix(
