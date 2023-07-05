@@ -15,6 +15,7 @@ from research_environment_api.library.legacy_api.client import (
 
 @dataclass(kw_only=True)
 class Config:
+    database_url: str = environ["DATABASE_URL"]
     project_id: str = environ["PROJECT_ID"]
     organization_domain: str = environ["ORGANIZATION_ID"]
     billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
