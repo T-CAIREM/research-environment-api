@@ -18,7 +18,6 @@ class ScopedModel(DeclarativeBase):
 
     @declared_attr
     def __tablename__(cls):
-        """"""
         return cls.__table_prefix__ + cls.__local_tablename__
 
     id: Mapped[str] = mapped_column(UUID(), primary_key=True, default=uuid.uuid4)
