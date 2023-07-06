@@ -27,7 +27,9 @@ def _create_google_workspace_user(
         )
 
 
-def _allow_to_create_billing_accounts(cloud_identity_creation):
+def _allow_to_create_billing_accounts(
+    cloud_identity_creation: entities.CloudIdentityCreation,
+):
     try:
         _allow_to_create_billing_accounts(cloud_identity_creation)
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
