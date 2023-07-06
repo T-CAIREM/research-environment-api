@@ -1,5 +1,8 @@
 from research_environment_api.modules.config import config
 from research_environment_api.modules.workspace_management import entities
+from research_environment_api.modules.workbench_management import (
+    services as workbench_services,
+)
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
@@ -13,8 +16,12 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
 
 
 def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
-    workspace_list = _list_active_google_projects(workspace_list_query)
-    return workspace_list
+    gcp_project_list = _list_active_google_projects(workspace_list_query)
+
+    return [
+        _build_workspace_entity(project_info)
+        for project_info in gcp_project_list.get("projects", [])
+    ]
 
 
 def _create_google_project(workspace_creation: entities.WorkspaceCreation):
@@ -44,8 +51,18 @@ def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
 def _list_active_google_projects(workspace_list_query: entities.WorkspaceListQuery):
     cloud_resource_client = config.google_cloud_resource_client
 
-    project_prefix = workspace_list_query.username[:15]
-    project_list = cloud_resource_client.list_projects_by_name_prefix(
-        project_prefix=project_prefix
+    project_list = cloud_resource_client.list_projects_by_label(
+        label="cloud_identity_username", value=workspace_list_query.username
     )
     return project_list
+
+
+def _build_workspace_entity(project_info: dict) -> entities.Workspace:
+    gcp_project_id = project_info["projectId"]
+    workbench_list = workbench_services.list_workbenches(gcp_project_id=gcp_project_id)
+
+    return entities.Workspace(
+        gcp_project_id=gcp_project_id,
+        gcp_project_number=project_info["projectNumber"],
+        workbench_list=workbench_list,
+    )
