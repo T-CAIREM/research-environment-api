@@ -12,7 +12,9 @@ IAM_ROLE_MAPPING = {
 }
 
 
-GoogleCloudBillingAccount = namedtuple("GoogleCloudBillingAccount", ["id", "name", "role"])
+GoogleCloudBillingAccount = namedtuple(
+    "GoogleCloudBillingAccount", ["id", "name", "role"]
+)
 
 
 # FIXME: Provide a concrete type for the mapping's values
