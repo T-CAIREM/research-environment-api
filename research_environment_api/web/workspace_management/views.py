@@ -1,5 +1,6 @@
 from flask import request
 
+from research_environment_api.web.cache import cache
 from research_environment_api.web.workspace_management import (
     workspace_management_bp,
     schemas,
@@ -13,6 +14,7 @@ def create_workspace():
     workspace_creation_request = schemas.WorkspaceCreationRequest().load(body)
     workspace_creation_entity = entities.WorkspaceCreation(**workspace_creation_request)
 
+    cache.delete_memoized(list_active_workspaces, workspace_creation_entity.email)
     created_google_workspace = services.create_workspace(workspace_creation_entity)
 
     return created_google_workspace.text, 201
@@ -25,12 +27,14 @@ def delete_workspace(email: str, workspace_id: str):
     )
     workspace_deletion_entity = entities.WorkspaceDeletion(**workspace_deletion_request)
 
+    cache.delete_memoized(list_active_workspaces, email)
     deleted_google_workspace = services.delete_workspace(workspace_deletion_entity)
 
     return deleted_google_workspace.text, 201
 
 
 @workspace_management_bp.get("/<email>")
+@cache.cached(timeout=3600)
 def list_active_workspaces(email: str):
     list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
         {"email": email}

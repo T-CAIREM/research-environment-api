@@ -1,5 +1,7 @@
 from flask import Flask
 
+from research_environment_api.web.cache import cache
+
 
 def create_app(config_object: str):
     app = Flask(__name__)
@@ -14,5 +16,7 @@ def create_app(config_object: str):
     app.register_blueprint(identity_management_bp, url_prefix="/identity")
     app.register_blueprint(billing_management_bp, url_prefix="/billing")
     app.register_blueprint(workspace_management_bp, url_prefix="/workspace")
+
+    cache.init_app(app)
 
     return app
