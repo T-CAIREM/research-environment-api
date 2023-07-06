@@ -1,0 +1,2 @@
+class CloudBuildInProgress(Exception):
+    pass
