@@ -5,6 +5,7 @@ from research_environment_api.modules.workbench_management import (
     tasks,
     enums,
 )
+from celery import chain
 from google.cloud.devtools import cloudbuild_v1
 
 
@@ -21,7 +22,15 @@ def fetch_workbench_info(gcp_project_id: str):
 #     return build_information.status
 
 
+def retry_jupyter_creation():
+    pass
+
+
 def start_jupyter_notebook(workbench_creation_request):
+    zone, available_zones = internal.get_available_zones(
+        workbench_creation_request.region
+    )
+
     build = factories.BuildFactory(
         config.project_id, internal.create_cloud_build_source()
     ).create_jupyter(
@@ -34,7 +43,15 @@ def start_jupyter_notebook(workbench_creation_request):
         persistent_disk=workbench_creation_request.persistent_disk,
         gpu_accelerator=workbench_creation_request.gpu_accelerator,
         vm_image=workbench_creation_request.vm_image,
-        zone=workbench_creation_request.zone,
+        zone=zone,
         jupyter_startup_script_bucket=workbench_creation_request.jupyter_startup_script_bucket,
     )
-    tasks.start_cloud_build(build=build, build_type=enums.BuildType.JUPYTER_CREATION)
+    return tasks.start_cloud_build.delay(build=build, build_type=enums.BuildType.JUPYTER_CREATION)
+    # chain(
+    #     tasks.start_cloud_build.s(
+    #         build=build, build_type=enums.BuildType.JUPYTER_CREATION
+    #     ),
+    #     tasks.check_cloud_build_status.s(),
+    #     tasks.handle_jupyter_workbench_build_error.s(available_zones, build),
+    # )
+    print("tutaj jestem")

@@ -9,8 +9,8 @@ class JupyterWorkbenchCreationRequest(Schema):
     bucket_name = fields.Str(required=True)
     region = fields.Str(required=True)
     persistent_disk = fields.Str(required=True)
+    vm_image = fields.Str(required=True)
     gpu_accelerator = fields.Str(required=True)
-    zone = fields.Str(required=True)
 
 
 class RstudioWorkbenchCreationRequest(Schema):
@@ -22,7 +22,6 @@ class RstudioWorkbenchCreationRequest(Schema):
     region = fields.Str(required=True)
     persistent_disk = fields.Str(required=True)
     gpu_accelerator = fields.Str(required=True)
-    zone = fields.Str(required=True)
 
 
 # class ProvisionedIdentity(Schema):

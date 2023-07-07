@@ -1,11 +1,22 @@
+import random
+
 from research_environment_api.modules.config import config
+from research_environment_api.modules.workbench_management.constants import (
+    AVAILABLE_ZONES,
+)
 
 
 def create_cloud_build_source():
     return {
-        "repoSource": {
+        "repo_source": {
             "project_id": config.terraform_project_id,
             "repo_name": config.terraform_repo_name,
             "branch_name": config.terraform_branch_name,
         }
     }
+
+
+def get_available_zones(region: str):
+    available_zones = AVAILABLE_ZONES[region]
+    random.shuffle(available_zones)
+    return "-".join([region, available_zones.pop(0)]), available_zones

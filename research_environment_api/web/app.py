@@ -11,6 +11,8 @@ def celery_init_app(app: Flask) -> Celery:
     celery_app = Celery(app.name, task_cls=FlaskTask)
     celery_app.config_from_object(app.config)
     celery_app.set_default()
+    celery_app.conf.accept_content = ['application/json', 'application/x-python-serialize', 'pickle']
+    celery_app.conf.result_serializer = 'pickle'
     app.extensions["celery"] = celery_app
     return celery_app
 

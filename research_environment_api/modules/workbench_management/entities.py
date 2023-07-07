@@ -11,9 +11,10 @@ class JupyterWorkbench:
     bucket_name: str
     region: str
     persistent_disk: str
+    vm_image: str
     gpu_accelerator: str
-    zone: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = config.jupyter_startup_script
+        self.persistent_disk = str(self.persistent_disk)
