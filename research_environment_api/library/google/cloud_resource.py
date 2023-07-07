@@ -8,10 +8,7 @@ class CloudResourceClient:
             "cloudresourcemanager", "v1", credentials=credentials
         )
 
-    def list_projects_by_name_prefix(self, project_prefix: str):
-        filtering_query = f"name:{project_prefix}* lifecycleState:ACTIVE"
+    def list_projects_by_label(self, label: str, value: str):
+        filtering_query = f"labels.{label}:{value} lifecycleState:ACTIVE"
 
-        project_list = (
-            self.cloud_resource_client.projects().list(filter=filtering_query).execute()
-        )
-        return project_list
+        return self.cloud_resource_client.projects().list(filter=filtering_query).execute()
