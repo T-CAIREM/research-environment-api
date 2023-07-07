@@ -9,6 +9,6 @@ class CloudResourceClient:
         )
 
     def list_projects_by_label(self, label: str, value: str):
-        filtering_query = f"labels.{label}:{value}"
+        filtering_query = f"labels.{label}:{value} lifecycleState:ACTIVE"
 
         return self.cloud_resource_client.projects().list(filter=filtering_query).execute()
