@@ -1,6 +1,6 @@
 import random
 import string
-from typing import List, Self
+from typing import List
 from dataclasses import dataclass, field
 
 from research_environment_api.modules.workspace_management.constants import (
