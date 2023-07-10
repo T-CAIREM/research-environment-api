@@ -62,8 +62,10 @@ def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion
 
 
 def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
-    gce_instances_per_region = config.google_compute_engine_client.list_instances(
-        project=gcp_project_id
+    gce_instances_per_region = (
+        config.google_compute_engine_instances_client.aggregated_list(
+            project=gcp_project_id
+        )
     )
     return [
         instance
