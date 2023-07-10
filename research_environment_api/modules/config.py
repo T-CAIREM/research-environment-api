@@ -5,6 +5,7 @@ import google.auth
 import google.cloud.compute
 import google.cloud.appengine_admin
 import google.cloud.resourcemanager
+import google.cloud.billing
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -24,7 +25,11 @@ class Config:
 
     legacy_workspace_api_credentials: google.auth.jwt.Credentials = field(init=False)
     service_account_credentials: service_account.Credentials = field(init=False)
+    # FIXME: Use only one BillingClient and move the custom logic into `billing_management`
     google_billing_client: BillingClient = field(init=False)
+    google_cloud_billing_client: google.cloud.billing.CloudBillingClient = field(
+        init=False
+    )
     google_workspace_client: WorkspaceClient = field(init=False)
     google_cloud_resource_client: google.cloud.resourcemanager.ProjectsClient = field(
         init=False
@@ -53,6 +58,9 @@ class Config:
             )
         )
         self.google_billing_client = BillingClient(
+            credentials=self.service_account_credentials,
+        )
+        self.google_cloud_billing_client = google.cloud.billing.CloudBillingClient(
             credentials=self.service_account_credentials,
         )
         self.google_workspace_client = WorkspaceClient(

@@ -51,4 +51,5 @@ class WorkspaceListQuery:
 @dataclass
 class Workspace:
     gcp_project_id: str
+    billing_account_id: str
     workbenches: List[Workbench]
