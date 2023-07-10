@@ -2,37 +2,67 @@ from typing import Mapping, Iterable
 
 from sqlalchemy import select
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 
 from research_environment_api.modules.db import make_session
 from research_environment_api.modules.config import config
-from research_environment_api.modules.workbench_management.entities import Workbench
+from research_environment_api.modules.workbench_management.entities import (
+    Workbench,
+    GcpWorkbenchResource,
+)
 from research_environment_api.modules.workbench_management.models import (
     WorkbenchMetadata,
 )
 
 
 def list_workbenches(gcp_project_id: str) -> Iterable[Workbench]:
-    gce_instances = _fetch_gce_instances(gcp_project_id)
-    if len(gce_instances) == 0:
+    gcp_resources = _fetch_gcp_workbench_resources(gcp_project_id)
+    if len(gcp_resources) == 0:
         return []
 
-    # FIXME: Avoid calling `str(instance.id)` twice in this method.
-    #        WorkbenchMetadata stores `gcp_identifier` in a varchar column
-    #        so casting the CE id to a string is necessary.
-    instance_identifiers = [str(instance.id) for instance in gce_instances]
-    workbench_metadata_dict = _fetch_workbench_metadata(instance_identifiers)
-
+    workbench_metadata_dict = _fetch_workbench_metadata(gcp_resources)
     return [
-        Workbench.from_gce_instance_and_metadata(
-            instance, workbench_metadata_dict[str(instance.id)]
+        Workbench.from_gcp_resource_and_metadata(
+            resource, workbench_metadata_dict[resource.id]
         )
-        for instance in gce_instances
+        for resource in gcp_resources
+        if resource.id in workbench_metadata_dict
     ]
 
 
-def _fetch_gce_instances(gcp_project_id: str) -> ComputeEngineInstance:
-    compute_engine_client = config.google_compute_engine_client
-    gce_instances_per_region = compute_engine_client.list_instances(
+def _fetch_gcp_workbench_resources(
+    gcp_project_id: str,
+) -> Iterable[GcpWorkbenchResource]:
+    gce_instances = _fetch_gce_instances(gcp_project_id)
+    app_engine_versions = _fetch_app_engine_versions(gcp_project_id)
+    if len(gce_instances) and len(app_engine_versions) == 0:
+        return []
+
+    gce_instance_resources = [
+        GcpWorkbenchResource.from_gce_instance(instance) for instance in gce_instances
+    ]
+    app_engine_resources = [
+        GcpWorkbenchResource.from_app_engine_version(version)
+        for version in app_engine_versions
+    ]
+    return gce_instance_resources + app_engine_resources
+
+
+def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion]:
+    app_engine_services = config.google_app_engine_client.list_services(
+        project=gcp_project_id
+    )
+    return [
+        version
+        for service in app_engine_services
+        for version in config.google_app_engine_client.list_versions(
+            service_name=service.name
+        )
+    ]
+
+
+def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
+    gce_instances_per_region = config.google_compute_engine_client.list_instances(
         project=gcp_project_id
     )
     return [
@@ -43,10 +73,11 @@ def _fetch_gce_instances(gcp_project_id: str) -> ComputeEngineInstance:
 
 
 def _fetch_workbench_metadata(
-    instance_identifiers: Iterable[str],
+    gcp_workbench_resources: Iterable[GcpWorkbenchResource],
 ) -> Mapping[str, Workbench]:
+    gcp_identifiers = [resource.id for resource in gcp_workbench_resources]
     workbench_metadata_query = select(WorkbenchMetadata).where(
-        WorkbenchMetadata.gcp_identifier.in_(instance_identifiers)
+        WorkbenchMetadata.gcp_identifier.in_(gcp_identifiers)
     )
     with make_session() as session:
         workbench_metadata_dict = {
