@@ -51,5 +51,4 @@ class WorkspaceListQuery:
 @dataclass
 class Workspace:
     gcp_project_id: str
-    gcp_project_number: str
-    workbench_list: List[Workbench]
+    workbenches: List[Workbench]

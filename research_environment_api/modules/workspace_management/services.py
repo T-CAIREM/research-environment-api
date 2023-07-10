@@ -1,3 +1,7 @@
+from typing import Iterable
+
+from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
+
 from research_environment_api.modules.config import config
 from research_environment_api.modules.workspace_management import entities
 from research_environment_api.modules.workbench_management import (
@@ -16,12 +20,9 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
 
 
 def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
-    gcp_project_list = _list_active_google_projects(workspace_list_query)
+    gcp_projects = _list_active_google_projects(workspace_list_query)
 
-    return [
-        _build_workspace_entity(project_info)
-        for project_info in gcp_project_list.get("projects", [])
-    ]
+    return [_build_workspace_entity(project) for project in gcp_projects]
 
 
 def _create_google_project(workspace_creation: entities.WorkspaceCreation):
@@ -48,21 +49,20 @@ def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
     return created_workspace
 
 
-def _list_active_google_projects(workspace_list_query: entities.WorkspaceListQuery):
+def _list_active_google_projects(
+    workspace_list_query: entities.WorkspaceListQuery,
+) -> Iterable[GoogleProject]:
     filtering_query = f"labels.cloud_identity_username:{workspace_list_query.username} lifecycleState:ACTIVE"
-    return (
-        config.google_cloud_resource_client.projects()
-        .list(filter=filtering_query)
-        .execute()
-    )
+    return config.google_cloud_resource_client.search_projects(
+        query=filtering_query
+    ).projects
 
 
-def _build_workspace_entity(project_info: dict) -> entities.Workspace:
-    gcp_project_id = project_info["projectId"]
-    workbench_list = workbench_services.list_workbenches(gcp_project_id=gcp_project_id)
+def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
+    gcp_project_id = gcp_project.project_id
+    workbenches = workbench_services.list_workbenches(gcp_project_id=gcp_project_id)
 
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
-        gcp_project_number=project_info["projectNumber"],
-        workbench_list=workbench_list,
+        workbenches=workbenches,
     )
