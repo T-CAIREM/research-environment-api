@@ -3,12 +3,12 @@ from dataclasses import dataclass, field
 
 import google.auth
 import google.cloud.compute
+import google.cloud.appengine_admin
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
 from research_environment_api.library.google.cloud_resource import CloudResourceClient
-from research_environment_api.library.google.app_engine import AppEngineClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
@@ -28,6 +28,12 @@ class Config:
     google_workspace_client: WorkspaceClient = field(init=False)
     google_cloud_resource_client: CloudResourceClient = field(init=False)
     google_compute_engine_instances_client: google.cloud.compute.InstancesClient = (
+        field(init=False)
+    )
+    google_app_engine_services_client: google.cloud.appengine_admin.ServicesClient = (
+        field(init=False)
+    )
+    google_app_engine_versions_client: google.cloud.appengine_admin.VersionsClient = (
         field(init=False)
     )
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
@@ -58,8 +64,15 @@ class Config:
                 credentials=self.service_account_credentials
             )
         )
-        self.google_app_engine_client = AppEngineClient(
-            credentials=self.service_account_credentials
+        self.google_app_engine_services_client = (
+            google.cloud.appengine_admin.ServicesClient(
+                credentials=self.service_account_credentials,
+            )
+        )
+        self.google_app_engine_versions_client = (
+            google.cloud.appengine_admin.VersionsClient(
+                credentials=self.service_account_credentials,
+            )
         )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
             credentials=self.legacy_workspace_api_credentials,

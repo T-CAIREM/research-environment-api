@@ -49,14 +49,14 @@ def _fetch_gcp_workbench_resources(
 
 
 def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion]:
-    app_engine_services = config.google_app_engine_client.list_services(
-        project=gcp_project_id
+    app_engine_services = config.google_app_engine_services_client.list_services(
+        {"parent": f"apps/{gcp_project_id}"}
     )
     return [
         version
         for service in app_engine_services
-        for version in config.google_app_engine_client.list_versions(
-            service_name=service.name
+        for version in config.google_app_engine_versions_client.list_versions(
+            {"parent": service.name}
         )
     ]
 
