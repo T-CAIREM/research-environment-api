@@ -11,14 +11,20 @@ from research_environment_api.modules.workbench_management.models import (
 )
 
 
-def list_workbenches(gcp_project_id: str):
+def list_workbenches(gcp_project_id: str) -> Iterable[Workbench]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
-    instance_identifiers = [instance.id for instance in gce_instances]
+    if len(gce_instances) == 0:
+        return []
+
+    # FIXME: Avoid calling `str(instance.id)` twice in this method.
+    #        WorkbenchMetadata stores `gcp_identifier` in a varchar column
+    #        so casting the CE id to a string is necessary.
+    instance_identifiers = [str(instance.id) for instance in gce_instances]
     workbench_metadata_dict = _fetch_workbench_metadata(instance_identifiers)
 
     return [
-        Workbench.from_gce_instance(
-            instance, workbench_metadata_dict[instance.gcp_identifier]
+        Workbench.from_gce_instance_and_metadata(
+            instance, workbench_metadata_dict[str(instance.id)]
         )
         for instance in gce_instances
     ]
