@@ -4,11 +4,11 @@ from dataclasses import dataclass, field
 import google.auth
 import google.cloud.compute
 import google.cloud.appengine_admin
+import googleapiclient.discovery
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
-from research_environment_api.library.google.cloud_resource import CloudResourceClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
@@ -26,7 +26,7 @@ class Config:
     service_account_credentials: service_account.Credentials = field(init=False)
     google_billing_client: BillingClient = field(init=False)
     google_workspace_client: WorkspaceClient = field(init=False)
-    google_cloud_resource_client: CloudResourceClient = field(init=False)
+    google_cloud_resource_client: googleapiclient.discovery.Resource = field(init=False)
     google_compute_engine_instances_client: google.cloud.compute.InstancesClient = (
         field(init=False)
     )
@@ -56,8 +56,8 @@ class Config:
         self.google_workspace_client = WorkspaceClient(
             credentials=self.service_account_credentials
         )
-        self.google_cloud_resource_client = CloudResourceClient(
-            credentials=self.service_account_credentials
+        self.google_cloud_resource_client = googleapiclient.discovery.build(
+            "cloudresourcemanager", "v1", credentials=self.service_account_credentials
         )
         self.google_compute_engine_instances_client = (
             google.cloud.compute.InstancesClient(

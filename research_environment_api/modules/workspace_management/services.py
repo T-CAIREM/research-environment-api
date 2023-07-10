@@ -49,12 +49,12 @@ def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
 
 
 def _list_active_google_projects(workspace_list_query: entities.WorkspaceListQuery):
-    cloud_resource_client = config.google_cloud_resource_client
-
-    project_list = cloud_resource_client.list_projects_by_label(
-        label="cloud_identity_username", value=workspace_list_query.username
+    filtering_query = f"labels.cloud_identity_username:{workspace_list_query.username} lifecycleState:ACTIVE"
+    return (
+        config.google_cloud_resource_client.projects()
+        .list(filter=filtering_query)
+        .execute()
     )
-    return project_list
 
 
 def _build_workspace_entity(project_info: dict) -> entities.Workspace:
