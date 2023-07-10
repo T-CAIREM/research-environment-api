@@ -8,6 +8,7 @@ from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
 from research_environment_api.library.google.cloud_resource import CloudResourceClient
 from research_environment_api.library.google.compute_engine import ComputeEngineClient
+from research_environment_api.library.google.app_engine import AppEngineClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
@@ -51,6 +52,9 @@ class Config:
             credentials=self.service_account_credentials
         )
         self.google_compute_engine_client = ComputeEngineClient(
+            credentials=self.service_account_credentials
+        )
+        self.google_app_engine_client = AppEngineClient(
             credentials=self.service_account_credentials
         )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
