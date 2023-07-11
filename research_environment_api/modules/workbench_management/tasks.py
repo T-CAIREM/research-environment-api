@@ -26,17 +26,12 @@ def check_cloud_build_status(build_id: str):
     return build_information, status
 
 
-@shared_task(
-    serializer="pickle"
-)
+@shared_task
 def start_cloud_build(build, build_type):
-    # print("a tutaj wszedlem")
-    return build
     build_client = config.google_cloud_build_client
     operation = build_client.create_cloud_build(
         build=build, project_id=config.project_id
     )
-    print(operation)
     build_id = operation.metadata.build.id
     workbench_activity = models.WorkbenchActivity(
         gcp_build_identifier=build_id, build_type=build_type
@@ -66,6 +61,7 @@ def handle_jupyter_workbench_build_error(
                 handle_jupyter_workbench_build_error.s(available_zones, build),
             )
         else:
+            pass
             workbench_activity.build_error_information = "No resources in any zone. Try again later"
 
     session.commit()

@@ -1,6 +1,5 @@
 from sqlalchemy import String, Enum
 from sqlalchemy.orm import Mapped, mapped_column
-from enum import EnumType
 
 from research_environment_api.modules.db import ScopedModel
 from research_environment_api.modules.workbench_management.enums import BuildType

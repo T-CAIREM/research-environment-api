@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 
 from research_environment_api.modules.config import config
 from research_environment_api.modules.workbench_management.constants import (
@@ -17,6 +18,6 @@ def create_cloud_build_source():
 
 
 def get_available_zones(region: str):
-    available_zones = AVAILABLE_ZONES[region]
+    available_zones = deepcopy(AVAILABLE_ZONES[region])
     random.shuffle(available_zones)
     return "-".join([region, available_zones.pop(0)]), available_zones

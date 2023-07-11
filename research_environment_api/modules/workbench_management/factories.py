@@ -4,7 +4,7 @@ from google.cloud.devtools import cloudbuild_v1
 class BuildFactory:
     def __init__(self, project_id: str, build_source: dict):
         self.build = cloudbuild_v1.Build()
-        self.build.service_account = f"projects/{project_id}/serviceAccounts/workspace-creator@{project_id}.iam.gserviceaccount.com"
+        self.build.service_account = f"projects/{project_id}/serviceAccounts/workspace-manager@{project_id}.iam.gserviceaccount.com"
         self.build.options = {"logging": "CLOUD_LOGGING_ONLY"}
         self.build.source = build_source
 

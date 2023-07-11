@@ -22,10 +22,3 @@ class RstudioWorkbenchCreationRequest(Schema):
     region = fields.Str(required=True)
     persistent_disk = fields.Str(required=True)
     gpu_accelerator = fields.Str(required=True)
-
-
-# class ProvisionedIdentity(Schema):
-#     primary_email = fields.Str(required=True)
-#     recovery_email = fields.Str(required=True, validate=validate.Email())
-#     family_name = fields.Str(required=True)
-#     given_name = fields.Str(required=True)

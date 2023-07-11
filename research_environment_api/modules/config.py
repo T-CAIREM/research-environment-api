@@ -21,7 +21,7 @@ class Config:
     organization_domain: str = environ["ORGANIZATION_ID"]
     billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
     legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
-    terraform_project_id = environ["TERRAFORM_PROJECT_ID"]
+    terraform_project_id = environ["PROJECT_ID"]
     terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
     terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
     jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
