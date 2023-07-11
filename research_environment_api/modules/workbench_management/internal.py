@@ -10,7 +10,7 @@ from research_environment_api.modules.workbench_management.constants import (
 def create_cloud_build_source():
     return {
         "repo_source": {
-            "project_id": config.terraform_project_id,
+            "project_id": config.project_id,
             "repo_name": config.terraform_repo_name,
             "branch_name": config.terraform_branch_name,
         }
