@@ -1,10 +1,12 @@
 import random
 import string
+from typing import List
 from dataclasses import dataclass, field
 
 from research_environment_api.modules.workspace_management.constants import (
     GOOGLE_REGIONS_SHORTCUTS,
 )
+from research_environment_api.modules.workbench_management.entities import Workbench
 
 
 @dataclass
@@ -44,3 +46,10 @@ class WorkspaceListQuery:
 
     def __post_init__(self):
         self.username, domain = self.email.split("@")
+
+
+@dataclass
+class Workspace:
+    gcp_project_id: str
+    billing_account_id: str
+    workbenches: List[Workbench]

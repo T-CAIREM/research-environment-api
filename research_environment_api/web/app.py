@@ -17,6 +17,8 @@ def celery_init_app(app: Flask) -> Celery:
     app.extensions["celery"] = celery_app
     return celery_app
 
+from research_environment_api.web.cache import cache
+
 
 def create_app(config_object: str):
     app = Flask(__name__)
@@ -36,5 +38,7 @@ def create_app(config_object: str):
     app.register_blueprint(billing_management_bp, url_prefix="/billing")
     app.register_blueprint(workspace_management_bp, url_prefix="/workspace")
     app.register_blueprint(workbench_management_bp, url_prefix="/workbench")
+
+    cache.init_app(app)
 
     return app

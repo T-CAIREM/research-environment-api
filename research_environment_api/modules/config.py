@@ -2,6 +2,10 @@ from os import environ
 from dataclasses import dataclass, field
 
 import google.auth
+import google.cloud.compute
+import google.cloud.appengine_admin
+import google.cloud.resourcemanager
+import google.cloud.billing
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -28,11 +32,25 @@ class Config:
 
     legacy_workspace_api_credentials: google.auth.jwt.Credentials = field(init=False)
     service_account_credentials: service_account.Credentials = field(init=False)
+    # FIXME: Use only one BillingClient and move the custom logic into `billing_management`
     google_billing_client: BillingClient = field(init=False)
-    google_workspace_client: WorkspaceClient = field(init=False)
-    google_cloud_resource_client: CloudResourceClient = field(init=False)
+    google_cloud_billing_client: google.cloud.billing.CloudBillingClient = field(
+        init=False
+    )
     google_cloud_build_client: CloudBuildClient = field(init=False)
-    google_compute_engine_client: ComputeEngineClient = field(init=False)
+    google_workspace_client: WorkspaceClient = field(init=False)
+    google_cloud_resource_client: google.cloud.resourcemanager.ProjectsClient = field(
+        init=False
+    )
+    google_compute_engine_instances_client: google.cloud.compute.InstancesClient = (
+        field(init=False)
+    )
+    google_app_engine_services_client: google.cloud.appengine_admin.ServicesClient = (
+        field(init=False)
+    )
+    google_app_engine_versions_client: google.cloud.appengine_admin.VersionsClient = (
+        field(init=False)
+    )
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
 
     def __post_init__(self):
@@ -50,17 +68,32 @@ class Config:
         self.google_billing_client = BillingClient(
             credentials=self.service_account_credentials,
         )
+        self.google_cloud_billing_client = google.cloud.billing.CloudBillingClient(
+            credentials=self.service_account_credentials,
+        )
         self.google_workspace_client = WorkspaceClient(
             credentials=self.service_account_credentials
         )
-        self.google_cloud_resource_client = CloudResourceClient(
+        self.google_cloud_resource_client = google.cloud.resourcemanager.ProjectsClient(
             credentials=self.service_account_credentials
         )
         self.google_cloud_build_client = CloudBuildClient(
             credentials=self.service_account_credentials
         )
-        self.google_compute_engine_client = ComputeEngineClient(
-            credentials=self.service_account_credentials
+        self.google_compute_engine_instances_client = (
+            google.cloud.compute.InstancesClient(
+                credentials=self.service_account_credentials
+            )
+        )
+        self.google_app_engine_services_client = (
+            google.cloud.appengine_admin.ServicesClient(
+                credentials=self.service_account_credentials,
+            )
+        )
+        self.google_app_engine_versions_client = (
+            google.cloud.appengine_admin.VersionsClient(
+                credentials=self.service_account_credentials,
+            )
         )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
             credentials=self.legacy_workspace_api_credentials,

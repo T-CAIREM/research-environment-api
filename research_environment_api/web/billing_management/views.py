@@ -1,5 +1,6 @@
 from flask import request
 
+from research_environment_api.web.cache import cache
 from research_environment_api.web.billing_management import (
     billing_management_bp,
     schemas,
@@ -8,6 +9,7 @@ from research_environment_api.modules.billing_management import services
 
 
 @billing_management_bp.get("/<email>")
+@cache.cached(timeout=300)
 def list_billing_accounts(email: str):
     list_billing_accounts_request = schemas.ListBillingAccountsRequest().load(
         {"email": email}
@@ -31,6 +33,7 @@ def share_billing_account():
     user_email = share_billing_account_request["user_email"]
     billing_account_id = share_billing_account_request["billing_account_id"]
 
+    cache.delete_memoized(list_billing_accounts, user_email)
     services.share_billing_account_to(
         owner_email,
         user_email,
@@ -51,6 +54,7 @@ def revoke_billing_account_access():
     user_email = revoke_billing_account_access_request["user_email"]
     billing_account_id = revoke_billing_account_access_request["billing_account_id"]
 
+    cache.delete_memoized(list_billing_accounts, user_email)
     services.revoke_billing_account_access(
         owner_email,
         user_email,

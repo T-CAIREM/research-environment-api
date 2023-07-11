@@ -1,19 +1,74 @@
-from research_environment_api.modules.workspace_management import (
-    entities,
-    internal,
+from typing import Iterable
+
+from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
+
+from research_environment_api.modules.config import config
+from research_environment_api.modules.workspace_management import entities
+from research_environment_api.modules.workbench_management import (
+    services as workbench_services,
 )
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
-    created_workspace = internal.create_google_project(workspace_creation)
+    created_workspace = _create_google_project(workspace_creation)
     return created_workspace
 
 
 def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
-    deleted_workspace = internal.delete_google_project(workspace_deletion)
+    deleted_workspace = _delete_google_project(workspace_deletion)
     return deleted_workspace
 
 
 def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
-    workspace_list = internal.list_active_google_projects(workspace_list_query)
-    return workspace_list
+    gcp_projects = _list_active_google_projects(workspace_list_query)
+
+    return [_build_workspace_entity(project) for project in gcp_projects]
+
+
+def _create_google_project(workspace_creation: entities.WorkspaceCreation):
+    workspace_controller_client = config.legacy_workspace_controller_client
+
+    created_workspace = workspace_controller_client.create_workspace(
+        gcp_user_id=workspace_creation.username,
+        email=workspace_creation.email,
+        region=workspace_creation.region,
+        billing_account_id=workspace_creation.billing_account_id,
+    )
+
+    return created_workspace
+
+
+def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
+    workspace_controller_client = config.legacy_workspace_controller_client
+
+    created_workspace = workspace_controller_client.delete_workspace(
+        gcp_project_id=workspace_deletion.workspace_id,
+        gcp_user_id=workspace_deletion.username,
+    )
+
+    return created_workspace
+
+
+def _list_active_google_projects(
+    workspace_list_query: entities.WorkspaceListQuery,
+) -> Iterable[GoogleProject]:
+    filtering_query = f"labels.cloud_identity_username:{workspace_list_query.username} lifecycleState:ACTIVE"
+    return config.google_cloud_resource_client.search_projects(
+        query=filtering_query
+    ).projects
+
+
+def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
+    gcp_project_id = gcp_project.project_id
+    billing_info = config.google_cloud_billing_client.get_project_billing_info(
+        name=gcp_project.name
+    )
+    # Format: billingAccounts/<billing_account_id>
+    _, billing_account_id = billing_info.billing_account_name.split("/")
+    workbenches = workbench_services.list_workbenches(gcp_project_id=gcp_project_id)
+
+    return entities.Workspace(
+        gcp_project_id=gcp_project_id,
+        billing_account_id=billing_account_id,
+        workbenches=workbenches,
+    )
