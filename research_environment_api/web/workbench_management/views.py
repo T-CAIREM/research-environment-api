@@ -10,12 +10,8 @@ from research_environment_api.modules.workbench_management import services, enti
 @workbench_management_bp.post("/create/jupyter")
 def create_jupyter_workbench():
     body = request.get_json()
-    workbench_creation_request = schemas.JupyterWorkbenchCreationRequest().load(
-        body
-    )
-    jupyter_workbench_entity = entities.JupyterWorkbench(
-        **workbench_creation_request
-    )
+    workbench_creation_request = schemas.JupyterWorkbenchCreationRequest().load(body)
+    jupyter_workbench_entity = entities.JupyterWorkbench(**workbench_creation_request)
     services.start_jupyter_notebook(jupyter_workbench_entity)
 
     return 200
@@ -24,8 +20,6 @@ def create_jupyter_workbench():
 @workbench_management_bp.post("/create/rstudio")
 def create_jupyter_workbench():
     body = request.get_json()
-    workbench_creation_request = schemas.RstudioWorkbenchCreationRequest().load(
-        body
-    )
-    #TODO: implement service that is starting rstudio
+    workbench_creation_request = schemas.RstudioWorkbenchCreationRequest().load(body)
+    # TODO: implement service that is starting rstudio
     return 200
