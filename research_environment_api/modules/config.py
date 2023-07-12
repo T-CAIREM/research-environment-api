@@ -1,5 +1,6 @@
 from os import environ
 from dataclasses import dataclass, field
+from celery import Celery, Task
 
 import google.auth
 import google.cloud.compute
@@ -10,12 +11,23 @@ from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
-from research_environment_api.library.google.cloud_resource import CloudResourceClient
 from research_environment_api.library.google.cloud_build import CloudBuildClient
-from research_environment_api.library.google.compute_engine import ComputeEngineClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
+
+
+def celery_init_app() -> Celery:
+    celery = Celery(broker=environ["BROKER_URL"], backend=environ["RESULT_BACKEND"])
+    celery.set_default()
+    celery.conf.accept_content = [
+        "application/json",
+        "application/x-python-serialize",
+        "pickle",
+    ]
+    celery.conf.task_serializer = "pickle"
+    celery.conf.result_serializer = "pickle"
+    return celery
 
 
 @dataclass(kw_only=True)
@@ -101,3 +113,4 @@ class Config:
 
 
 config = Config()
+celery_app = celery_init_app()

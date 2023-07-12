@@ -6,4 +6,3 @@ from research_environment_api.web.app import create_app
 load_dotenv()
 
 app = create_app("research_environment_api.web.config.Config")
-celery_app = app.extensions["celery"]

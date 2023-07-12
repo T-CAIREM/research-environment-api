@@ -1,6 +1,6 @@
 from celery import shared_task, chain
 from research_environment_api.modules.config import config
-from research_environment_api.modules.db import session
+from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management import (
     exceptions,
     models,
@@ -36,6 +36,7 @@ def start_cloud_build(build, build_type):
     workbench_activity = models.WorkbenchActivity(
         gcp_build_identifier=build_id, build_type=build_type
     )
+    session = make_session()
     session.add(workbench_activity)
     session.commit()
     return build_id
@@ -45,6 +46,7 @@ def start_cloud_build(build, build_type):
 def handle_jupyter_workbench_build_error(
     build_information, status: Build.Status, available_zones: list, build: Build
 ):
+    session = make_session()
     workbench_activity = session.get(models.WorkbenchActivity, build_information.id)
     workbench_activity.build_status = status
     workbench_activity.build_error_information = constants.CLOUD_BUILD_ERROR_MESSAGE[
@@ -52,7 +54,9 @@ def handle_jupyter_workbench_build_error(
     ]
     if status not in [Build.Status.SUCCESS, Build.Status.CANCELLED]:
         if available_zones:
-            build.substitutions["_ZONE"] = "-".join([build.substitutions["_REGION"], available_zones.pop(0)])
+            build.substitutions["_ZONE"] = "-".join(
+                [build.substitutions["_REGION"], available_zones.pop(0)]
+            )
             chain(
                 start_cloud_build.s(
                     build=build, build_type=enums.BuildType.JUPYTER_CREATION_RETRY
@@ -62,6 +66,8 @@ def handle_jupyter_workbench_build_error(
             )
         else:
             pass
-            workbench_activity.build_error_information = "No resources in any zone. Try again later"
+            workbench_activity.build_error_information = (
+                "No resources in any zone. Try again later"
+            )
 
     session.commit()

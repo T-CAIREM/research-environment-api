@@ -86,7 +86,7 @@ class BuildFactory:
             "_GPU_ACCELERATOR": gpu_accelerator,
             "_VM_IMAGE": vm_image,
             "_ZONE": zone,
-            "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket
+            "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
         }
 
         return build

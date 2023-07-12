@@ -123,4 +123,3 @@ def start_jupyter_notebook(workbench_creation_request):
         tasks.check_cloud_build_status.s(),
         tasks.handle_jupyter_workbench_build_error.s(available_zones, build),
     )()
-

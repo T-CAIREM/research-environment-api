@@ -8,6 +8,7 @@ from google.cloud.devtools.cloudbuild_v1 import Build
 
 Status = Build.Status
 
+
 class Base(ScopedModel):
     __abstract__ = True
     __table_prefix__ = "workbench_"

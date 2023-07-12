@@ -79,6 +79,7 @@ class Workbench:
         )
 
 
+@dataclass
 class JupyterWorkbench:
     machine_type: str
     user_project_id: str
