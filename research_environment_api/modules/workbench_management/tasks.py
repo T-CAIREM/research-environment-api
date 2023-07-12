@@ -59,7 +59,6 @@ def handle_jupyter_workbench_build_error(
                 handle_jupyter_workbench_build_error.s(available_zones, build),
             )
         else:
-            pass
             workbench_activity.build_error_information = (
                 "No resources in any zone. Try again later"
             )
