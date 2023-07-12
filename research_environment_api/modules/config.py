@@ -5,12 +5,12 @@ import google.auth
 import google.cloud.appengine_admin
 import google.cloud.billing
 import google.cloud.compute
+import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
-from celery import Celery, Task
+from celery import Celery
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
-from research_environment_api.library.google.cloud_build import CloudBuildClient
 from research_environment_api.library.google.workspace import WorkspaceClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
@@ -52,8 +52,10 @@ class Config:
     google_cloud_billing_client: google.cloud.billing.CloudBillingClient = field(
         init=False
     )
-    google_cloud_build_client: CloudBuildClient = field(init=False)
     google_workspace_client: WorkspaceClient = field(init=False)
+    google_cloud_build_client: google.cloud.devtools.cloudbuild.CloudBuildClient = (
+        field(init=False)
+    )
     google_cloud_resource_client: google.cloud.resourcemanager.ProjectsClient = field(
         init=False
     )
@@ -92,8 +94,10 @@ class Config:
         self.google_cloud_resource_client = google.cloud.resourcemanager.ProjectsClient(
             credentials=self.service_account_credentials
         )
-        self.google_cloud_build_client = CloudBuildClient(
-            credentials=self.service_account_credentials
+        self.google_cloud_build_client = (
+            google.cloud.devtools.cloudbuild.CloudBuildClient(
+                credentials=self.service_account_credentials
+            )
         )
         self.google_compute_engine_instances_client = (
             google.cloud.compute.InstancesClient(

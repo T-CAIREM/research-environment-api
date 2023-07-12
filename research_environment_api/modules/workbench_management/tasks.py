@@ -13,8 +13,8 @@ from research_environment_api.modules.workbench_management import (
 @shared_task(bind=True)
 def check_cloud_build_status(self, build_id: str):
     cloud_build_client = config.google_cloud_build_client
-    build_information = cloud_build_client.get_cloud_build_information(
-        project_id=config.project_id, build_id=build_id
+    build_information = cloud_build_client.get_build(
+        project_id=config.project_id, id=build_id
     )
     status = build_information.status
     if status in [Build.Status.WORKING, Build.Status.QUEUED, Build.Status.PENDING]:
@@ -25,9 +25,7 @@ def check_cloud_build_status(self, build_id: str):
 @shared_task
 def start_cloud_build(build, build_type):
     build_client = config.google_cloud_build_client
-    operation = build_client.create_cloud_build(
-        build=build, project_id=config.project_id
-    )
+    operation = build_client.create_build(build=build, project_id=config.project_id)
     build_id = operation.metadata.build.id
     workbench_activity = models.WorkbenchActivity(
         gcp_build_identifier=build_id, build_type=build_type
