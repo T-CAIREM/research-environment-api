@@ -1,5 +1,6 @@
 from typing import Mapping, Iterable
 
+from celery import chain
 from sqlalchemy import select
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
@@ -12,7 +13,6 @@ from research_environment_api.modules.workbench_management import (
     tasks,
     enums,
 )
-from celery import chain
 from research_environment_api.modules.workbench_management.entities import (
     Workbench,
     GcpWorkbenchResource,

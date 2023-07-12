@@ -1,6 +1,5 @@
 from os import environ
 from dataclasses import dataclass, field
-from celery import Celery, Task
 
 import google.auth
 import google.cloud.compute
@@ -8,6 +7,7 @@ import google.cloud.appengine_admin
 import google.cloud.resourcemanager
 import google.cloud.billing
 from google.oauth2 import service_account
+from celery import Celery, Task
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
@@ -113,4 +113,6 @@ class Config:
 
 
 config = Config()
+
+
 celery_app = celery_init_app()

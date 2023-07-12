@@ -1,10 +1,10 @@
+from google.cloud.devtools.cloudbuild_v1 import Build
 from sqlalchemy import String, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from research_environment_api.modules.db import ScopedModel
 from research_environment_api.modules.workbench_management.enums import BuildType
 
-from google.cloud.devtools.cloudbuild_v1 import Build
 
 Status = Build.Status
 

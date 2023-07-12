@@ -1,10 +1,10 @@
 from typing import Self, Optional
 from dataclasses import dataclass, field
-from research_environment_api.modules.config import config
 
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 
+from research_environment_api.modules.config import config
 from research_environment_api.modules.workbench_management.constants import (
     MACHINE_TYPE_TO_RESOURCE_MAP,
 )

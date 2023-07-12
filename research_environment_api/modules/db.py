@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from research_environment_api.modules.config import config
 
 
-# FIXME: Create the engine and session in the top-level component of the application instead of when this module is imported.
+# FIXME: Create the engine in the top-level component of the application instead of when this module is imported.
 engine = create_engine(config.database_url, echo=True)
 
 
