@@ -4,25 +4,21 @@ from google.cloud.devtools.cloudbuild_v1 import Build
 from research_environment_api.modules.config import config
 from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management import (
-    exceptions,
     models,
     constants,
     enums,
 )
 
 
-@shared_task(
-    autoretry_for=(exceptions.CloudBuildInProgress,),
-    retry_kwargs={"max_retries": None, "countdown": 15},
-)
-def check_cloud_build_status(build_id: str):
+@shared_task(bind=True)
+def check_cloud_build_status(self, build_id: str):
     cloud_build_client = config.google_cloud_build_client
     build_information = cloud_build_client.get_cloud_build_information(
         project_id=config.project_id, build_id=build_id
     )
     status = build_information.status
     if status in [Build.Status.WORKING, Build.Status.QUEUED, Build.Status.PENDING]:
-        raise exceptions.CloudBuildInProgress
+        raise self.retry(max_retries=None, countdown=15)
     return build_information, status
 
 
@@ -54,9 +50,7 @@ def handle_jupyter_workbench_build_error(
     ]
     if status not in [Build.Status.SUCCESS, Build.Status.CANCELLED]:
         if available_zones:
-            build.substitutions["_ZONE"] = "-".join(
-                [build.substitutions["_REGION"], available_zones.pop(0)]
-            )
+            build.substitutions["_ZONE"] = available_zones.pop(0)
             chain(
                 start_cloud_build.s(
                     build=build, build_type=enums.BuildType.JUPYTER_CREATION_RETRY

@@ -20,4 +20,4 @@ def create_cloud_build_source():
 def get_available_zones(region: str):
     available_zones = deepcopy(AVAILABLE_ZONES[region])
     random.shuffle(available_zones)
-    return "-".join([region, available_zones.pop(0)]), available_zones
+    return available_zones.pop(0), available_zones

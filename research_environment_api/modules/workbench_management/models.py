@@ -1,12 +1,9 @@
-from google.cloud.devtools.cloudbuild_v1 import Build
+from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 from sqlalchemy import String, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from research_environment_api.modules.db import ScopedModel
 from research_environment_api.modules.workbench_management.enums import BuildType
-
-
-Status = Build.Status
 
 
 class Base(ScopedModel):
@@ -28,5 +25,5 @@ class WorkbenchActivity(Base):
     gcp_build_identifier: Mapped[str] = mapped_column(String(), nullable=False)
     invoker_username: Mapped[str] = mapped_column(String(), nullable=False)
     build_type: Mapped[BuildType] = mapped_column(Enum(BuildType), nullable=False)
-    build_status: Mapped[Build.Status] = mapped_column(Enum(Build.Status))
+    build_status: Mapped[CloudBuild.Status] = mapped_column(Enum(CloudBuild.Status))
     build_error_information: Mapped[str] = mapped_column(String())

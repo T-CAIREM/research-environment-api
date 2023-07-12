@@ -18,7 +18,11 @@ from research_environment_api.library.legacy_api.client import (
 
 
 def celery_init_app() -> Celery:
-    celery = Celery(broker=environ["BROKER_URL"], backend=environ["RESULT_BACKEND"])
+    celery = Celery(
+        broker=environ["BROKER_URL"],
+        backend=environ["RESULT_BACKEND"],
+        include=["research_environment_api.modules.workbench_management.tasks"],
+    )
     celery.set_default()
     celery.conf.accept_content = [
         "application/json",
