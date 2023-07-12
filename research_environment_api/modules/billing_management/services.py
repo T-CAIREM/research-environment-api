@@ -1,10 +1,9 @@
-from typing import List, Mapping, Optional
 from collections import namedtuple
+from typing import List, Mapping, Optional
 
 import research_environment_api.library.google.billing as billing_api
+from research_environment_api.modules.billing_management import entities, enums
 from research_environment_api.modules.config import config
-from research_environment_api.modules.billing_management import enums, entities
-
 
 IAM_ROLE_MAPPING = {
     billing_api.IamBillingRole.ADMIN: enums.BillingAccountRole.OWNER,

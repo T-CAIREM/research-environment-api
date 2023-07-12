@@ -1,10 +1,10 @@
 from flask import request
 
+from research_environment_api.modules.workbench_management import entities, services
 from research_environment_api.web.workbench_management import (
-    workbench_management_bp,
     schemas,
+    workbench_management_bp,
 )
-from research_environment_api.modules.workbench_management import services, entities
 
 
 @workbench_management_bp.post("/create/jupyter")

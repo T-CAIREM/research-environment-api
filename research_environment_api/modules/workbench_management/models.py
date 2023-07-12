@@ -1,5 +1,5 @@
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
-from sqlalchemy import String, Enum
+from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from research_environment_api.modules.db import ScopedModel

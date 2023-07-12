@@ -1,10 +1,10 @@
 from flask import request
 
+from research_environment_api.modules.identity_management import entities, services
 from research_environment_api.web.identity_management import (
     identity_management_bp,
     schemas,
 )
-from research_environment_api.modules.identity_management import services, entities
 
 
 @identity_management_bp.post("/create")

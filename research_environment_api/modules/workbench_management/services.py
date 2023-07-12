@@ -1,21 +1,21 @@
-from typing import Mapping, Iterable
+from typing import Iterable, Mapping
 
 from celery import chain
-from sqlalchemy import select
-from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
+from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+from sqlalchemy import select
 
-from research_environment_api.modules.db import make_session
 from research_environment_api.modules.config import config
+from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management import (
+    enums,
     factories,
     internal,
     tasks,
-    enums,
 )
 from research_environment_api.modules.workbench_management.entities import (
-    Workbench,
     GcpWorkbenchResource,
+    Workbench,
 )
 from research_environment_api.modules.workbench_management.models import (
     WorkbenchMetadata,

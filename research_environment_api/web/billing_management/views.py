@@ -1,11 +1,11 @@
 from flask import request
 
-from research_environment_api.web.cache import cache
+from research_environment_api.modules.billing_management import services
 from research_environment_api.web.billing_management import (
     billing_management_bp,
     schemas,
 )
-from research_environment_api.modules.billing_management import services
+from research_environment_api.web.cache import cache
 
 
 @billing_management_bp.get("/<email>")

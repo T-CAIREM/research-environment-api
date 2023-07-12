@@ -1,11 +1,11 @@
 from flask import request
 
+from research_environment_api.modules.workspace_management import entities, services
 from research_environment_api.web.cache import cache
 from research_environment_api.web.workspace_management import (
-    workspace_management_bp,
     schemas,
+    workspace_management_bp,
 )
-from research_environment_api.modules.workspace_management import services, entities
 
 
 @workspace_management_bp.post("/create")

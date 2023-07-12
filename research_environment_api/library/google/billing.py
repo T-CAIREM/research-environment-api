@@ -1,6 +1,6 @@
-from typing import Optional
 from enum import StrEnum
 from functools import cache
+from typing import Optional
 
 from google import protobuf
 from google.cloud import billing

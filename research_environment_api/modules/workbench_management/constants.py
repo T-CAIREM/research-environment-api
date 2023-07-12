@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-
 AVAILABLE_ZONES = {
     "us-central1": ["us-central1-a", "us-central1-b", "us-central1-c", "us-central1-f"],
     "northamerica-northeast1": [

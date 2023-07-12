@@ -1,12 +1,12 @@
 import random
 import string
-from typing import List
 from dataclasses import dataclass, field
+from typing import List
 
+from research_environment_api.modules.workbench_management.entities import Workbench
 from research_environment_api.modules.workspace_management.constants import (
     GOOGLE_REGIONS_SHORTCUTS,
 )
-from research_environment_api.modules.workbench_management.entities import Workbench
 
 
 @dataclass

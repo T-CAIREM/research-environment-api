@@ -1,8 +1,8 @@
-from typing import Self, Optional
 from dataclasses import dataclass, field
+from typing import Optional, Self
 
-from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
+from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.modules.config import config
 from research_environment_api.modules.workbench_management.constants import (
