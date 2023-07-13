@@ -8,8 +8,7 @@ variable "project_id" {
 }
 
 variable "region" {
-  type    = string
-  default = "us-central1"
+  type = string
 }
 
 variable "service_account_name" {
@@ -17,8 +16,7 @@ variable "service_account_name" {
 }
 
 variable "image_repository" {
-  type    = string
-  default = "default_repository"
+  type = string
 }
 
 variable "image_tag" {
@@ -33,7 +31,6 @@ variable "max_scale" {
   type = number
 }
 
-variable "billing_creator_group_id" {
-  type    = string
-  default = "00xvir7l3d802t9"
+variable "db_tier" {
+  type = string
 }
