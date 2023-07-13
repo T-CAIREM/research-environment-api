@@ -1,16 +1,11 @@
-from research_environment_api.modules.celery_management import (
-    tasks,
-    factories,
-    enums,
-)
-from research_environment_api.modules.config import config
-from research_environment_api.modules.celery_management.constants import (
-    AVAILABLE_ZONES,
-)
-
 import random
 from copy import deepcopy
+
 from celery import chain
+
+from research_environment_api.modules.celery_management import enums, factories, tasks
+from research_environment_api.modules.celery_management.constants import AVAILABLE_ZONES
+from research_environment_api.modules.config import config
 
 
 def create_cloud_build_source():
@@ -30,9 +25,7 @@ def get_available_zones(region: str):
 
 
 def start_jupyter_notebook(workbench_creation_request):
-    zone, available_zones = get_available_zones(
-        workbench_creation_request.region
-    )
+    zone, available_zones = get_available_zones(workbench_creation_request.region)
 
     build = factories.BuildFactory(
         config.project_id, create_cloud_build_source()

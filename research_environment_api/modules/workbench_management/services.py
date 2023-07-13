@@ -4,6 +4,7 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from sqlalchemy import select
 
+from research_environment_api.modules.celery_management import services
 from research_environment_api.modules.config import config
 from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management.entities import (
@@ -13,7 +14,6 @@ from research_environment_api.modules.workbench_management.entities import (
 from research_environment_api.modules.workbench_management.models import (
     WorkbenchMetadata,
 )
-from research_environment_api.modules.celery_management import services
 
 
 def list_workbenches(gcp_project_id: str) -> Iterable[Workbench]:

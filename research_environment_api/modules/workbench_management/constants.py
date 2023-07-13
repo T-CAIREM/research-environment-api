@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
 )

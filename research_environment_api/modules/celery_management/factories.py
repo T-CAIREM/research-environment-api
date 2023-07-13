@@ -1,6 +1,7 @@
-from google.cloud.devtools import cloudbuild_v1
 import random
 import string
+
+from google.cloud.devtools import cloudbuild_v1
 
 
 class BuildFactory:
