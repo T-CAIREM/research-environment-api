@@ -5,9 +5,9 @@ from research_environment_api.modules.config import config
 from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management import (
     constants,
-    enums,
     models,
 )
+from research_environment_api.modules.celery_management import enums
 
 
 @shared_task(bind=True)

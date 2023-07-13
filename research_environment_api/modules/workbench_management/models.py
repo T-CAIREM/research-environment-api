@@ -3,7 +3,7 @@ from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from research_environment_api.modules.db import ScopedModel
-from research_environment_api.modules.workbench_management.enums import BuildType
+from research_environment_api.modules.celery_management.enums import BuildType
 
 
 class Base(ScopedModel):

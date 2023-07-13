@@ -1,4 +1,6 @@
 from google.cloud.devtools import cloudbuild_v1
+import random
+import string
 
 
 class BuildFactory:
@@ -7,6 +9,10 @@ class BuildFactory:
         self.build.service_account = f"projects/{project_id}/serviceAccounts/workspace-manager@{project_id}.iam.gserviceaccount.com"
         self.build.options = {"logging": "CLOUD_LOGGING_ONLY"}
         self.build.source = build_source
+
+    @staticmethod
+    def _generate_jupyter_name():
+        return random.choice(string.ascii_letters)
 
     def create_jupyter(
         self,
@@ -57,6 +63,7 @@ class BuildFactory:
                     "TF_VAR_vm_image=${_VM_IMAGE}",
                     "TF_VAR_zone=${_ZONE}",
                     "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+                    "TF_VAR_name=${_NAME}",
                 ],
             },
             {
