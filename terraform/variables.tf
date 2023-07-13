@@ -1,6 +1,6 @@
 variable "name" {
   type    = string
-  default = "research_environment_api"
+  default = "research-environment-api"
 }
 
 variable "project_id" {

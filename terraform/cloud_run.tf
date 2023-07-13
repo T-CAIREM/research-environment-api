@@ -1,5 +1,5 @@
 resource "google_cloud_run_service" "api" {
-  name                       = "${var.name}_${terraform.workspace}"
+  name                       = "${var.name}-${terraform.workspace}"
   location                   = var.region
   autogenerate_revision_name = true
 
