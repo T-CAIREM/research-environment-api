@@ -5,17 +5,38 @@ from research_environment_api.modules.celery_management import (
     enums,
 )
 from research_environment_api.modules.config import config
+from research_environment_api.modules.celery_management.constants import (
+    AVAILABLE_ZONES,
+)
 
+import random
+from copy import deepcopy
 from celery import chain
 
 
+def create_cloud_build_source():
+    return {
+        "repo_source": {
+            "project_id": config.project_id,
+            "repo_name": config.terraform_repo_name,
+            "branch_name": config.terraform_branch_name,
+        }
+    }
+
+
+def get_available_zones(region: str):
+    available_zones = deepcopy(AVAILABLE_ZONES[region])
+    random.shuffle(available_zones)
+    return available_zones.pop(0), available_zones
+
+
 def start_jupyter_notebook(workbench_creation_request):
-    zone, available_zones = internal.get_available_zones(
+    zone, available_zones = get_available_zones(
         workbench_creation_request.region
     )
 
     build = factories.BuildFactory(
-        config.project_id, internal.create_cloud_build_source()
+        config.project_id, create_cloud_build_source()
     ).create_jupyter(
         machine_type=workbench_creation_request.machine_type,
         user_project_id=workbench_creation_request.user_project_id,
