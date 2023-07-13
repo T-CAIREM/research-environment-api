@@ -1,7 +1,6 @@
 from research_environment_api.modules.celery_management import (
     tasks,
     factories,
-    internal,
     enums,
 )
 from research_environment_api.modules.config import config
