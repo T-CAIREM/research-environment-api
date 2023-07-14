@@ -24,7 +24,7 @@ def get_available_zones(region: str):
     return available_zones.pop(0), available_zones
 
 
-def start_jupyter_notebook(workbench_creation_request):
+def create_jupyter_notebook(workbench_creation_request):
     zone, available_zones = get_available_zones(workbench_creation_request.region)
 
     build = factories.BuildFactory(
