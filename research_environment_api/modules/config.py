@@ -21,7 +21,7 @@ def celery_init_app() -> Celery:
     celery = Celery(
         broker=environ["BROKER_URL"],
         backend=environ["RESULT_BACKEND"],
-        include=["research_environment_api.modules.workbench_management.tasks"],
+        include=["research_environment_api.modules.celery_management.tasks"],
     )
     celery.set_default()
     celery.conf.accept_content = [
