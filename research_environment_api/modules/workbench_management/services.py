@@ -91,4 +91,4 @@ def _fetch_workbench_metadata(
 
 
 def create_jupyter_notebook(workbench_creation_request):
-    return services.start_jupyter_notebook(workbench_creation_request)
+    return services.create_jupyter_notebook(workbench_creation_request)
