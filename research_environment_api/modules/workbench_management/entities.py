@@ -95,3 +95,10 @@ class JupyterWorkbench:
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
         self.persistent_disk = str(self.persistent_disk)
+
+
+@dataclass
+class JupyterWorkbenchStop:
+    user_project: str
+    instance_name: str
+    gcp_identifier: str

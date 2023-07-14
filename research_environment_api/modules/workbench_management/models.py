@@ -17,12 +17,13 @@ class WorkbenchMetadata(Base):
     gcp_identifier: Mapped[str] = mapped_column(String())
     dataset_slug: Mapped[str] = mapped_column(String())
     dataset_version: Mapped[str] = mapped_column(String())
+    zone: Mapped[str] = mapped_column(String())
 
 
 class WorkbenchActivity(Base):
     __local_tablename__ = "workbench_activities"
 
-    gcp_build_identifier: Mapped[str] = mapped_column(String(), nullable=False)
+    gcp_identifier: Mapped[str] = mapped_column(String(), nullable=False)
     invoker_username: Mapped[str] = mapped_column(String(), nullable=False)
     build_type: Mapped[BuildType] = mapped_column(Enum(BuildType), nullable=False)
     build_status: Mapped[CloudBuild.Status] = mapped_column(Enum(CloudBuild.Status))
