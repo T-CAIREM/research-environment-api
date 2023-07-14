@@ -35,8 +35,9 @@ def start_cloud_build(build, build_type):
 
 @shared_task
 def handle_jupyter_workbench_build_error(
-    build_information, status: Build.Status, available_zones: list, build: Build
+    build_information_status_tuple: tuple, available_zones: list, build: Build
 ):
+    build_information, status = build_information_status_tuple
     session = make_session()
     workbench_activity = session.get(models.WorkbenchActivity, build_information.id)
     workbench_activity.build_status = status
