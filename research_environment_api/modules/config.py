@@ -61,13 +61,13 @@ class Config:
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
 
     # Business Logic Config
-    project_id: str = environ["PROJECT_ID"]
-    organization_domain: str = environ["ORGANIZATION_ID"]
-    billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
-    legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
-    terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
-    terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
-    jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+    project_id: str = field(init=False)
+    organization_domain: str = field(init=False)
+    billing_account_creator_group_id: str = field(init=False)
+    legacy_workspace_api_url: str = field(init=False)
+    terraform_branch_name: str = field(init=False)
+    terraform_repo_name: str = field(init=False)
+    jupyter_startup_script: str = field(init=False)
 
     # Celery Config
     celery_broker_url: str = field(init=False)
@@ -83,6 +83,14 @@ class Config:
             self.cloud_sql_instance_connection_name = environ[
                 "CLOUD_SQL_INSTANCE_CONNECTION_NAME"
             ]
+
+        self.project_id = environ["PROJECT_ID"]
+        self.organization_domain = environ["ORGANIZATION_ID"]
+        self.billing_account_creator_group_id = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
+        self.legacy_workspace_api_url = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
+        self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
+        self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
+        self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
 
         self.legacy_workspace_api_credentials = (
             google.auth.jwt.Credentials.from_service_account_file(
