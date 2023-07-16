@@ -16,7 +16,6 @@ GoogleCloudBillingAccount = namedtuple(
 )
 
 
-# FIXME: Provide a concrete type for the mapping's values
 def list_billing_accounts_for(
     user_email: str,
 ) -> List[entities.BillingAccount]:
