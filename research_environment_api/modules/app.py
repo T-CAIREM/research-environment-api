@@ -1,9 +1,48 @@
+from celery import Celery
+from sqlalchemy.engine.base import Engine as DatabaseEngine
+from sqlalchemy.orm import Session as DatabaseSession
+
 from research_environment_api.modules.celery import make_celery
-from research_environment_api.modules.config import make_config
+from research_environment_api.modules.config import Config, make_config
 from research_environment_api.modules.db import make_engine
 
-config = make_config()
 
-engine = make_engine(config)
+class Application:
+    def initialize(self, init_db=True, init_celery=False):
+        self._config = make_config()
+        if init_db:
+            self._database_engine = make_engine(self._config)
 
-celery_app = make_celery(config)
+        if init_celery:
+            self._celery_app = make_celery(self._config)
+
+    def database_session(self) -> DatabaseSession:
+        return DatabaseSession(self.database_engine)
+
+    @property
+    def config(self) -> Config:
+        if not self._config:
+            raise Exception("The config was not initialized for the Application.")
+
+        return self._config
+
+    @property
+    def database_engine(self) -> DatabaseEngine:
+        if not self._database_engine:
+            raise Exception(
+                "The database engine was not initialized for the Application."
+            )
+
+        return self._database_engine
+
+    @property
+    def celery_app(self) -> Celery:
+        if not self._celery_app:
+            raise Exception(
+                "The Celery application was not initialized for the Application."
+            )
+
+        return self._celery_app
+
+
+app = Application()

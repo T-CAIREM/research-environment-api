@@ -2,7 +2,7 @@ from typing import Iterable
 
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
-from research_environment_api.modules.app import config
+from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
@@ -26,7 +26,7 @@ def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
 
 
 def _create_google_project(workspace_creation: entities.WorkspaceCreation):
-    workspace_controller_client = config.legacy_workspace_controller_client
+    workspace_controller_client = app.config.legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.create_workspace(
         gcp_user_id=workspace_creation.username,
@@ -39,7 +39,7 @@ def _create_google_project(workspace_creation: entities.WorkspaceCreation):
 
 
 def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
-    workspace_controller_client = config.legacy_workspace_controller_client
+    workspace_controller_client = app.config.legacy_workspace_controller_client
 
     created_workspace = workspace_controller_client.delete_workspace(
         gcp_project_id=workspace_deletion.workspace_id,
@@ -53,14 +53,14 @@ def _list_active_google_projects(
     workspace_list_query: entities.WorkspaceListQuery,
 ) -> Iterable[GoogleProject]:
     filtering_query = f"labels.cloud_identity_username:{workspace_list_query.username} lifecycleState:ACTIVE"
-    return config.google_cloud_resource_client.search_projects(
+    return app.config.google_cloud_resource_client.search_projects(
         query=filtering_query
     ).projects
 
 
 def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
     gcp_project_id = gcp_project.project_id
-    billing_info = config.google_cloud_billing_client.get_project_billing_info(
+    billing_info = app.config.google_cloud_billing_client.get_project_billing_info(
         name=gcp_project.name
     )
     # Format: billingAccounts/<billing_account_id>

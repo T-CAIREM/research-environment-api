@@ -1,6 +1,6 @@
 from celery import Celery
 
-from research_environment_api.modules.app import Config
+from research_environment_api.modules.config import Config
 
 
 def make_celery(config: Config) -> Celery:

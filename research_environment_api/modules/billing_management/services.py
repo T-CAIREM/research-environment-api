@@ -2,7 +2,7 @@ from collections import namedtuple
 from typing import List, Mapping, Optional
 
 import research_environment_api.library.google.billing as billing_api
-from research_environment_api.modules.app import config
+from research_environment_api.modules.app import app
 from research_environment_api.modules.billing_management import entities, enums
 
 IAM_ROLE_MAPPING = {
@@ -59,7 +59,7 @@ def revoke_billing_account_access(
 def _list_billing_accounts(
     user_email: str,
 ) -> Mapping[enums.BillingAccountRole, GoogleCloudBillingAccount]:
-    billing_client = config.google_billing_client
+    billing_client = app.config.google_billing_client
     billing_account_list = billing_client.list_active_billing_accounts(
         user_email=user_email
     )
@@ -78,7 +78,7 @@ def _list_billing_accounts(
 def _billing_account_role_for(
     user_email: str, billing_account_id: str
 ) -> Optional[enums.BillingAccountRole]:
-    billing_client = config.google_billing_client
+    billing_client = app.config.google_billing_client
     iam_policy = billing_client.get_iam_policy_for_billing_account(
         user_email=user_email, billing_account_id=billing_account_id
     )
@@ -96,7 +96,7 @@ def _give_user_billing_account_permission(
     user_email: str,
     billing_account_id: str,
 ):
-    billing_client = config.google_billing_client
+    billing_client = app.config.google_billing_client
 
     return billing_client.create_membership_binding_for_billing_account(
         owner_email=owner_email,
@@ -110,7 +110,7 @@ def _remove_user_billing_account_permission(
     user_email: str,
     billing_account_id: str,
 ):
-    billing_client = config.google_billing_client
+    billing_client = app.config.google_billing_client
 
     return billing_client.remove_membership_binding_for_billing_account(
         owner_email=owner_email,

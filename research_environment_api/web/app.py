@@ -3,9 +3,8 @@ from flask import Flask
 from research_environment_api.web.cache import cache
 
 
-def create_app(config_object: str):
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config_object)
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp

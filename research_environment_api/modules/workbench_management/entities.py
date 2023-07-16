@@ -4,7 +4,7 @@ from typing import Optional, Self
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
-from research_environment_api.modules.app import config
+from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.constants import (
     MACHINE_TYPE_TO_RESOURCE_MAP,
 )
@@ -93,5 +93,5 @@ class JupyterWorkbench:
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
-        self.jupyter_startup_script_bucket = config.jupyter_startup_script
+        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
         self.persistent_disk = str(self.persistent_disk)

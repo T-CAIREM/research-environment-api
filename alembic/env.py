@@ -2,8 +2,10 @@ from logging.config import fileConfig
 
 from alembic import context
 
-from research_environment_api.modules.config import make_config
-from research_environment_api.modules.db import make_engine
+from research_environment_api.modules.app import app
+
+# Initialize the backend business logic Application.
+app.initialize()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -53,8 +55,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    app_config = make_config()
-    connectable = make_engine(app_config)
+    connectable = app.database_engine
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
