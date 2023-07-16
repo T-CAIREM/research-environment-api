@@ -1,8 +1,8 @@
 from celery import chain, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build
 
+from research_environment_api.modules.app import config
 from research_environment_api.modules.celery_management import constants, enums
-from research_environment_api.modules.config import config
 from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management import models
 

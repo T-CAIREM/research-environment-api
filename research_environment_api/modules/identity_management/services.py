@@ -1,5 +1,5 @@
 from research_environment_api.library.google import workspace as google_workspace
-from research_environment_api.modules.config import config
+from research_environment_api.modules.app import config
 from research_environment_api.modules.identity_management import entities, exceptions
 from research_environment_api.modules.logger import logger
 

@@ -1,4 +1,4 @@
-from research_environment_api.modules.db import ScopedModel
+from research_environment_api.modules.model import ScopedModel
 
 
 class Workspace(ScopedModel):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from research_environment_api.modules.config import config
+from research_environment_api.modules.app import config
 
 
 @dataclass

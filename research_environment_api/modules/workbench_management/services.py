@@ -3,10 +3,10 @@ from typing import Iterable, Mapping
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from research_environment_api.modules.app import config, engine
 from research_environment_api.modules.celery_management import services
-from research_environment_api.modules.config import config
-from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management.entities import (
     GcpWorkbenchResource,
     Workbench,
@@ -82,7 +82,7 @@ def _fetch_workbench_metadata(
     workbench_metadata_query = select(WorkbenchMetadata).where(
         WorkbenchMetadata.gcp_identifier.in_(gcp_identifiers)
     )
-    with make_session() as session:
+    with Session(engine) as session:
         workbench_metadata_dict = {
             metadata.gcp_identifier: metadata
             for metadata in session.scalars(workbench_metadata_query)

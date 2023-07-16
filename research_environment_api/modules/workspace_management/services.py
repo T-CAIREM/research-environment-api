@@ -2,7 +2,7 @@ from typing import Iterable
 
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
-from research_environment_api.modules.config import config
+from research_environment_api.modules.app import config
 from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )

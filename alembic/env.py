@@ -1,12 +1,9 @@
-from os import environ
 from logging.config import fileConfig
 
-from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# FIXME: Move to a more sensible place one a production config is created.
-load_dotenv()
+from research_environment_api.modules.config import make_config
+from research_environment_api.modules.db import make_engine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,13 +14,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from research_environment_api.modules.db import ScopedModel
+from research_environment_api.modules.model import ScopedModel
 import research_environment_api.modules.workbench_management.models
 import research_environment_api.modules.workspace_management.models
 
 target_metadata = ScopedModel.metadata
-
-config.set_main_option("sqlalchemy.url", environ["DATABASE_URL"])
 
 
 def run_migrations_offline() -> None:
@@ -38,6 +33,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    # FIXME: Allow to run offline migrations against the Cloud SQL Connector
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -57,11 +53,8 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    app_config = make_config()
+    connectable = make_engine(app_config)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

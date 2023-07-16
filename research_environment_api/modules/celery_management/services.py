@@ -3,9 +3,9 @@ from copy import deepcopy
 
 from celery import chain
 
+from research_environment_api.modules.app import config
 from research_environment_api.modules.celery_management import enums, factories, tasks
 from research_environment_api.modules.celery_management.constants import AVAILABLE_ZONES
-from research_environment_api.modules.config import config
 
 
 def create_cloud_build_source():

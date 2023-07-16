@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import StrEnum
 from os import environ
 
 import google.auth
@@ -7,7 +8,7 @@ import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
-from celery import Celery
+from dotenv import load_dotenv
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -16,35 +17,27 @@ from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
 
+load_dotenv()
 
-def celery_init_app() -> Celery:
-    celery = Celery(
-        broker=environ["BROKER_URL"],
-        backend=environ["RESULT_BACKEND"],
-        include=["research_environment_api.modules.celery_management.tasks"],
-    )
-    celery.set_default()
-    celery.conf.accept_content = [
-        "application/json",
-        "application/x-python-serialize",
-        "pickle",
-    ]
-    celery.conf.task_serializer = "pickle"
-    celery.conf.result_serializer = "pickle"
-    return celery
+
+class AppEnv(StrEnum):
+    DEVELOPMENT = "development"
+    PRODUCTION = "production"
 
 
 @dataclass(kw_only=True)
 class Config:
-    database_url: str = environ["DATABASE_URL"]
-    project_id: str = environ["PROJECT_ID"]
-    organization_domain: str = environ["ORGANIZATION_ID"]
-    billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
-    legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
-    terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
-    terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
-    jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+    # App Config
+    app_env: AppEnv
 
+    # Database Config
+    database_url: str = field(init=False)
+    database_user: str = field(init=False)
+    database_password: str = field(init=False)
+    database_name: str = field(init=False)
+    cloud_sql_instance_connection_name: str = field(init=False)
+
+    # Google Client Config
     legacy_workspace_api_credentials: google.auth.jwt.Credentials = field(init=False)
     service_account_credentials: service_account.Credentials = field(init=False)
     # FIXME: Use only one BillingClient and move the custom logic into `billing_management`
@@ -70,7 +63,26 @@ class Config:
     )
     legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
 
+    # Business Logic Config
+    project_id: str = environ["PROJECT_ID"]
+    organization_domain: str = environ["ORGANIZATION_ID"]
+    billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
+    legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
+    terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
+    terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
+    jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+
     def __post_init__(self):
+        if self.is_development():
+            self.database_url = environ["DATABASE_URL"]
+        else:
+            self.database_user = environ["DATABASE_USER"]
+            self.database_password = environ["DATABASE_PASSWORD"]
+            self.database_name = environ["DATABASE_NAME"]
+            self.cloud_sql_instance_connection_name = environ[
+                "CLOUD_SQL_INSTANCE_CONNECTION_NAME"
+            ]
+
         self.legacy_workspace_api_credentials = (
             google.auth.jwt.Credentials.from_service_account_file(
                 environ["GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"],
@@ -119,8 +131,17 @@ class Config:
             api_url=self.legacy_workspace_api_url,
         )
 
+    def is_development(self):
+        return self.app_env == AppEnv.DEVELOPMENT
 
-config = Config()
+    def is_production(self):
+        return self.app_env == AppEnv.PRODUCTION
 
 
-celery_app = celery_init_app()
+def make_config() -> Config:
+    if environ["APP_ENV"] == "production":
+        app_env = AppEnv.PRODUCTION
+    else:
+        app_env = AppEnv.DEVELOPMENT
+
+    return Config(app_env=app_env)
