@@ -67,7 +67,6 @@ prometheus-client==0.17.0
 prompt-toolkit==3.0.39
 proto-plus==1.22.2
 protobuf==4.22.1
-psycopg2-binary==2.9.6
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.21
