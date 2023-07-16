@@ -1,12 +1,10 @@
 from celery import Celery
 
-from research_environment_api.modules.config import Config
 
-
-def make_celery(config: Config) -> Celery:
+def make_celery(broker_url: str, result_backend: str) -> Celery:
     celery = Celery(
-        broker=config.celery_broker_url,
-        backend=config.celery_result_backend,
+        broker=broker_url,
+        backend=result_backend,
         include=["research_environment_api.modules.celery_management.tasks"],
     )
     celery.set_default()

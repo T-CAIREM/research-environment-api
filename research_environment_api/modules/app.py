@@ -4,17 +4,29 @@ from sqlalchemy.orm import Session as DatabaseSession
 
 from research_environment_api.modules.celery import make_celery
 from research_environment_api.modules.config import Config, make_config
-from research_environment_api.modules.db import make_engine
+from research_environment_api.modules.db import make_cloud_sql_engine, make_engine
 
 
 class Application:
     def initialize(self, init_db=True, init_celery=False):
         self._config = make_config()
         if init_db:
-            self._database_engine = make_engine(self._config)
+            self._database_engine = (
+                make_engine(self.config.database_url)
+                if self.config.is_development()
+                else make_cloud_sql_engine(
+                    self.config.service_account_credentials,
+                    self.config.cloud_sql_instance_connection_name,
+                    self.config.database_user,
+                    self.config.database_password,
+                    self.config.database_name,
+                )
+            )
 
         if init_celery:
-            self._celery_app = make_celery(self._config)
+            self._celery_app = make_celery(
+                self.config.celery_broker_url, self.config.celery_result_backend
+            )
 
     def database_session(self) -> DatabaseSession:
         return DatabaseSession(self.database_engine)

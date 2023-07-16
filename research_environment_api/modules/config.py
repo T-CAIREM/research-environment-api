@@ -72,6 +72,10 @@ class Config:
     terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
     jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
 
+    # Celery Config
+    celery_broker_url: str = field(init=False)
+    celery_result_backend: str = field(init=False)
+
     def __post_init__(self):
         if self.is_development():
             self.database_url = environ["DATABASE_URL"]
