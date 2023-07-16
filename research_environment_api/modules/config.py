@@ -8,7 +8,6 @@ import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
-from dotenv import load_dotenv
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -16,8 +15,6 @@ from research_environment_api.library.google.workspace import WorkspaceClient
 from research_environment_api.library.legacy_api.client import (
     WorkspaceControllerApiClient,
 )
-
-load_dotenv()
 
 
 class AppEnv(StrEnum):

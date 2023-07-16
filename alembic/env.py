@@ -1,8 +1,12 @@
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
 
 from research_environment_api.modules.app import app
+
+# Load environment variables
+load_dotenv()
 
 # Initialize the backend business logic Application.
 app.initialize()
