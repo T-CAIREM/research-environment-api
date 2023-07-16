@@ -2,19 +2,19 @@ from celery import Celery
 from sqlalchemy.engine.base import Engine as DatabaseEngine
 from sqlalchemy.orm import Session as DatabaseSession
 
-from research_environment_api.modules.celery import make_celery
-from research_environment_api.modules.config import Config, make_config
-from research_environment_api.modules.db import make_cloud_sql_engine, make_engine
+from research_environment_api.modules.celery import create_celery
+from research_environment_api.modules.config import Config, create_config
+from research_environment_api.modules.db import create_cloud_sql_engine, create_sql_engine
 
 
 class Application:
     def initialize(self, init_db=True, init_celery=False):
-        self._config = make_config()
+        self._config = create_config()
         if init_db:
             self._database_engine = (
-                make_engine(self.config.database_url)
+                create_sql_engine(self.config.database_url)
                 if self.config.is_development()
-                else make_cloud_sql_engine(
+                else create_cloud_sql_engine(
                     self.config.service_account_credentials,
                     self.config.cloud_sql_instance_connection_name,
                     self.config.database_user,
@@ -24,7 +24,7 @@ class Application:
             )
 
         if init_celery:
-            self._celery_app = make_celery(
+            self._celery_app = create_celery(
                 self.config.celery_broker_url, self.config.celery_result_backend
             )
 

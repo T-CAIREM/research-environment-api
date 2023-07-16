@@ -4,7 +4,7 @@ from google.auth.credentials import Credentials
 from google.cloud.sql.connector import Connector, IPTypes
 
 
-def make_cloud_sql_engine(
+def create_cloud_sql_engine(
     service_account_credentials: Credentials,
     instance_connection_name: str,
     database_user: str,
@@ -32,7 +32,7 @@ def make_cloud_sql_engine(
     return engine
 
 
-def make_engine(database_url: str) -> sqlalchemy.engine.base.Engine:
+def create_sql_engine(database_url: str) -> sqlalchemy.engine.base.Engine:
     return sqlalchemy.create_engine(
         database_url,
         echo=True,

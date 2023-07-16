@@ -1,7 +1,7 @@
 from celery import Celery
 
 
-def make_celery(broker_url: str, result_backend: str) -> Celery:
+def create_celery(broker_url: str, result_backend: str) -> Celery:
     celery = Celery(
         broker=broker_url,
         backend=result_backend,

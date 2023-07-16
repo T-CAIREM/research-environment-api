@@ -107,7 +107,7 @@ class Config:
         )
 
 
-def make_config() -> Config:
+def create_config() -> Config:
     if environ["APP_ENV"] == "production":
         app_env = AppEnv.PRODUCTION
     else:
