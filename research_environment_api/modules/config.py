@@ -39,7 +39,7 @@ class Config:
 
     def _init_business_logic_config(self):
         self.project_id = environ["PROJECT_ID"]
-        self.organization_domain = environ["ORGANIZATION_ID"]
+        self.organization_domain = environ.get("ORGANIZATION_DOMAIN", "healthdatanexus.ai")
         self.billing_account_creator_group_id = environ[
             "BILLING_ACCOUNT_CREATOR_GROUP_ID"
         ]
