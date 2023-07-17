@@ -23,3 +23,15 @@ def create_rstudio_workbench():
     workbench_creation_request = schemas.RstudioWorkbenchCreationRequest().load(body)
     # TODO: implement service that is starting rstudio
     return 200
+
+
+@workbench_management_bp.post("/stop/jupyter")
+def stop_jupyter_workbench():
+    body = request.get_json()
+    workbench_stop_request = schemas.JupyterWorkbenchStopRequest().load(body)
+    jupyter_workbench_stop_entity = entities.JupyterWorkbenchStop(
+        **workbench_stop_request
+    )
+    services.stop_jupyter_workbench(jupyter_workbench_stop_entity)
+
+    return 200

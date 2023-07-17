@@ -91,3 +91,7 @@ def _fetch_workbench_metadata(
 
 def create_jupyter_notebook(workbench_creation_request):
     return services.create_jupyter_notebook(workbench_creation_request)
+
+
+def stop_jupyter_workbench(workbench_stop_request):
+    return services.stop_jupyter_workbench(workbench_stop_request)

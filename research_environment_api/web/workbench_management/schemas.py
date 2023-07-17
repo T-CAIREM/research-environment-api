@@ -22,3 +22,9 @@ class RstudioWorkbenchCreationRequest(Schema):
     region = fields.Str(required=True)
     persistent_disk = fields.Str(required=True)
     gpu_accelerator = fields.Str(required=True)
+
+
+class JupyterWorkbenchStopRequest(Schema):
+    user_project = fields.Str(requried=True)
+    instance_name = fields.Str(required=True)
+    gcp_identifier = fields.Str(required=True)

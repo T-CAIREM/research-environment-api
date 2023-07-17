@@ -49,3 +49,19 @@ def create_jupyter_notebook(workbench_creation_request):
         tasks.check_cloud_build_status.s(),
         tasks.handle_jupyter_workbench_build_error.s(available_zones, build),
     )()
+
+
+def stop_jupyter_workbench(workbench_stop_request):
+    return chain(
+        tasks.stop_compute_instance.s(
+            user_project=workbench_stop_request.user_project,
+            instance_name=workbench_stop_request.instance_name,
+            gcp_workbench_identifier=workbench_stop_request.gcp_identifier,
+            build_type=enums.BuildType.JUPYTER_STOP,
+        ),
+        tasks.check_compute_instance_status.s(
+            user_project=workbench_stop_request.user_project,
+            instance_name=workbench_stop_request.instance_name,
+        ),
+        tasks.handle_jupyter_workbench_stop_error.s(),
+    )()
