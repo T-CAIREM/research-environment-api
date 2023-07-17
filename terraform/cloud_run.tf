@@ -38,6 +38,11 @@ resource "google_cloud_run_service" "api" {
           mount_path = "/app/core_service_account_secret"
         }
         env {
+          name  = "APP_ENV"
+          value = "production"
+        }
+
+        env {
           name  = "PROJECT_ID"
           value = var.project_id
         }
