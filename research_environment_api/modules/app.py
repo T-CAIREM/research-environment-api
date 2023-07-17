@@ -11,6 +11,11 @@ from research_environment_api.modules.db import (
 
 
 class Application:
+    def __init__(self):
+        self._config = None
+        self._database_engine = None
+        self._celery_app = None
+
     def initialize(self, init_db=True, init_celery=False):
         self._config = create_config()
         if init_db:
