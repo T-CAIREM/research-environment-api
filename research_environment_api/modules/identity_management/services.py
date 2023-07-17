@@ -1,5 +1,5 @@
 from research_environment_api.library.google import workspace as google_workspace
-from research_environment_api.modules.config import config
+from research_environment_api.modules.app import app
 from research_environment_api.modules.identity_management import entities, exceptions
 from research_environment_api.modules.logger import logger
 
@@ -64,7 +64,7 @@ def _allow_to_create_billing_accounts(
     try:
         google_workspace_client.add_user_to_group(
             cloud_identity_creation.primary_email,
-            config.billing_account_creator_group_id,
+            app.config.billing_account_creator_group_id,
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
         raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
@@ -76,5 +76,5 @@ def _build_google_workspace_client() -> google_workspace.WorkspaceClient:
     # https://googleapis.github.io/google-api-python-client/docs/thread_safety.html
     # Every place that uses this function to build a client should instead fetch the
     # pre-built client from `config` after it's made thread-safe.
-    credentials = config.service_account_credentials
+    credentials = app.config.service_account_credentials
     return google_workspace.WorkspaceClient(credentials=credentials)

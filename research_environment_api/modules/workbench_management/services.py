@@ -4,9 +4,8 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from sqlalchemy import select
 
+from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import services
-from research_environment_api.modules.config import config
-from research_environment_api.modules.db import make_session
 from research_environment_api.modules.workbench_management.entities import (
     GcpWorkbenchResource,
     Workbench,
@@ -50,13 +49,13 @@ def _fetch_gcp_workbench_resources(
 
 
 def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion]:
-    app_engine_services = config.google_app_engine_services_client.list_services(
+    app_engine_services = app.config.google_app_engine_services_client.list_services(
         {"parent": f"apps/{gcp_project_id}"}
     )
     return [
         version
         for service in app_engine_services
-        for version in config.google_app_engine_versions_client.list_versions(
+        for version in app.config.google_app_engine_versions_client.list_versions(
             {"parent": service.name}
         )
     ]
@@ -64,7 +63,7 @@ def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion
 
 def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
     gce_instances_per_region = (
-        config.google_compute_engine_instances_client.aggregated_list(
+        app.config.google_compute_engine_instances_client.aggregated_list(
             project=gcp_project_id
         )
     )
@@ -82,7 +81,7 @@ def _fetch_workbench_metadata(
     workbench_metadata_query = select(WorkbenchMetadata).where(
         WorkbenchMetadata.gcp_identifier.in_(gcp_identifiers)
     )
-    with make_session() as session:
+    with app.database_session() as session:
         workbench_metadata_dict = {
             metadata.gcp_identifier: metadata
             for metadata in session.scalars(workbench_metadata_query)

@@ -3,17 +3,17 @@ from copy import deepcopy
 
 from celery import chain
 
+from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import enums, factories, tasks
 from research_environment_api.modules.celery_management.constants import AVAILABLE_ZONES
-from research_environment_api.modules.config import config
 
 
 def create_cloud_build_source():
     return {
         "repo_source": {
-            "project_id": config.project_id,
-            "repo_name": config.terraform_repo_name,
-            "branch_name": config.terraform_branch_name,
+            "project_id": app.config.project_id,
+            "repo_name": app.config.terraform_repo_name,
+            "branch_name": app.config.terraform_branch_name,
         }
     }
 
@@ -28,7 +28,7 @@ def create_jupyter_notebook(workbench_creation_request):
     zone, available_zones = get_available_zones(workbench_creation_request.region)
 
     build = factories.BuildFactory(
-        config.project_id, create_cloud_build_source()
+        app.config.project_id, create_cloud_build_source()
     ).create_jupyter(
         machine_type=workbench_creation_request.machine_type,
         user_project_id=workbench_creation_request.user_project_id,

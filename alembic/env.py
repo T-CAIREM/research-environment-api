@@ -1,12 +1,15 @@
-from os import environ
 from logging.config import fileConfig
 
-from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from dotenv import load_dotenv
 
-# FIXME: Move to a more sensible place one a production config is created.
+from research_environment_api.modules.app import app
+
+# Load environment variables
 load_dotenv()
+
+# Initialize the backend business logic Application.
+app.initialize()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,13 +20,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from research_environment_api.modules.db import ScopedModel
+from research_environment_api.modules.model import ScopedModel
 import research_environment_api.modules.workbench_management.models
 import research_environment_api.modules.workspace_management.models
 
 target_metadata = ScopedModel.metadata
-
-config.set_main_option("sqlalchemy.url", environ["DATABASE_URL"])
 
 
 def run_migrations_offline() -> None:
@@ -38,6 +39,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    # FIXME: Allow to run offline migrations against the Cloud SQL Connector
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -57,11 +59,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = app.database_engine
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

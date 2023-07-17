@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from enum import StrEnum
 from os import environ
 
 import google.auth
@@ -7,7 +7,6 @@ import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
-from celery import Celery
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -17,66 +16,48 @@ from research_environment_api.library.legacy_api.client import (
 )
 
 
-def celery_init_app() -> Celery:
-    celery = Celery(
-        broker=environ["BROKER_URL"],
-        backend=environ["RESULT_BACKEND"],
-        include=["research_environment_api.modules.celery_management.tasks"],
-    )
-    celery.set_default()
-    celery.conf.accept_content = [
-        "application/json",
-        "application/x-python-serialize",
-        "pickle",
-    ]
-    celery.conf.task_serializer = "pickle"
-    celery.conf.result_serializer = "pickle"
-    return celery
+class AppEnv(StrEnum):
+    DEVELOPMENT = "development"
+    PRODUCTION = "production"
 
 
-@dataclass(kw_only=True)
 class Config:
-    database_url: str = environ["DATABASE_URL"]
-    project_id: str = environ["PROJECT_ID"]
-    organization_domain: str = environ["ORGANIZATION_ID"]
-    billing_account_creator_group_id: str = environ["BILLING_ACCOUNT_CREATOR_GROUP_ID"]
-    legacy_workspace_api_url: str = environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"]
-    terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
-    terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
-    jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+    def __init__(self, app_env: AppEnv):
+        self.app_env = app_env
 
-    legacy_workspace_api_credentials: google.auth.jwt.Credentials = field(init=False)
-    service_account_credentials: service_account.Credentials = field(init=False)
-    # FIXME: Use only one BillingClient and move the custom logic into `billing_management`
-    google_billing_client: BillingClient = field(init=False)
-    google_cloud_billing_client: google.cloud.billing.CloudBillingClient = field(
-        init=False
-    )
-    google_workspace_client: WorkspaceClient = field(init=False)
-    google_cloud_build_client: google.cloud.devtools.cloudbuild.CloudBuildClient = (
-        field(init=False)
-    )
-    google_cloud_resource_client: google.cloud.resourcemanager.ProjectsClient = field(
-        init=False
-    )
-    google_compute_engine_instances_client: google.cloud.compute.InstancesClient = (
-        field(init=False)
-    )
-    google_app_engine_services_client: google.cloud.appengine_admin.ServicesClient = (
-        field(init=False)
-    )
-    google_app_engine_versions_client: google.cloud.appengine_admin.VersionsClient = (
-        field(init=False)
-    )
-    legacy_workspace_controller_client: WorkspaceControllerApiClient = field(init=False)
+        self._init_business_logic_config()
+        self._init_database_config()
+        self._init_google_clients()
+        self._init_legacy_workspace_controller_config()
 
-    def __post_init__(self):
-        self.legacy_workspace_api_credentials = (
-            google.auth.jwt.Credentials.from_service_account_file(
-                environ["GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"],
-                audience=environ["GATEWAY_AUDIENCE"],
-            )
-        )
+    def is_development(self):
+        return self.app_env == AppEnv.DEVELOPMENT
+
+    def is_production(self):
+        return self.app_env == AppEnv.PRODUCTION
+
+    def _init_business_logic_config(self):
+        self.project_id = environ["PROJECT_ID"]
+        self.organization_domain = environ["ORGANIZATION_ID"]
+        self.billing_account_creator_group_id = environ[
+            "BILLING_ACCOUNT_CREATOR_GROUP_ID"
+        ]
+        self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
+        self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
+        self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+
+    def _init_database_config(self):
+        if self.is_development():
+            self.database_url = environ["DATABASE_URL"]
+        else:
+            self.database_user = environ["DATABASE_USER"]
+            self.database_password = environ["DATABASE_PASSWORD"]
+            self.database_name = environ["DATABASE_NAME"]
+            self.cloud_sql_instance_connection_name = environ[
+                "CLOUD_SQL_INSTANCE_CONNECTION_NAME"
+            ]
+
+    def _init_google_clients(self):
         self.service_account_credentials = (
             service_account.Credentials.from_service_account_file(
                 environ["SERVICE_ACCOUNT_CREDENTIALS_PATH"]
@@ -114,13 +95,22 @@ class Config:
                 credentials=self.service_account_credentials,
             )
         )
+
+    def _init_legacy_workspace_controller_config(self):
+        credentials = google.auth.jwt.Credentials.from_service_account_file(
+            environ["GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"],
+            audience=environ["GATEWAY_AUDIENCE"],
+        )
         self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
-            credentials=self.legacy_workspace_api_credentials,
-            api_url=self.legacy_workspace_api_url,
+            credentials=credentials,
+            api_url=environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"],
         )
 
 
-config = Config()
+def create_config() -> Config:
+    if environ["APP_ENV"] == "production":
+        app_env = AppEnv.PRODUCTION
+    else:
+        app_env = AppEnv.DEVELOPMENT
 
-
-celery_app = celery_init_app()
+    return Config(app_env=app_env)

@@ -34,3 +34,7 @@ variable "max_scale" {
 variable "db_tier" {
   type = string
 }
+
+variable "db_password_secret_name" {
+  type = string
+}

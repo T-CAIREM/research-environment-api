@@ -1,26 +1,39 @@
-import uuid
-
-from sqlalchemy import UUID, create_engine
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
-
-from research_environment_api.modules.config import config
-
-# FIXME: Create the engine in the top-level component of the application instead of when this module is imported.
-engine = create_engine(config.database_url, echo=True)
+import pg8000
+import sqlalchemy
+from google.auth.credentials import Credentials
+from google.cloud.sql.connector import Connector, IPTypes
 
 
-def make_session() -> Session:
-    return Session(engine)
+def create_cloud_sql_engine(
+    service_account_credentials: Credentials,
+    instance_connection_name: str,
+    database_user: str,
+    database_password: str,
+    database_name: str,
+) -> sqlalchemy.engine.base.Engine:
+    connector = Connector(credentials=service_account_credentials)
+
+    def getconn() -> pg8000.dbapi.Connection:
+        conn: pg8000.dbapi.Connection = connector.connect(
+            instance_connection_name,
+            "pg8000",
+            user=database_user,
+            password=database_password,
+            db=database_name,
+            ip_type=IPTypes.PUBLIC,
+        )
+        return conn
+
+    engine = sqlalchemy.create_engine(
+        "postgresql+pg8000://",
+        creator=getconn,
+        echo=True,
+    )
+    return engine
 
 
-class ScopedModel(DeclarativeBase):
-    """Base class for SQLAlchemy ORM models."""
-
-    __abstract__ = True
-
-    @declared_attr
-    def __tablename__(cls):
-        return cls.__table_prefix__ + cls.__local_tablename__
-
-    id: Mapped[str] = mapped_column(UUID(), primary_key=True, default=uuid.uuid4)
+def create_sql_engine(database_url: str) -> sqlalchemy.engine.base.Engine:
+    return sqlalchemy.create_engine(
+        database_url,
+        echo=True,
+    )
