@@ -88,7 +88,7 @@ def check_compute_instance_status(
     instance = instance_client.get(
         project=user_project, instance=instance_name, zone=workbench_zone
     )
-    if instance.status in [
+    if instance.status not in [
         CloudInstance.Status.STOPPED,
         CloudInstance.Status.SUSPENDED,
         CloudInstance.Status.TERMINATED,
