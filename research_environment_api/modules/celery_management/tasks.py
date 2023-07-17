@@ -40,7 +40,7 @@ def start_cloud_build(build, build_type):
 
 @shared_task
 def handle_jupyter_workbench_build_error(
-    build_information_status_tuple: tuple, available_zones: list, build: Build
+    build_information_status_tuple: tuple, available_zones: list, build: CloudBuild
 ):
     build_information, status = build_information_status_tuple
     with app.database_session() as session:
@@ -70,11 +70,10 @@ def handle_jupyter_workbench_build_error(
 @shared_task
 def handle_jupyter_workbench_stop_error(instance_operation_identifier_tuple: tuple):
     instance, operation_identifier = instance_operation_identifier_tuple
-    session = make_session()
-    workbench_activity = session.get(models.WorkbenchActivity, operation_identifier)
-    workbench_activity.build_status = instance.status
-    session.commit()
-    # TODO: handle jupyter stop errors by moving persistant disc and changing zone
+    with app.database_session() as session:
+        workbench_activity = session.get(models.WorkbenchActivity, operation_identifier)
+        workbench_activity.build_status = instance.status
+        session.commit()
 
 
 @shared_task(bind=True)
@@ -85,7 +84,7 @@ def check_compute_instance_status(
     instance_name: str,
 ):
     workbench_zone, gcp_identifier = workbench_zone_gcp_id_tuple
-    instance_client = config.google_compute_engine_instances_client
+    instance_client = app.config.google_compute_engine_instances_client
     instance = instance_client.get(
         project=user_project, instance=instance_name, zone=workbench_zone
     )
@@ -106,17 +105,18 @@ def stop_compute_instance(
     gcp_workbench_identifier: str,
     build_type: enums.BuildType,
 ):
-    session = make_session()
-    workbench_zone = session.get(models.WorkbenchMetadata, gcp_workbench_identifier).zone
-    instance_client = config.google_compute_engine_instances_client
-    operation = instance_client.stop(
-        project=user_project, instance=instance_name, zone=workbench_zone
-    )
-    workbench_activity = models.WorkbenchActivity(
-        gcp_identifier=operation.name, build_type=build_type
-    )
-    session.add(workbench_activity)
-    session.commit()
+    with app.database_session() as session:
+        workbench_zone = session.get(models.WorkbenchMetadata, gcp_workbench_identifier).zone
+        instance_client = app.config.google_compute_engine_instances_client
+        operation = instance_client.stop(
+            project=user_project, instance=instance_name, zone=workbench_zone
+        )
+        workbench_activity = models.WorkbenchActivity(
+            gcp_identifier=operation.name, build_type=build_type
+        )
+        session.add(workbench_activity)
+        session.commit()
+
     return (
         workbench_zone,
         workbench_activity.gcp_identifier,
