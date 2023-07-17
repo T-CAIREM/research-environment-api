@@ -30,12 +30,12 @@ resource "google_cloud_run_service" "api" {
 
         volume_mounts {
           name       = local.legacy_cloud_research_environments_credentials_volume_name
-          mount_path = "/app/legacy_workspace_research_environments_secret/legacy-workspace-controller-credentials"
+          mount_path = "/app/legacy_workspace_research_environments_secret"
         }
 
         volume_mounts {
           name       = local.service_account_credentials_volume_name
-          mount_path = "/app/core_service_account_secret/core-service-account-key"
+          mount_path = "/app/core_service_account_secret"
         }
         env {
           name  = "PROJECT_ID"
