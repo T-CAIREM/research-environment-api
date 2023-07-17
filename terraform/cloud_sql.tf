@@ -6,17 +6,18 @@ resource "google_sql_database_instance" "main" {
   settings {
     tier              = var.db_tier
     availability_type = "ZONAL"
+
+    database_flags {
+      name  = "cloudsql.iam_authentication"
+      value = true
+    }
   }
 
   deletion_protection = true
 }
 
-data "google_secret_manager_secret_version" "postgres_password" {
-  secret = var.db_password_secret_name
-}
-
 resource "google_sql_user" "user" {
-  name     = "dev"
   instance = google_sql_database_instance.main.name
-  password = data.google_secret_manager_secret_version.postgres_password.secret_data
+  type     = "CLOUD_IAM_SERVICE_ACCOUNT"
+  name     = replace(var.service_account_name, ".gserviceaccount.com", "")
 }

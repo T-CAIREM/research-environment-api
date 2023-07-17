@@ -23,6 +23,10 @@ variable "image_tag" {
   type = string
 }
 
+variable "database_name" {
+  type = string
+}
+
 variable "min_scale" {
   type = number
 }

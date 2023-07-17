@@ -43,6 +43,11 @@ resource "google_cloud_run_service" "api" {
         }
 
         env {
+          name  = "DATABASE_NAME"
+          value = var.database_name
+        }
+
+        env {
           name  = "PROJECT_ID"
           value = var.project_id
         }

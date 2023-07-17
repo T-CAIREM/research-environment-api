@@ -25,8 +25,6 @@ class Application:
                 else create_cloud_sql_engine(
                     self.config.service_account_credentials,
                     self.config.cloud_sql_instance_connection_name,
-                    self.config.database_user,
-                    self.config.database_password,
                     self.config.database_name,
                 )
             )

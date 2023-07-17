@@ -39,7 +39,9 @@ class Config:
 
     def _init_business_logic_config(self):
         self.project_id = environ["PROJECT_ID"]
-        self.organization_domain = environ.get("ORGANIZATION_DOMAIN", "healthdatanexus.ai")
+        self.organization_domain = environ.get(
+            "ORGANIZATION_DOMAIN", "healthdatanexus.ai"
+        )
         self.billing_account_creator_group_id = environ[
             "BILLING_ACCOUNT_CREATOR_GROUP_ID"
         ]
@@ -51,8 +53,6 @@ class Config:
         if self.is_development():
             self.database_url = environ["DATABASE_URL"]
         else:
-            self.database_user = environ["DATABASE_USER"]
-            self.database_password = environ["DATABASE_PASSWORD"]
             self.database_name = environ["DATABASE_NAME"]
             self.cloud_sql_instance_connection_name = environ[
                 "CLOUD_SQL_INSTANCE_CONNECTION_NAME"
