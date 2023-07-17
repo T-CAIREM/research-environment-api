@@ -1,6 +1,6 @@
 from celery import chain, shared_task
-from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 from google.cloud.compute import Instance as CloudInstance
+from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
 from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import constants, enums
@@ -106,7 +106,9 @@ def stop_compute_instance(
     build_type: enums.BuildType,
 ):
     with app.database_session() as session:
-        workbench_zone = session.get(models.WorkbenchMetadata, gcp_workbench_identifier).zone
+        workbench_zone = session.get(
+            models.WorkbenchMetadata, gcp_workbench_identifier
+        ).zone
         instance_client = app.config.google_compute_engine_instances_client
         operation = instance_client.stop(
             project=user_project, instance=instance_name, zone=workbench_zone

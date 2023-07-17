@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session as DatabaseSession
 
 from research_environment_api.modules.celery import create_celery
 from research_environment_api.modules.config import Config, create_config
-from research_environment_api.modules.db import create_cloud_sql_engine, create_sql_engine
+from research_environment_api.modules.db import (
+    create_cloud_sql_engine,
+    create_sql_engine,
+)
 
 
 class Application:
