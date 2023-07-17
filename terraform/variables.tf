@@ -38,3 +38,23 @@ variable "db_tier" {
 variable "db_password_secret_name" {
   type = string
 }
+
+variable "billing_account_creator_group_id" {
+  type = string
+}
+
+variable "legacy_cloud_research_environments_api_url" {
+  type = string
+}
+
+variable "legacy_cloud_research_environments_gateway_audience" {
+  type = string
+}
+
+variable "legacy_cloud_research_environments_credentials_secret_name" {
+  type = string
+}
+
+variable "service_account_credentials_secret_name" {
+  type = string
+}
