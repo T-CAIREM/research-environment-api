@@ -29,6 +29,7 @@ class Config:
         self._init_database_config()
         self._init_google_clients()
         self._init_legacy_workspace_controller_config()
+        self._init_celery_config()
 
     def is_development(self):
         return self.app_env == AppEnv.DEVELOPMENT
@@ -56,6 +57,10 @@ class Config:
             self.cloud_sql_instance_connection_name = environ[
                 "CLOUD_SQL_INSTANCE_CONNECTION_NAME"
             ]
+
+    def _init_celery_config(self):
+        self.celery_broker_url = environ["CELERY_BROKER_URL"]
+        self.celery_result_backend = environ["CELERY_RESULT_BACKEND"]
 
     def _init_google_clients(self):
         self.service_account_credentials = (
