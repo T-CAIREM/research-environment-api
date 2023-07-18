@@ -16,7 +16,7 @@ class Application:
         self._database_engine = None
         self._celery_app = None
 
-    def initialize(self, init_db=True, init_celery=False):
+    def initialize(self, init_db=True):
         self._config = create_config()
         if init_db:
             self._database_engine = (
@@ -27,11 +27,6 @@ class Application:
                     self.config.cloud_sql_instance_connection_name,
                     self.config.database_name,
                 )
-            )
-
-        if init_celery:
-            self._celery_app = create_celery(
-                self.config.celery_broker_url, self.config.celery_result_backend
             )
 
     def database_session(self) -> DatabaseSession:
@@ -53,7 +48,14 @@ class Application:
 
         return self._database_engine
 
-    @property
+
+class CeleryApplication:
+    def __init__(self):
+        self._config = create_config()
+        self._celery_app = create_celery(
+            self._config.celery_broker_url, self._config.celery_result_backend
+        )
+
     def celery_app(self) -> Celery:
         if not self._celery_app:
             raise Exception(
@@ -64,3 +66,5 @@ class Application:
 
 
 app = Application()
+celery_app = CeleryApplication().celery_app()
+
