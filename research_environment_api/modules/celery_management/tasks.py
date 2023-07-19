@@ -47,7 +47,7 @@ def handle_jupyter_workbench_build_error(
         workbench_activity = (
             session.query(models.WorkbenchActivity)
             .filter_by(gcp_identifier=build_information.id)
-            .first()
+            .one()
         )
         workbench_activity.build_status = status
         workbench_activity.build_error_information = (
@@ -78,7 +78,7 @@ def handle_jupyter_workbench_stop_error(instance_operation_identifier_tuple: tup
         workbench_activity = (
             session.query(models.WorkbenchActivity)
             .filter_by(gcp_identifier=operation_identifier)
-            .first()
+            .one()
         )
         workbench_activity.build_status = instance.status
         session.commit()
@@ -117,7 +117,7 @@ def stop_compute_instance(
         workbench_zone = (
             session.query(models.WorkbenchMetadata)
             .filter_by(gcp_workbench_identifier=gcp_workbench_identifier)
-            .first()
+            .one()
             .zone
         )
         instance_client = app.config.google_compute_engine_instances_client
