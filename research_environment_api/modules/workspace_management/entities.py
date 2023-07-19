@@ -52,4 +52,5 @@ class WorkspaceListQuery:
 class Workspace:
     gcp_project_id: str
     billing_account_id: str
+    region: str
     workbenches: List[Workbench]
