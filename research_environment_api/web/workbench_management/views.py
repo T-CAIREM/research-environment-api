@@ -25,3 +25,13 @@ def stop_workbench():
     services.schedule_workbench_stop(workbench_stop_entity)
 
     return "", 200
+
+
+@workbench_management_bp.post("/update")
+def update_workbench():
+    body = request.get_json()
+    workbench_update_request = schemas.WorkbenchUpdateRequest().load(body)
+    workbench_update_entity = entities.WorkbenchUpdate(**workbench_update_request)
+    services.schedule_workbench_update(workbench_update_entity)
+
+    return 200

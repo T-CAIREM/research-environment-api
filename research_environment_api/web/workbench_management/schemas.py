@@ -19,3 +19,18 @@ class WorkbenchStopRequest(Schema):
     workspace_project_id = fields.Str(requried=True)
     workbench_resource_id = fields.Str(required=True)
     zone = fields.Str()
+
+
+class WorkbenchUpdateRequest(Schema):
+    workbench_type = fields.Str(required=True)
+    machine_type = fields.Str(required=True)
+    instance_name = fields.Str(required=True)
+    user_project_id = fields.Str(required=True)
+    dataset = fields.Str(required=True)
+    email_id = fields.Str(required=True)
+    bucket_name = fields.Str(required=True)
+    region = fields.Str(required=True)
+    persistent_disk = fields.Str(required=True)
+    vm_image = fields.Str(required=True)
+    gpu_accelerator = fields.Str(required=True)
+    gcp_identifier = fields.Str(required=True)

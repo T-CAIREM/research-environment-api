@@ -71,3 +71,11 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStop):
     else:
         # TODO: Integrate RStudio
         pass
+
+
+def schedule_workbench_update(workbench_update_request: entities.WorkbenchUpdate):
+    if workbench_update_request.workbench_type == "jupyter":
+        return schedulers.update_jupyter_workbench(workbench_update_request)
+    else:
+        # TODO: Integrate RStudio
+        pass

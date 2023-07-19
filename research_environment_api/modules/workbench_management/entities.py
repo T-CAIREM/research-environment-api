@@ -95,6 +95,8 @@ class WorkbenchCreation:
     region: str
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
+    instance_name: Optional[str] = None
+    gcp_identifier: Optional[str] = None
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
