@@ -89,8 +89,18 @@ def _fetch_workbench_metadata(
         return workbench_metadata_dict
 
 
-def create_jupyter_notebook(workbench_creation_request):
-    return services.create_jupyter_notebook(workbench_creation_request)
+def create_workbench(workbench_creation_request):
+    if workbench_creation_request.workbench_type == "jupyter":
+        vm_image = (
+            "common-cu110-notebooks"
+            if workbench_creation_request.gpu_accelerator
+            else "r-4-2-cpu-experimental-notebooks"
+        )
+        workbench_creation_request.vm_image = vm_image
+        return services.create_jupyter_notebook(workbench_creation_request)
+    else:
+        # TODO: integrate rstuido
+        pass
 
 
 def stop_jupyter_workbench(workbench_stop_request):
