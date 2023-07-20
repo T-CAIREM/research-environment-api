@@ -67,4 +67,3 @@ class CeleryApplication:
 
 app = Application()
 celery_app = CeleryApplication().celery_app()
-
