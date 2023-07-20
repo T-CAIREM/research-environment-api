@@ -17,10 +17,26 @@ class WorkbenchType(StrEnum):
     RSTUDIO = "rstudio"
 
 
+class WorkbenchStatus(StrEnum):
+    RUNNING = "running"
+    STOPPED = "stopped"
+
+
+GCE_STATUS_MAP = {
+    "RUNNING": WorkbenchStatus.RUNNING,
+    "TERMINATED": WorkbenchStatus.STOPPED,
+}
+
+
+RSTUDIO_STATUS_MAP = {
+    "SERVING": WorkbenchStatus.RUNNING,
+}
+
+
 @dataclass
 class Workbench:
     gcp_identifier: str
-    resource_status: str
+    status: str
     dataset_identifier: str
     cpu: float
     memory: float
@@ -42,7 +58,7 @@ class Workbench:
         return cls(
             gcp_identifier=str(instance.id),
             dataset_identifier=instance.labels["dataset_identifier"],
-            resource_status=instance.status,
+            status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
             url=maybe_proxy_url,
@@ -56,7 +72,7 @@ class Workbench:
         return cls(
             gcp_identifier=version.id,
             dataset_identifier=service.labels["dataset_identifier"],
-            resource_status=version.serving_status,
+            status=RSTUDIO_STATUS_MAP[version.serving_status],
             cpu=version.resources.cpu,
             memory=version.resources.memory_gb,
             url=version.version_url,

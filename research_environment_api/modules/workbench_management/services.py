@@ -6,8 +6,10 @@ from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInsta
 
 from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import services
+from research_environment_api.modules.workbench_management.constants import (
+    DEFAULT_APP_ENGINE_SERVICE_ID,
+)
 from research_environment_api.modules.workbench_management.entities import Workbench
-from research_environment_api.modules.workbench_management.constants import DEFAULT_APP_ENGINE_SERVICE_ID
 
 
 def list_workbenches(
