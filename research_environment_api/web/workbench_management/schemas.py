@@ -2,7 +2,7 @@ from marshmallow import Schema, fields, validate
 
 
 class WorkbenchCreationRequest(Schema):
-    workbench_type = fields.str(required=True)
+    workbench_type = fields.Str(required=True)
     machine_type = fields.Str(required=True)
     user_project_id = fields.Str(required=True)
     dataset = fields.Str(required=True)
