@@ -1,10 +1,12 @@
 from flask import Flask
 
 from research_environment_api.web.cache import cache
+from research_environment_api.web.config import build_config
 
 
 def create_app():
     app = Flask(__name__)
+    app.config.from_mapping(build_config())
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp
