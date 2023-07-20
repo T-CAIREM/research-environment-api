@@ -7,7 +7,7 @@ from research_environment_api.modules.celery_management import constants, enums
 from research_environment_api.modules.workbench_management import models
 
 
-@shared_task(bind=True, serializer="pickle")
+@shared_task(bind=True)
 def check_cloud_build_status(self, build_id: str):
     cloud_build_client = app.config.google_cloud_build_client
     build_information = cloud_build_client.get_build(
@@ -23,7 +23,7 @@ def check_cloud_build_status(self, build_id: str):
     return build_information, status
 
 
-@shared_task(serializer="pickle")
+@shared_task
 def start_cloud_build(build, build_type, invoker_username):
     build_client = app.config.google_cloud_build_client
     operation = build_client.create_build(build=build, project_id=app.config.project_id)
@@ -40,7 +40,7 @@ def start_cloud_build(build, build_type, invoker_username):
     return build_id
 
 
-@shared_task(serializer="pickle")
+@shared_task
 def handle_jupyter_workbench_build_error(
     build_information_status_tuple: tuple, available_zones: list, build: CloudBuild
 ):
@@ -73,7 +73,7 @@ def handle_jupyter_workbench_build_error(
         session.commit()
 
 
-@shared_task(serializer="pickle")
+@shared_task
 def handle_jupyter_workbench_stop_error(instance_operation_identifier_tuple: tuple):
     instance, operation_identifier = instance_operation_identifier_tuple
     with app.database_session() as session:
@@ -86,7 +86,7 @@ def handle_jupyter_workbench_stop_error(instance_operation_identifier_tuple: tup
         session.commit()
 
 
-@shared_task(bind=True, serializer="pickle")
+@shared_task(bind=True)
 def check_compute_instance_status(
     self,
     workbench_zone_gcp_id_tuple: tuple,
@@ -108,7 +108,7 @@ def check_compute_instance_status(
     return instance, gcp_identifier
 
 
-@shared_task(serializer="pickle")
+@shared_task
 def stop_compute_instance(
     user_project: str,
     instance_name: str,
