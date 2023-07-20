@@ -3,11 +3,11 @@ from typing import Iterable, Tuple
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
-from sqlalchemy import select
 
 from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import services
 from research_environment_api.modules.workbench_management.entities import Workbench
+from research_environment_api.modules.workbench_management.constants import DEFAULT_APP_ENGINE_SERVICE_ID
 
 
 def list_workbenches(
@@ -38,6 +38,7 @@ def _fetch_app_engine_services(
         for version in app.config.google_app_engine_versions_client.list_versions(
             {"parent": service.name}
         )
+        if service.id != DEFAULT_APP_ENGINE_SERVICE_ID
     ]
 
 
