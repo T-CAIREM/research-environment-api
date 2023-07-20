@@ -14,8 +14,9 @@ class WorkbenchCreationRequest(Schema):
     gpu_accelerator = fields.Str()
 
 
-class JupyterWorkbenchStopRequest(Schema):
+class WorkbenchStopRequest(Schema):
     invoker_username = fields.Str(required=True)
+    workbench_type = fields.Str(required=True)
     user_project = fields.Str(requried=True)
     instance_name = fields.Str(required=True)
     gcp_identifier = fields.Str(required=True)

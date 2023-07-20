@@ -100,8 +100,9 @@ class WorkbenchCreation:
 
 
 @dataclass
-class JupyterWorkbenchStop:
+class WorkbenchStop:
     invoker_username: str
+    workbench_type: str
     user_project: str
     instance_name: str
     gcp_identifier: str

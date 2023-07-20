@@ -103,5 +103,9 @@ def create_workbench(workbench_creation_request):
         pass
 
 
-def stop_jupyter_workbench(workbench_stop_request):
-    return services.stop_jupyter_workbench(workbench_stop_request)
+def stop_workbench(workbench_stop_request):
+    if workbench_stop_request.workbench_type == "jupyter":
+        return services.stop_jupyter_workbench(workbench_stop_request)
+    else:
+        # TODO: integrate rstuido
+        pass

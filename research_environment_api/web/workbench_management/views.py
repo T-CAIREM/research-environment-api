@@ -17,13 +17,11 @@ def create_workbench():
     return Response("Workbench creation started", status=200)
 
 
-@workbench_management_bp.post("/stop/jupyter")
-def stop_jupyter_workbench():
+@workbench_management_bp.post("/stop")
+def stop_workbench():
     body = request.get_json()
-    workbench_stop_request = schemas.JupyterWorkbenchStopRequest().load(body)
-    jupyter_workbench_stop_entity = entities.JupyterWorkbenchStop(
-        **workbench_stop_request
-    )
-    services.stop_jupyter_workbench(jupyter_workbench_stop_entity)
+    workbench_stop_request = schemas.WorkbenchStopRequest().load(body)
+    workbench_stop_entity = entities.WorkbenchStop(**workbench_stop_request)
+    services.stop_workbench(workbench_stop_entity)
 
     return Response("Stopping workbench", status=200)
