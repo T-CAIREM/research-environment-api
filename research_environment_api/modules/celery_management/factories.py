@@ -95,6 +95,7 @@ class BuildFactory:
             "_VM_IMAGE": vm_image,
             "_ZONE": zone,
             "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+            "_NAME": self._generate_jupyter_name(),
         }
 
         return build

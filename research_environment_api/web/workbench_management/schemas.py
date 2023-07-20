@@ -2,6 +2,7 @@ from marshmallow import Schema, fields, validate
 
 
 class WorkbenchCreationRequest(Schema):
+    invoker_username = fields.Str(required=True)
     workbench_type = fields.Str(required=True)
     machine_type = fields.Str(required=True)
     user_project_id = fields.Str(required=True)
@@ -14,6 +15,7 @@ class WorkbenchCreationRequest(Schema):
 
 
 class JupyterWorkbenchStopRequest(Schema):
+    invoker_username = fields.Str(required=True)
     user_project = fields.Str(requried=True)
     instance_name = fields.Str(required=True)
     gcp_identifier = fields.Str(required=True)

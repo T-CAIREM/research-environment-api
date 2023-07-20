@@ -44,7 +44,9 @@ def create_jupyter_notebook(workbench_creation_request):
     )
     return chain(
         tasks.start_cloud_build.s(
-            build=build, build_type=enums.BuildType.JUPYTER_CREATION
+            build=build,
+            build_type=enums.BuildType.JUPYTER_CREATION,
+            invoker_username=workbench_creation_request.invoker_username,
         ),
         tasks.check_cloud_build_status.s(),
         tasks.handle_jupyter_workbench_build_error.s(available_zones, build),
@@ -57,6 +59,7 @@ def stop_jupyter_workbench(workbench_stop_request):
             user_project=workbench_stop_request.user_project,
             instance_name=workbench_stop_request.instance_name,
             gcp_workbench_identifier=workbench_stop_request.gcp_identifier,
+            invoker_username=workbench_stop_request.invoker_username,
             build_type=enums.BuildType.JUPYTER_STOP,
         ),
         tasks.check_compute_instance_status.s(

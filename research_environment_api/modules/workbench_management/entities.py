@@ -81,6 +81,7 @@ class Workbench:
 
 @dataclass
 class WorkbenchCreation:
+    invoker_username: str
     workbench_type: str
     machine_type: str
     user_project_id: str
@@ -100,6 +101,7 @@ class WorkbenchCreation:
 
 @dataclass
 class JupyterWorkbenchStop:
+    invoker_username: str
     user_project: str
     instance_name: str
     gcp_identifier: str

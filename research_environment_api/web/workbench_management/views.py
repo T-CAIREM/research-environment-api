@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, Response
 
 from research_environment_api.modules.workbench_management import entities, services
 from research_environment_api.web.workbench_management import (
@@ -14,7 +14,7 @@ def create_workbench():
     workbench_entity = entities.WorkbenchCreation(**workbench_creation_request)
     services.create_workbench(workbench_entity)
 
-    return 200
+    return Response("Workbench creation started", status=200)
 
 
 @workbench_management_bp.post("/stop/jupyter")
@@ -26,4 +26,4 @@ def stop_jupyter_workbench():
     )
     services.stop_jupyter_workbench(jupyter_workbench_stop_entity)
 
-    return 200
+    return Response("Stopping workbench", status=200)
