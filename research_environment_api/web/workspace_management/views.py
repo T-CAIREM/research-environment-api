@@ -43,8 +43,7 @@ def list_active_workspaces(email: str):
         **list_active_workspaces_request
     )
 
-    google_active_workspaces_list = services.list_active_workspaces(
-        workspace_list_query_entity
-    )
+    workspaces = services.list_active_workspaces(workspace_list_query_entity)
+    serialized_workspaces = schemas.Workspace(many=True).dump(workspaces)
 
-    return google_active_workspaces_list, 200
+    return serialized_workspaces, 200
