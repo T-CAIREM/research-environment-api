@@ -99,3 +99,88 @@ class BuildFactory:
         }
 
         return build
+
+    def create_workspace(
+        self,
+        billing_account: str,
+        user_project_id: str,
+        email_id: str,
+        region: str,
+        perimeter_name: str,
+        appengine_region: str,
+        controller_project_name: str,
+    ):
+        build = self.build
+        build.steps = [
+            {
+                "name": "python",
+                "args": ["python3", "project/python3.py", "${_PROJECT_ID}"],
+                "wait_for": ["-"],
+            },
+            {
+                "name": "hashicorp/terraform",
+                "args": ["-chdir=./project", "init", "-reconfigure"],
+            },
+            {
+                "name": "hashicorp/terraform",
+                "args": ["-chdir=./project", "apply", "-auto-approve"],
+                "env": [
+                    "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
+                    "TF_VAR_project_id=${_PROJECT_ID}",
+                    "TF_VAR_emailid=${_EMAIL_ID}",
+                    "TF_VAR_app_eng_location=${_APPENGINE_REGION}",
+                    "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+                ],
+            },
+            {
+                "name": "python",
+                "args": [
+                    "python3",
+                    "appengine-rstudio/python3.py",
+                    "default",
+                    "${_SERVICE_ACCOUNT}",
+                    "${_MACHINE_TYPE}",
+                    "${_REGION}",
+                ],
+                "wait_for": ["-"],
+            },
+            {
+                "name": "gcr.io/cloud-builders/gcloud",
+                "args": [
+                    "app",
+                    "deploy",
+                    "std-appengine/app.yaml",
+                    "--project=${_PROJECT_ID}",
+                ],
+            },
+            {
+                "name": "python",
+                "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
+                "wait_for": ["-"],
+            },
+            {
+                "name": "hashicorp/terraform",
+                "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+            },
+            {
+                "name": "hashicorp/terraform",
+                "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+                "env": [
+                    "TF_VAR_project_id=${_PROJECT_ID}",
+                    "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+                ],
+            },
+        ]
+        build.substitutions = {
+            "_BILLING_ACCOUNT": billing_account,
+            "_PROJECT_ID": user_project_id,
+            "_EMAIL_ID": email_id,
+            "_MACHINE_TYPE": "n1-standard-1",
+            "_REGION": region,
+            "_SERVICE_ACCOUNT": f"default-rstudio@{user_project_id}.iam.gserviceaccount.com",
+            "_APPENGINE_REGION": appengine_region,
+            "_WORKSPACE_CONTROLLER_PROJECT_NAME": controller_project_name,
+            "_PERIMETER_NAME": perimeter_name,
+        }
+
+        return build

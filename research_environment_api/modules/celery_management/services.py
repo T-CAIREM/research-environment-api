@@ -24,6 +24,36 @@ def get_available_zones(region: str):
     return available_zones.pop(0), available_zones
 
 
+def get_appengine_region(region: str):
+    if region == "us-central1":
+        return "us-central"
+    return region
+
+
+def create_workspace(workspace_creation_request):
+    appengine_region = get_appengine_region(workspace_creation_request.region)
+
+    build = factories.BuildFactory(
+        app.config.project_id, create_cloud_build_source()
+    ).create_workspace(
+        billing_account=workspace_creation_request.billing_account_id,
+        user_project_id=workspace_creation_request.project_name,
+        email_id=workspace_creation_request.email_id,
+        region=workspace_creation_request.region,
+        perimeter_name=app.config.perimeter_name,
+        appengine_region=appengine_region,
+        controller_project_name=app.config.project_id,
+    )
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build,
+            build_type=enums.BuildType.JUPYTER_CREATION,
+            invoker_email=workspace_creation_request.email_id,
+        ),
+        tasks.check_cloud_build_status.s(),
+    )()
+
+
 def create_jupyter_notebook(workbench_creation_request):
     zone, available_zones = get_available_zones(workbench_creation_request.region)
 

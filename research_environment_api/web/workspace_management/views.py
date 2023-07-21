@@ -14,10 +14,10 @@ def create_workspace():
     workspace_creation_request = schemas.WorkspaceCreationRequest().load(body)
     workspace_creation_entity = entities.WorkspaceCreation(**workspace_creation_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_creation_entity.email)
-    created_google_workspace = services.create_workspace(workspace_creation_entity)
+    # cache.delete_memoized(list_active_workspaces, workspace_creation_entity.email_id)
+    services.create_workspace(workspace_creation_entity)
 
-    return created_google_workspace.text, 201
+    return "", 201
 
 
 @workspace_management_bp.delete("/<email>/<workspace_id>")

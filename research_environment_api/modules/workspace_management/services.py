@@ -7,11 +7,13 @@ from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
 from research_environment_api.modules.workspace_management import entities
+from research_environment_api.modules.celery_management import (
+    services as celery_services,
+)
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
-    created_workspace = _create_google_project(workspace_creation)
-    return created_workspace
+    return celery_services.create_workspace(workspace_creation)
 
 
 def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
