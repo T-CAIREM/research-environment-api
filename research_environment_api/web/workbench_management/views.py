@@ -13,7 +13,7 @@ def create_workbench():
     workbench_entity = entities.WorkbenchCreation(**workbench_creation_request)
     services.create_workbench(workbench_entity)
 
-    return "Workbench creation started", 200
+    return "", 200
 
 
 @workbench_management_bp.post("/stop")
@@ -23,4 +23,4 @@ def stop_workbench():
     workbench_stop_entity = entities.WorkbenchStop(**workbench_stop_request)
     services.stop_workbench(workbench_stop_entity)
 
-    return "Stopping workbench", 200
+    return "", 200
