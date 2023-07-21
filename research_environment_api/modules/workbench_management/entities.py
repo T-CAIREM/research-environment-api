@@ -81,7 +81,6 @@ class Workbench:
 
 @dataclass
 class WorkbenchCreation:
-    invoker_username: str
     workbench_type: str
     machine_type: str
     user_project_id: str
@@ -90,7 +89,6 @@ class WorkbenchCreation:
     bucket_name: str
     region: str
     persistent_disk: str
-    vm_image: str = field(init=False)
     gpu_accelerator: str
     jupyter_startup_script_bucket: str = field(init=False)
 
@@ -101,7 +99,7 @@ class WorkbenchCreation:
 
 @dataclass
 class WorkbenchStop:
-    invoker_username: str
+    invoker_email: str
     workbench_type: str
     user_project: str
     instance_name: str
