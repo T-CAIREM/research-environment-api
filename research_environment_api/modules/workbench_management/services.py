@@ -1,63 +1,46 @@
-from typing import Iterable, Mapping
+from typing import Iterable, Tuple
 
+from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
-from sqlalchemy import select
 
 from research_environment_api.modules.app import app
 from research_environment_api.modules.celery_management import services
-from research_environment_api.modules.workbench_management.entities import (
-    GcpWorkbenchResource,
-    Workbench,
+from research_environment_api.modules.workbench_management.constants import (
+    DEFAULT_APP_ENGINE_SERVICE_ID,
 )
-from research_environment_api.modules.workbench_management.models import (
-    WorkbenchMetadata,
-)
+from research_environment_api.modules.workbench_management.entities import Workbench
 
 
-def list_workbenches(gcp_project_id: str) -> Iterable[Workbench]:
-    gcp_resources = _fetch_gcp_workbench_resources(gcp_project_id)
-    if len(gcp_resources) == 0:
-        return []
-
-    workbench_metadata_dict = _fetch_workbench_metadata(gcp_resources)
-    return [
-        Workbench.from_gcp_resource_and_metadata(
-            resource, workbench_metadata_dict[resource.id]
-        )
-        for resource in gcp_resources
-        if resource.id in workbench_metadata_dict
-    ]
-
-
-def _fetch_gcp_workbench_resources(
+def list_workbenches(
     gcp_project_id: str,
-) -> Iterable[GcpWorkbenchResource]:
+) -> Iterable[Workbench]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
-    app_engine_versions = _fetch_app_engine_versions(gcp_project_id)
-    if len(gce_instances) and len(app_engine_versions) == 0:
-        return []
+    app_engine_services = _fetch_app_engine_services(gcp_project_id)
 
-    gce_instance_resources = [
-        GcpWorkbenchResource.from_gce_instance(instance) for instance in gce_instances
+    gce_instance_workbenches = [
+        Workbench.from_gce_instance(instance) for instance in gce_instances
     ]
-    app_engine_resources = [
-        GcpWorkbenchResource.from_app_engine_version(version)
-        for version in app_engine_versions
+    app_engine_workbenches = [
+        Workbench.from_app_engine_service_and_version(service, version)
+        for service, version in app_engine_services
     ]
-    return gce_instance_resources + app_engine_resources
+    return gce_instance_workbenches + app_engine_workbenches
 
 
-def _fetch_app_engine_versions(gcp_project_id: str) -> Iterable[AppEngineVersion]:
+def _fetch_app_engine_services(
+    gcp_project_id: str,
+) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
     app_engine_services = app.config.google_app_engine_services_client.list_services(
         {"parent": f"apps/{gcp_project_id}"}
     )
     return [
-        version
+        (service, version)
         for service in app_engine_services
         for version in app.config.google_app_engine_versions_client.list_versions(
             {"parent": service.name}
         )
+        if service.id != DEFAULT_APP_ENGINE_SERVICE_ID
     ]
 
 
