@@ -26,5 +26,7 @@ class WorkbenchActivity(Base):
     gcp_identifier: Mapped[str] = mapped_column(String(), nullable=False)
     invoker_email: Mapped[str] = mapped_column(String(), nullable=False)
     build_type: Mapped[BuildType] = mapped_column(Enum(BuildType), nullable=False)
-    build_status: Mapped[CloudBuild.Status] = mapped_column(Enum(CloudBuild.Status), nullable=True)
+    build_status: Mapped[CloudBuild.Status] = mapped_column(
+        Enum(CloudBuild.Status), nullable=True
+    )
     build_error_information: Mapped[str] = mapped_column(String(), nullable=True)

@@ -1,4 +1,5 @@
 from flask import request
+
 from research_environment_api.modules.workbench_management import entities, services
 from research_environment_api.web.workbench_management import (
     schemas,

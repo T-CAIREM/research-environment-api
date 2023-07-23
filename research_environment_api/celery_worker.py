@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
-from research_environment_api.modules.celery import create_celery
 from research_environment_api.modules.app import app as research_environment_backend_app
+from research_environment_api.modules.celery import create_celery
 
 load_dotenv()
 
