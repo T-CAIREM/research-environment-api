@@ -3,9 +3,8 @@ from copy import deepcopy
 
 from celery import chain
 
+from research_environment_api.background import constants, enums, factories, tasks
 from research_environment_api.modules.app import app
-from research_environment_api.modules.celery_management import enums, factories, tasks
-from research_environment_api.modules.celery_management.constants import AVAILABLE_ZONES
 
 
 def create_cloud_build_source():
@@ -19,7 +18,7 @@ def create_cloud_build_source():
 
 
 def get_available_zones(region: str):
-    available_zones = deepcopy(AVAILABLE_ZONES[region])
+    available_zones = deepcopy(constants.AVAILABLE_ZONES[region])
     random.shuffle(available_zones)
     return available_zones.pop(0), available_zones
 

@@ -4,8 +4,8 @@ from google.cloud.appengine_admin_v1.types.service import Service as AppEngineSe
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
+from research_environment_api import background
 from research_environment_api.modules.app import app
-from research_environment_api.modules.celery_management import services
 from research_environment_api.modules.workbench_management.constants import (
     DEFAULT_APP_ENGINE_SERVICE_ID,
 )
@@ -74,15 +74,15 @@ def _fetch_workbench_metadata(
 
 def create_workbench(workbench_creation_request):
     if workbench_creation_request.workbench_type == "jupyter":
-        return services.create_jupyter_notebook(workbench_creation_request)
+        return background.services.create_jupyter_notebook(workbench_creation_request)
     else:
-        # TODO: integrate rstuido
+        # TODO: Integrate RStudio
         pass
 
 
 def stop_workbench(workbench_stop_request):
     if workbench_stop_request.workbench_type == "jupyter":
-        return services.stop_jupyter_workbench(workbench_stop_request)
+        return background.services.stop_jupyter_workbench(workbench_stop_request)
     else:
-        # TODO: integrate rstuido
+        # TODO: Integrate RStudio
         pass

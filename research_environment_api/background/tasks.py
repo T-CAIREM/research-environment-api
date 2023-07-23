@@ -2,8 +2,8 @@ from celery import chain, shared_task
 from google.cloud.compute import Instance as CloudInstance
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
+from research_environment_api.background import constants, enums
 from research_environment_api.modules.app import app
-from research_environment_api.modules.celery_management import constants, enums
 from research_environment_api.modules.workbench_management import models
 
 
