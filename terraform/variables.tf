@@ -62,3 +62,11 @@ variable "legacy_cloud_research_environments_credentials_secret_name" {
 variable "service_account_credentials_secret_name" {
   type = string
 }
+
+variable "celery_broker_url" {
+  type = string
+}
+
+variable "celery_backend_url" {
+  type = string
+}
