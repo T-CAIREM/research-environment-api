@@ -42,6 +42,7 @@ class Workbench:
     memory: float
     type: WorkbenchType
     url: Optional[str]
+    zone: Optional[str] = None
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
@@ -62,6 +63,7 @@ class Workbench:
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
             url=maybe_proxy_url,
+            zone=instance.zone,
             type=WorkbenchType.JUPYTER,
         )
 
@@ -84,7 +86,7 @@ class Workbench:
 class WorkbenchCreation:
     workbench_type: str
     machine_type: str
-    user_project_id: str
+    workspace_project_id: str
     dataset: str
     email_id: str
     bucket_name: str
@@ -100,8 +102,8 @@ class WorkbenchCreation:
 
 @dataclass
 class WorkbenchStop:
-    invoker_email: str
     workbench_type: str
-    user_project: str
-    instance_name: str
-    gcp_identifier: str
+    workspace_project_id: str
+    workbench_resource_id: str
+    user_email: str
+    instance_zone: Optional[str] = None
