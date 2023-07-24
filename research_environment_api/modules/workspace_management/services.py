@@ -7,16 +7,15 @@ from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
 from research_environment_api.modules.workspace_management import entities, enums
+from research_environment_api.background import schedulers
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
-    created_workspace = _create_google_project(workspace_creation)
-    return created_workspace
+    return schedulers.create_workspace(workspace_creation)
 
 
 def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
-    deleted_workspace = _delete_google_project(workspace_deletion)
-    return deleted_workspace
+    return schedulers.destroy_workspace(workspace_deletion)
 
 
 def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
@@ -25,17 +24,17 @@ def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
     return [_build_workspace_entity(project) for project in gcp_projects]
 
 
-def _create_google_project(workspace_creation: entities.WorkspaceCreation):
-    workspace_controller_client = app.config.legacy_workspace_controller_client
-
-    created_workspace = workspace_controller_client.create_workspace(
-        gcp_user_id=workspace_creation.username,
-        email=workspace_creation.email,
-        region=workspace_creation.region,
-        billing_account_id=workspace_creation.billing_account_id,
-    )
-
-    return created_workspace
+# def _create_google_project(workspace_creation: entities.WorkspaceCreation):
+#     workspace_controller_client = app.config.legacy_workspace_controller_client
+#
+#     created_workspace = workspace_controller_client.create_workspace(
+#         gcp_user_id=workspace_creation.username,
+#         email=workspace_creation.email,
+#         region=workspace_creation.region,
+#         billing_account_id=workspace_creation.billing_account_id,
+#     )
+#
+#     return created_workspace
 
 
 def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):

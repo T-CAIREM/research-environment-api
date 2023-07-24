@@ -37,3 +37,33 @@ def stop_jupyter_workbench(
         tasks.check_polling_future_status.s(),
         tasks.process_compute_instance_status.s(),
     )
+
+
+def create_workspace(
+    build: cloudbuild_v1.Build,
+    user_email: str,
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build,
+            build_type=enums.BuildType.WORKSPACE_CREATION,
+            user_email=user_email,
+        ),
+        tasks.check_polling_future_status.s(),
+        tasks.process_cloud_build_result.s(build),
+    )
+
+
+def destroy_workspace(
+    build: cloudbuild_v1.Build,
+    user_email: str,
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build,
+            build_type=enums.BuildType.WORKSPACE_DELETION,
+            user_email=user_email,
+        ),
+        tasks.check_polling_future_status.s(),
+        tasks.process_cloud_build_result.s(build),
+    )

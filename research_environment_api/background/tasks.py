@@ -45,7 +45,7 @@ def check_polling_future_status(
 @shared_task
 def process_cloud_build_result(
     build: CloudBuild,
-    fallback_zones: List[str],
+    fallback_zones: Optional[List[str]] = None,
 ):
     with app.database_session() as session:
         with session.begin():

@@ -49,3 +49,103 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
         "args": ["python3", "notebookcreation/check_errors.py"],
     },
 ]
+
+CREATE_WORKSPACE_STEPS = [
+    {
+        "name": "python",
+        "args": ["python3", "project/python3.py", "${_PROJECT_ID}"],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./project", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./project", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_app_eng_location=${_APPENGINE_REGION}",
+            "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "default",
+            "${_SERVICE_ACCOUNT}",
+            "${_MACHINE_TYPE}",
+            "${_REGION}",
+        ],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "deploy",
+            "std-appengine/app.yaml",
+            "--project=${_PROJECT_ID}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+        ],
+    },
+]
+
+DESTROY_WORKSPACE_STEPS = [
+    {
+        "name": "python",
+        "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "destroy", "-auto-approve"],
+        "env": [
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": ["python3", "project/python3.py", "${_PROJECT_ID}"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./project", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./project", "destroy", "-auto-approve"],
+        "env": [
+            "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_app_eng_location=${_APPENGINE_REGION}",
+            "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+        ],
+    },
+]
