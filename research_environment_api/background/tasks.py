@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, List, Tuple, Optional
 
 from celery import shared_task
 from google.api_core.future import polling
@@ -16,10 +16,10 @@ def start_cloud_build(
     operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
-    cloud_build = operation.metadata.build
+    cloud_build_id = operation.metadata.build.id
 
     workbench_activity = models.WorkbenchActivity(
-        gcp_identifier=cloud_build.id,
+        gcp_identifier=cloud_build_id,
         build_type=build_type,
         invoker_email=user_email,
     )
@@ -27,15 +27,15 @@ def start_cloud_build(
         session.add(workbench_activity)
         session.commit()
 
-    return operation, cloud_build
+    return operation, cloud_build_id
 
 
 @shared_task(bind=True)
 def check_polling_future_status(
     self,
-    polling_future: polling.PollingFuture,
-    passthrough: Optional[CloudBuild] = None,
-) -> Optional[CloudBuild]:
+    polling_context: Tuple[polling.PollingFuture, Any],
+) -> Any:
+    polling_future, passthrough = polling_context
     if not polling_future.done():
         raise self.retry(max_retries=None, countdown=30)
 
@@ -44,9 +44,14 @@ def check_polling_future_status(
 
 @shared_task
 def process_cloud_build_result(
-    build: CloudBuild,
+    build_id: str,
+    user_email: str,
     fallback_zones: Optional[List[str]] = None,
 ):
+    build = app.config.google_cloud_build_client.get_build(
+        project_id=app.config.project_id, id=build_id
+    )
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = (
@@ -75,7 +80,7 @@ def process_cloud_build_result(
             workflows.create_jupyter_notebook(
                 build=build,
                 fallback_zones=new_fallback_zones,
-                user_email="????@????.????",  # FIXME: What's the email?
+                user_email=user_email,
             )
 
 
@@ -103,7 +108,7 @@ def stop_compute_instance(
         session.add(workbench_activity)
         session.commit()
 
-    return operation
+    return operation, None
 
 
 @shared_task

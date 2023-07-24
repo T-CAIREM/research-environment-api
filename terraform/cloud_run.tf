@@ -1,10 +1,19 @@
 locals {
   legacy_cloud_research_environments_credentials_volume_name = "legacy_cloud_research_environments_credentials"
   service_account_credentials_volume_name                    = "service_account_credentials"
+  services = [
+    { name = "core", command = null },
+    { name = "celery", command = ["celery", "-A", "research_environment_api.celery_worker", "worker"] }
+  ]
 }
 
 resource "google_cloud_run_service" "api" {
-  name                       = "${var.name}-${terraform.workspace}-core"
+  for_each = {
+    for index, service in local.services :
+    service.name => service
+  }
+
+  name                       = "${var.name}-${terraform.workspace}-${each.value.name}"
   location                   = var.region
   autogenerate_revision_name = true
 
@@ -26,7 +35,8 @@ resource "google_cloud_run_service" "api" {
       }
 
       containers {
-        image = "${var.image_repository}:${var.image_tag}"
+        image   = "${var.image_repository}:${var.image_tag}"
+        command = each.value.command
 
         volume_mounts {
           name       = local.legacy_cloud_research_environments_credentials_volume_name
