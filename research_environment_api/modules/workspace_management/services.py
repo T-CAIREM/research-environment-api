@@ -6,10 +6,10 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
-from research_environment_api.modules.workspace_management import entities
 from research_environment_api.modules.celery_management import (
     services as celery_services,
 )
+from research_environment_api.modules.workspace_management import entities, enums
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
@@ -74,5 +74,5 @@ def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
         gcp_project_id=gcp_project_id,
         billing_account_id=billing_account_id,
         workbenches=workbenches,
-        region=region,
+        region=enums.Region(region),
     )
