@@ -34,11 +34,6 @@ def create_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
-    vm_image = (
-        "common-cu110-notebooks"
-        if gpu_accelerator_type
-        else "r-4-2-cpu-experimental-notebooks"
-    )
     instance_name = random.choice(string.ascii_letters)
 
     cloud_build = _base_build()
