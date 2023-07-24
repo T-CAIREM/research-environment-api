@@ -87,13 +87,14 @@ def stop_compute_instance(
     build_type: enums.BuildType,
     instance_zone: str,
 ) -> polling.PollingFuture:
+    instance_client = app.config.google_compute_engine_instances_client
+    operation = instance_client.stop(
+        project=workspace_project_id,
+        instance=workbench_resource_id,
+        zone=instance_zone,
+    )
+
     with app.database_session() as session:
-        instance_client = app.config.google_compute_engine_instances_client
-        operation = instance_client.stop(
-            project=workspace_project_id,
-            instance=workbench_resource_id,
-            zone=instance_zone,
-        )
         workbench_activity = models.WorkbenchActivity(
             gcp_identifier=operation.name,
             build_type=build_type,
