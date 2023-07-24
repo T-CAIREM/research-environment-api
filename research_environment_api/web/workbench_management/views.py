@@ -25,3 +25,15 @@ def stop_workbench():
     services.schedule_workbench_stop(workbench_stop_entity)
 
     return "", 200
+
+
+@workbench_management_bp.post("/start/jupyter")
+def start_workbench():
+    body = request.get_json()
+    workbench_stop_request = schemas.WorkbenchStartRequest().load(body)
+    jupyter_workbench_stop_entity = entities.JupyterWorkbenchStart(
+        **workbench_stop_request
+    )
+    services.start_workbench(jupyter_workbench_stop_entity)
+
+    return 200

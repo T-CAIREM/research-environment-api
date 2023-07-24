@@ -71,3 +71,7 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStop):
     else:
         # TODO: Integrate RStudio
         pass
+
+
+def schedule_workbench_start(workbench_start_request):
+    pass

@@ -113,3 +113,10 @@ class WorkbenchStop:
     workbench_resource_id: str
     user_email: str
     instance_zone: Optional[str] = None
+
+
+@dataclass
+class JupyterWorkbenchStart:
+    user_project: str
+    instance_name: str
+    gcp_identifier: str
