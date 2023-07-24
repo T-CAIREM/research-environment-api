@@ -52,7 +52,7 @@ def create_workspace(
             user_email=user_email,
         ),
         tasks.check_polling_future_status.s(),
-        tasks.process_cloud_build_result.s(build),
+        tasks.process_cloud_build_result.s(user_email=user_email),
     )
 
 
@@ -67,5 +67,5 @@ def destroy_workspace(
             user_email=user_email,
         ),
         tasks.check_polling_future_status.s(),
-        tasks.process_cloud_build_result.s(build),
+        tasks.process_cloud_build_result.s(user_email=user_email),
     )
