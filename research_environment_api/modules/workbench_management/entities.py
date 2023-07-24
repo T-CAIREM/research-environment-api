@@ -81,7 +81,8 @@ class Workbench:
 
 
 @dataclass
-class JupyterWorkbench:
+class WorkbenchCreation:
+    workbench_type: str
     machine_type: str
     user_project_id: str
     dataset: str
@@ -89,7 +90,6 @@ class JupyterWorkbench:
     bucket_name: str
     region: str
     persistent_disk: str
-    vm_image: str
     gpu_accelerator: str
     jupyter_startup_script_bucket: str = field(init=False)
 
@@ -99,7 +99,9 @@ class JupyterWorkbench:
 
 
 @dataclass
-class JupyterWorkbenchStop:
+class WorkbenchStop:
+    invoker_email: str
+    workbench_type: str
     user_project: str
     instance_name: str
     gcp_identifier: str

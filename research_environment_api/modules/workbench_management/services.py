@@ -57,9 +57,32 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
-def create_jupyter_notebook(workbench_creation_request):
-    return services.create_jupyter_notebook(workbench_creation_request)
+def _fetch_workbench_metadata(
+    gcp_workbench_resources: Iterable[GcpWorkbenchResource],
+) -> Mapping[str, Workbench]:
+    gcp_identifiers = [resource.id for resource in gcp_workbench_resources]
+    workbench_metadata_query = select(WorkbenchMetadata).where(
+        WorkbenchMetadata.gcp_identifier.in_(gcp_identifiers)
+    )
+    with app.database_session() as session:
+        workbench_metadata_dict = {
+            metadata.gcp_identifier: metadata
+            for metadata in session.scalars(workbench_metadata_query)
+        }
+        return workbench_metadata_dict
 
 
-def stop_jupyter_workbench(workbench_stop_request):
-    return services.stop_jupyter_workbench(workbench_stop_request)
+def create_workbench(workbench_creation_request):
+    if workbench_creation_request.workbench_type == "jupyter":
+        return services.create_jupyter_notebook(workbench_creation_request)
+    else:
+        # TODO: integrate rstuido
+        pass
+
+
+def stop_workbench(workbench_stop_request):
+    if workbench_stop_request.workbench_type == "jupyter":
+        return services.stop_jupyter_workbench(workbench_stop_request)
+    else:
+        # TODO: integrate rstuido
+        pass

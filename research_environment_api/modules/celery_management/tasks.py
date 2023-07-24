@@ -24,12 +24,14 @@ def check_cloud_build_status(self, build_id: str):
 
 
 @shared_task
-def start_cloud_build(build, build_type):
+def start_cloud_build(build, build_type, invoker_email):
     build_client = app.config.google_cloud_build_client
     operation = build_client.create_build(build=build, project_id=app.config.project_id)
     build_id = operation.metadata.build.id
     workbench_activity = models.WorkbenchActivity(
-        gcp_identifier=build_id, build_type=build_type
+        gcp_identifier=build_id,
+        build_type=build_type,
+        invoker_email=invoker_email,
     )
     with app.database_session() as session:
         session.add(workbench_activity)
@@ -111,6 +113,7 @@ def stop_compute_instance(
     user_project: str,
     instance_name: str,
     gcp_workbench_identifier: str,
+    invoker_email: str,
     build_type: enums.BuildType,
 ):
     with app.database_session() as session:
@@ -125,7 +128,9 @@ def stop_compute_instance(
             project=user_project, instance=instance_name, zone=workbench_zone
         )
         workbench_activity = models.WorkbenchActivity(
-            gcp_identifier=operation.name, build_type=build_type
+            gcp_identifier=operation.name,
+            build_type=build_type,
+            invoker_email=invoker_email,
         )
         session.add(workbench_activity)
         session.commit()
