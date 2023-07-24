@@ -16,7 +16,9 @@ def create_jupyter_notebook(
             user_email=user_email,
         ),
         tasks.check_polling_future_status.s(),
-        tasks.process_cloud_build_result.s(fallback_zones, build),
+        tasks.process_cloud_build_result.s(
+            fallback_zones=fallback_zones, user_email=user_email
+        ),
     )
 
 
