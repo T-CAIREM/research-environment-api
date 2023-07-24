@@ -5,7 +5,7 @@ def create_celery(broker_url: str, result_backend: str) -> Celery:
     celery = Celery(
         broker=broker_url,
         backend=result_backend,
-        include=["research_environment_api.modules.celery_management.tasks"],
+        include=["research_environment_api.background.tasks"],
     )
     celery.set_default()
     celery.conf.accept_content = [

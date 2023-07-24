@@ -30,6 +30,7 @@ class Workbench(Schema):
     memory = fields.Float(required=True)
     url = fields.URL(required=True)
     type = fields.Enum(WorkbenchType, by_value=True, required=True)
+    zone = fields.Str()
 
 
 class Workspace(Schema):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Optional, Self
+from typing import Optional
 
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
@@ -42,6 +42,7 @@ class Workbench:
     memory: float
     type: WorkbenchType
     url: Optional[str]
+    zone: Optional[str] = None
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
@@ -62,6 +63,7 @@ class Workbench:
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
             url=maybe_proxy_url,
+            zone=instance.zone,
             type=WorkbenchType.JUPYTER,
         )
 
@@ -84,24 +86,30 @@ class Workbench:
 class WorkbenchCreation:
     workbench_type: str
     machine_type: str
-    user_project_id: str
+    persistent_disk: str
+    gpu_accelerator_type: str
+    workspace_project_id: str
     dataset: str
     email_id: str
     bucket_name: str
     region: str
-    persistent_disk: str
-    gpu_accelerator: str
+    vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
         self.persistent_disk = str(self.persistent_disk)
+        self.vm_image = (
+            "common-cu110-notebooks"
+            if self.gpu_accelerator_type
+            else "r-4-2-cpu-experimental-notebooks"
+        )
 
 
 @dataclass
 class WorkbenchStop:
-    invoker_email: str
     workbench_type: str
-    user_project: str
-    instance_name: str
-    gcp_identifier: str
+    workspace_project_id: str
+    workbench_resource_id: str
+    user_email: str
+    instance_zone: Optional[str] = None
