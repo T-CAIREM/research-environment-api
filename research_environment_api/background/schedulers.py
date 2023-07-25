@@ -21,4 +21,9 @@ def create_jupyter_notebook(
 
 
 def stop_jupyter_workbench(workbench_stop_request: entities.WorkbenchStop):
-    return workflows.stop_jupyter_workbench(**workbench_stop_request)()
+    return workflows.stop_jupyter_workbench(
+        workspace_project_id=workbench_stop_request.workspace_project_id,
+        workbench_resource_id=workbench_stop_request.workbench_resource_id,
+        instance_zone=workbench_stop_request.instance_zone,
+        user_email=workbench_stop_request.user_email,
+    )()
