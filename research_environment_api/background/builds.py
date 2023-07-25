@@ -9,7 +9,7 @@ from research_environment_api.modules.app import app
 
 def _base_build() -> cloudbuild_v1.Build:
     cloud_build = cloudbuild_v1.Build()
-    cloud_build.service_account = app.config.cloud_build_service_account
+    cloud_build.service_account = app.config.cloud_build_service_account_name
     cloud_build.options = {"logging": "CLOUD_LOGGING_ONLY"}
     cloud_build.source = {
         "repo_source": {
