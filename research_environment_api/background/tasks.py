@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple, Optional
+from typing import Any, List, Optional, Tuple
 
 from celery import shared_task
 from google.api_core.future import polling

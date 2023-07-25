@@ -2,12 +2,12 @@ from typing import Iterable
 
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
+from research_environment_api.background import schedulers
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
 from research_environment_api.modules.workspace_management import entities, enums
-from research_environment_api.background import schedulers
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
