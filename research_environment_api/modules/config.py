@@ -49,7 +49,9 @@ class Config:
         self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
         self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
         self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
-        self.cloud_build_service_account_name = environ["CLOUD_BUILD_SERVICE_ACCOUNT_NAME"]
+        self.cloud_build_service_account_name = environ[
+            "CLOUD_BUILD_SERVICE_ACCOUNT_NAME"
+        ]
 
     def _init_database_config(self):
         if self.is_development():
@@ -91,6 +93,12 @@ class Config:
             google.cloud.compute.InstancesClient(
                 credentials=self.service_account_credentials
             )
+        )
+        self.google_zone_operations_client = google.cloud.compute.ZoneOperationsClient(
+            credentials=self.service_account_credentials
+        )
+        self.google_operations_client = (
+            self.google_cloud_build_client._transport._operations_client
         )
         self.google_app_engine_services_client = (
             google.cloud.appengine_admin.ServicesClient(

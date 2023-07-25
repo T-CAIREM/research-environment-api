@@ -4,7 +4,7 @@ from celery import shared_task
 from google.api_core.future import polling
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import constants, enums, workflows
+from research_environment_api.background import constants, enums, operations, workflows
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models
 
@@ -13,10 +13,10 @@ from research_environment_api.modules.workbench_management import models
 def start_cloud_build(
     build: CloudBuild, build_type: enums.BuildType, user_email: str
 ) -> Tuple[polling.PollingFuture, CloudBuild]:
-    operation = app.config.google_cloud_build_client.create_build(
+    build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
-    cloud_build_id = operation.metadata.build.id
+    cloud_build_id = build_operation.metadata.build.id
 
     workbench_activity = models.WorkbenchActivity(
         gcp_identifier=cloud_build_id,
@@ -27,19 +27,8 @@ def start_cloud_build(
         session.add(workbench_activity)
         session.commit()
 
+    operation = operations.BuildOperation(name=build_operation.operation.name)
     return operation, cloud_build_id
-
-
-@shared_task(bind=True)
-def check_polling_future_status(
-    self,
-    polling_context: Tuple[polling.PollingFuture, Any],
-) -> Any:
-    polling_future, passthrough = polling_context
-    if not polling_future.done():
-        raise self.retry(max_retries=None, countdown=30)
-
-    return passthrough
 
 
 @shared_task
@@ -91,9 +80,9 @@ def stop_compute_instance(
     user_email: str,
     build_type: enums.BuildType,
     instance_zone: str,
-) -> polling.PollingFuture:
+) -> Tuple[operations.Operation, None]:
     instance_client = app.config.google_compute_engine_instances_client
-    operation = instance_client.stop(
+    stop_operation = instance_client.stop(
         project=workspace_project_id,
         instance=workbench_resource_id,
         zone=instance_zone,
@@ -101,12 +90,16 @@ def stop_compute_instance(
 
     with app.database_session() as session:
         workbench_activity = models.WorkbenchActivity(
-            gcp_identifier=operation.name,
+            gcp_identifier=stop_operation.name,
             build_type=build_type,
             invoker_email=user_email,
         )
         session.add(workbench_activity)
         session.commit()
+
+    operation = operations.InstanceOperation(
+        project_id=workspace_project_id, zone=instance_zone, name=stop_operation.name
+    )
 
     return operation, None
 
@@ -124,3 +117,15 @@ def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
         # FIXME: Makes no sense semantically.
         workbench_activity.build_status = instance.status
         session.commit()
+
+
+@shared_task(bind=True)
+def check_operation_status(
+    self,
+    operation_context: Tuple[operations.Operation, Any],
+) -> Any:
+    operation, passthrough = operation_context
+    if not operation.done():
+        raise self.retry(max_retries=None, countdown=30)
+
+    return passthrough
