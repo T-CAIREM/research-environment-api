@@ -39,5 +39,5 @@ class BuildOperation(Operation):
         return self._operation().done
 
     def _operation(self) -> operation.Operation:
-        client = app.config.google_cloud_build_client._transport._operations_client
+        client = app.config.google_operations_client
         return client.get_operation(name=self.name)
