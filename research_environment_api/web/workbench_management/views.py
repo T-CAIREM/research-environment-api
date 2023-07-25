@@ -20,20 +20,20 @@ def create_workbench():
 @workbench_management_bp.post("/stop")
 def stop_workbench():
     body = request.get_json()
-    workbench_stop_request = schemas.WorkbenchStopRequest().load(body)
-    workbench_stop_entity = entities.WorkbenchStop(**workbench_stop_request)
+    workbench_stop_request = schemas.WorkbenchStartStopRequest().load(body)
+    workbench_stop_entity = entities.WorkbenchStartStop(**workbench_stop_request)
     services.schedule_workbench_stop(workbench_stop_entity)
 
     return "", 200
 
 
-@workbench_management_bp.post("/start/jupyter")
+@workbench_management_bp.post("/start")
 def start_workbench():
     body = request.get_json()
-    workbench_stop_request = schemas.WorkbenchStartRequest().load(body)
-    jupyter_workbench_stop_entity = entities.JupyterWorkbenchStart(
+    workbench_stop_request = schemas.WorkbenchStartStopRequest().load(body)
+    jupyter_workbench_stop_entity = entities.WorkbenchStartStop(
         **workbench_stop_request
     )
-    services.start_workbench(jupyter_workbench_stop_entity)
+    services.schedule_workbench_start(jupyter_workbench_stop_entity)
 
-    return 200
+    return "", 200

@@ -27,3 +27,7 @@ def stop_jupyter_workbench(workbench_stop_request: entities.WorkbenchStop):
         instance_zone=workbench_stop_request.instance_zone,
         user_email=workbench_stop_request.user_email,
     )()
+
+
+def start_jupyter_workbench(workbench_start_request: entities.WorkbenchStartStop):
+    return workflows.start_jupyter_workbench(**workbench_start_request)()

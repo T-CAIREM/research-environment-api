@@ -65,7 +65,7 @@ def schedule_workbench_create(workbench_creation_request: entities.WorkbenchCrea
         pass
 
 
-def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStop):
+def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStartStop):
     if workbench_stop_request.workbench_type == "jupyter":
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
     else:
@@ -74,4 +74,9 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStop):
 
 
 def schedule_workbench_start(workbench_start_request):
+    if workbench_start_request.workbench_type == "jupyter":
+        return schedulers.start_jupyter_workbench(workbench_start_request)
+    else:
+        # TODO: Integrate RStudio
+        pass
     pass

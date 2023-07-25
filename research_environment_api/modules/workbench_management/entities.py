@@ -107,16 +107,9 @@ class WorkbenchCreation:
 
 
 @dataclass
-class WorkbenchStop:
+class WorkbenchStartStop:
     workbench_type: str
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
     instance_zone: Optional[str] = None
-
-
-@dataclass
-class JupyterWorkbenchStart:
-    user_project: str
-    instance_name: str
-    gcp_identifier: str

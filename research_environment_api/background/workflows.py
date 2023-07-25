@@ -39,3 +39,22 @@ def stop_jupyter_workbench(
         tasks.check_polling_future_status.s(),
         tasks.process_compute_instance_status.s(),
     )
+
+
+def start_jupyter_workbench(
+    workspace_project_id: str,
+    workbench_resource_id: str,
+    instance_zone: str,
+    user_email: str,
+):
+    return chain(
+        tasks.start_compute_instance.s(
+            workspace_project_id=workspace_project_id,
+            workbench_resource_id=workbench_resource_id,
+            user_email=user_email,
+            instance_zone=instance_zone,
+            build_type=enums.BuildType.JUPYTER_STOP,
+        ),
+        tasks.check_polling_future_status.s(),
+        tasks.process_compute_instance_status.s(),
+    )
