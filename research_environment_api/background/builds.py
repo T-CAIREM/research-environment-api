@@ -7,10 +7,6 @@ from research_environment_api.background import build_templates
 from research_environment_api.modules.app import app
 
 
-def _get_appengine_region(region: str):
-    return "us-central" if region == "us-central1" else region
-
-
 def _base_build() -> cloudbuild_v1.Build:
     cloud_build = cloudbuild_v1.Build()
     cloud_build.service_account = app.config.cloud_build_service_account_name
@@ -26,11 +22,11 @@ def _base_build() -> cloudbuild_v1.Build:
 
 
 def create_jupyter_workbench_build(
-    user_project_id: str,
+    workspace_project_id: str,
     region: str,
     zone: str,
     machine_type: str,
-    persistent_disk: int,
+    persistent_disk: str,
     gpu_accelerator_type: str,
     dataset_identifier: str,
     user_email: str,
@@ -43,7 +39,7 @@ def create_jupyter_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
-        "_PROJECT_ID": user_project_id,
+        "_PROJECT_ID": workspace_project_id,
         "_REGION": region,
         "_ZONE": zone,
         "_MACHINE_TYPE": machine_type,
@@ -62,41 +58,39 @@ def create_jupyter_workbench_build(
 
 def create_workspace_build(
     billing_account_id: str,
-    project_name: str,
-    email_id: str,
+    workspace_project_id: str,
+    user_email: str,
     region: str,
 ):
-    appengine_region = _get_appengine_region(region)
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_WORKSPACE_STEPS
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
-        "_PROJECT_ID": project_name,
-        "_EMAIL_ID": email_id,
+        "_PROJECT_ID": workspace_project_id,
+        "_EMAIL_ID": user_email,
         "_MACHINE_TYPE": "n1-standard-1",
         "_REGION": region,
-        "_SERVICE_ACCOUNT": f"default-rstudio@{project_name}.iam.gserviceaccount.com",
-        "_APPENGINE_REGION": appengine_region,
+        "_SERVICE_ACCOUNT": f"default-rstudio@{workspace_project_id}.iam.gserviceaccount.com",
+        "_APPENGINE_REGION": region,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
-        "_PERIMETER_NAME": app.config.perimeter_name,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
 
     return cloud_build
 
 
 def destroy_workspace_build(
-    billing_account_id: str, workspace_id: str, email_id: str, region: str
+    billing_account_id: str, workspace_project_id: str, user_email: str, region: str
 ):
-    appengine_region = _get_appengine_region(region)
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_WORKSPACE_STEPS
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
-        "_PROJECT_ID": workspace_id,
-        "_EMAIL_ID": email_id,
-        "_APPENGINE_REGION": appengine_region,
+        "_PROJECT_ID": workspace_project_id,
+        "_EMAIL_ID": user_email,
+        "_APPENGINE_REGION": region,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
-        "_PERIMETER_NAME": app.config.perimeter_name,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
 
     return cloud_build

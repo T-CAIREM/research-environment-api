@@ -125,7 +125,7 @@ def check_operation_status(
     operation_context: Tuple[operations.Operation, Any],
 ) -> Any:
     operation, passthrough = operation_context
-    if not operation.done():
+    if not operation.is_done():
         raise self.retry(max_retries=None, countdown=30)
 
     return passthrough

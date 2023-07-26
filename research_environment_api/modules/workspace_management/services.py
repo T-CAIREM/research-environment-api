@@ -24,19 +24,6 @@ def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
     return [_build_workspace_entity(project) for project in gcp_projects]
 
 
-# def _create_google_project(workspace_creation: entities.WorkspaceCreation):
-#     workspace_controller_client = app.config.legacy_workspace_controller_client
-#
-#     created_workspace = workspace_controller_client.create_workspace(
-#         gcp_user_id=workspace_creation.username,
-#         email=workspace_creation.email,
-#         region=workspace_creation.region,
-#         billing_account_id=workspace_creation.billing_account_id,
-#     )
-#
-#     return created_workspace
-
-
 def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
     workspace_controller_client = app.config.legacy_workspace_controller_client
 

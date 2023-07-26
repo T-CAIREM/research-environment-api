@@ -16,11 +16,21 @@ def create_jupyter_notebook(
     zone, *fallback_zones = random.sample(zones, len(zones))
 
     build = builds.create_jupyter_workbench_build(
-        zone=zone, **workbench_creation_request
+        workspace_project_id=workbench_creation_request.workspace_project_id,
+        region=workbench_creation_request.region.value,
+        zone=zone,
+        machine_type=workbench_creation_request.machine_type,
+        persistent_disk=workbench_creation_request.persistent_disk,
+        gpu_accelerator_type=workbench_creation_request.gpu_accelerator_type,
+        dataset_identifier=workbench_creation_request.dataset_identifier,
+        user_email=workbench_creation_request.user_email,
+        bucket_name=workbench_creation_request.bucket_name,
+        vm_image=workbench_creation_request.vm_image,
+        jupyter_startup_script_bucket=workbench_creation_request.jupyter_startup_script_bucket,
     )
     return workflows.create_jupyter_notebook(
         build=build,
-        user_email=workbench_creation_request.email_id,
+        user_email=workbench_creation_request.user_email,
         fallback_zones=fallback_zones,
     )()
 
@@ -28,16 +38,26 @@ def create_jupyter_notebook(
 def create_workspace(
     workspace_creation_request: workspace_entities.WorkspaceCreation,
 ):
-    build = builds.create_workspace_build(**workspace_creation_request)
+    build = builds.create_workspace_build(
+        billing_account_id=workspace_creation_request.billing_account_id,
+        workspace_project_id=workspace_creation_request.workspace_project_id,
+        user_email=workspace_creation_request.user_email,
+        region=workspace_creation_request.region.value,
+    )
     return workflows.create_workspace(
-        build=build, user_email=workspace_creation_request.email_id
+        build=build, user_email=workspace_creation_request.user_email
     )
 
 
 def destroy_workspace(workspace_deletion_request: workspace_entities.WorkspaceDeletion):
-    build = builds.destroy_workspace_build(**workspace_deletion_request)
+    build = builds.destroy_workspace_build(
+        billing_account_id=workspace_deletion_request.billing_account_id,
+        workspace_project_id=workspace_deletion_request.workspace_project_id,
+        user_email=workspace_deletion_request.user_email,
+        region=workspace_deletion_request.region.value,
+    )
     return workflows.destroy_workspace(
-        build=build, user_email=workspace_deletion_request.email_id
+        build=build, user_email=workspace_deletion_request.user_email
     )
 
 

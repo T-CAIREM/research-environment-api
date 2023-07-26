@@ -11,12 +11,12 @@ class WorkspaceCreationRequest(Schema):
     region = fields.Str(
         required=True, validate=validate.OneOf([r.value for r in Region])
     )
-    email_id = fields.Str(required=True, validate=validate.Email())
+    user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
 
 
 class WorkspaceDeletionRequest(Schema):
-    email_id = fields.Str(required=True, validate=validate.Email())
+    user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
     region = fields.Str(
         required=True, validate=validate.OneOf([r.value for r in Region])

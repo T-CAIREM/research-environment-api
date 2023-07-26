@@ -14,7 +14,7 @@ def create_workspace():
     workspace_creation_request = schemas.WorkspaceCreationRequest().load(body)
     workspace_creation_entity = entities.WorkspaceCreation(**workspace_creation_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_creation_entity.email_id)
+    cache.delete_memoized(list_active_workspaces, workspace_creation_entity.user_email)
     created_google_workspace = services.create_workspace(workspace_creation_entity)
 
     return created_google_workspace, 201
@@ -26,7 +26,7 @@ def delete_workspace():
     workspace_deletion_request = schemas.WorkspaceDeletionRequest().load(body)
     workspace_deletion_entity = entities.WorkspaceDeletion(**workspace_deletion_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.email_id)
+    cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.user_email)
     deleted_google_workspace = services.delete_workspace(workspace_deletion_entity)
 
     return deleted_google_workspace.text, 201

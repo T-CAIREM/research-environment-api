@@ -15,7 +15,7 @@ def create_jupyter_notebook(
             build_type=enums.BuildType.JUPYTER_CREATION,
             user_email=user_email,
         ),
-        tasks.check_polling_future_status.s(),
+        tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             fallback_zones=fallback_zones, user_email=user_email
         ),
@@ -36,7 +36,7 @@ def stop_jupyter_workbench(
             instance_zone=instance_zone,
             build_type=enums.BuildType.JUPYTER_STOP,
         ),
-        tasks.check_polling_future_status.s(),
+        tasks.check_operation_status.s(),
         tasks.process_compute_instance_status.s(),
     )
 
@@ -51,7 +51,7 @@ def create_workspace(
             build_type=enums.BuildType.WORKSPACE_CREATION,
             user_email=user_email,
         ),
-        tasks.check_polling_future_status.s(),
+        tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
     )
 
@@ -66,6 +66,6 @@ def destroy_workspace(
             build_type=enums.BuildType.WORKSPACE_DELETION,
             user_email=user_email,
         ),
-        tasks.check_polling_future_status.s(),
+        tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
     )

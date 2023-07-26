@@ -7,38 +7,39 @@ from research_environment_api.modules.workbench_management.entities import Workb
 from research_environment_api.modules.workspace_management.constants import (
     GOOGLE_REGIONS_SHORTCUTS,
 )
+from research_environment_api.modules.workspace_management.enums import Region
 
 
 @dataclass
 class WorkspaceCreation:
-    region: str
-    email_id: str
-    project_name: str = field(init=False)
+    region: Region
+    user_email: str
+    workspace_project_id: str = field(init=False)
     billing_account_id: str
     username: str = field(init=False)
 
     def __post_init__(self):
-        self.username, domain = self.email_id.split("@")
-        self.project_name = self._project_name()
+        self.username, domain = self.user_email.split("@")
+        self.workspace_project_id = self._workspace_project_id()
 
-    def _project_name(self):
-        project_name = (
+    def _workspace_project_id(self):
+        workspace_project_id = (
             f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region]}-"
             + "".join(random.choices(string.ascii_lowercase, k=5))
         )
-        return project_name
+        return workspace_project_id
 
 
 @dataclass
 class WorkspaceDeletion:
-    workspace_id: str
-    region: str
-    email_id: str
+    workspace_project_id: str
+    region: Region
+    user_email: str
     billing_account_id: str
     username: str = field(init=False)
 
     def __post_init__(self):
-        self.username, domain = self.email_id.split("@")
+        self.username, domain = self.user_email.split("@")
 
 
 @dataclass
