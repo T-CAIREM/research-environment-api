@@ -76,7 +76,6 @@ def update_jupyter_workbench_build(
         "_MACHINE_TYPE": machine_type,
         "_PROJECT_ID": workspace_project_id,
         "_INSTANCE_NAME": workbench_resource_id,
-        "_STATUS": "RUNNING",
         "_REGION": region,
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,

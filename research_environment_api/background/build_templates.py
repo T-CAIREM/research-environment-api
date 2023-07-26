@@ -76,7 +76,6 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_dataset=${_DATASET}",
-            "TF_VAR_status=${_STATUS}",
             "TF_VAR_region=${_REGION}",
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_bucket_name=${_BUCKET_NAME}",
