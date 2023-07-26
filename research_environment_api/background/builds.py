@@ -54,3 +54,38 @@ def create_jupyter_workbench_build(
     }
 
     return cloud_build
+
+
+def update_jupyter_workbench_build(
+    workspace_project_id: str,
+    region: str,
+    zone: str,
+    machine_type: str,
+    persistent_disk: str,
+    gpu_accelerator_type: str,
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+    vm_image: str,
+    jupyter_startup_script_bucket: str,
+    workbench_resource_id: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type,
+        "_PROJECT_ID": workspace_project_id,
+        "_INSTANCE_NAME": workbench_resource_id,
+        "_STATUS": "RUNNING",
+        "_REGION": region,
+        "_DATASET": dataset_identifier,
+        "_EMAIL_ID": user_email,
+        "_BUCKET_NAME": bucket_name,
+        "_VM_IMAGE": vm_image,
+        "_PERSISTENT_DISK": persistent_disk,
+        "_GPU_ACCELERATOR": gpu_accelerator_type,
+        "_ZONE": zone,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+    }
+
+    return cloud_build

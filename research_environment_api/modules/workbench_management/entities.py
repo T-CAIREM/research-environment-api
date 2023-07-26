@@ -83,20 +83,19 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchCreation:
+class WorkbenchUpdateCreate:
     workbench_type: str
     machine_type: str
     persistent_disk: str
     gpu_accelerator_type: str
     workspace_project_id: str
-    dataset: str
-    email_id: str
+    dataset_identifier: str
+    user_email: str
     bucket_name: str
     region: str
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
-    instance_name: Optional[str] = None
-    gcp_identifier: Optional[str] = None
+    workbench_resource_id: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script

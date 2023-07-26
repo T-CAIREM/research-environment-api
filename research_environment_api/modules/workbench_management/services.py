@@ -28,6 +28,17 @@ def list_workbenches(
     return gce_instance_workbenches + app_engine_workbenches
 
 
+def get_jupyter_workbench(
+    gcp_project_id: str,
+    workbench_resource_id: str,
+) -> entities.Workbench:
+    gce_instances = _fetch_gce_instances(gcp_project_id)
+    gce_instance = filter(
+        lambda instance: instance.name == workbench_resource_id, gce_instances
+    )
+    return entities.Workbench.from_gce_instance(gce_instance)
+
+
 def _fetch_app_engine_services(
     gcp_project_id: str,
 ) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
@@ -57,7 +68,7 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
-def schedule_workbench_create(workbench_creation_request: entities.WorkbenchCreation):
+def schedule_workbench_create(workbench_creation_request: entities.WorkbenchUpdateCreate):
     if workbench_creation_request.workbench_type == "jupyter":
         return schedulers.create_jupyter_notebook(workbench_creation_request)
     else:
@@ -73,7 +84,7 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStop):
         pass
 
 
-def schedule_workbench_update(workbench_update_request: entities.WorkbenchUpdate):
+def schedule_workbench_update(workbench_update_request: entities.WorkbenchUpdateCreate):
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
     else:
