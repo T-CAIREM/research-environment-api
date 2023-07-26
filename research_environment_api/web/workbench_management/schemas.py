@@ -31,5 +31,4 @@ class WorkbenchUpdateRequest(Schema):
     bucket_name = fields.Str(required=True)
     region = fields.Str(required=True)
     persistent_disk = fields.Str(required=True)
-    vm_image = fields.Str(required=True)
     gpu_accelerator_type = fields.Str(required=True)
