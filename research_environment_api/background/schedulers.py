@@ -5,7 +5,7 @@ from research_environment_api.modules.workbench_management import entities, serv
 
 
 def create_jupyter_notebook(
-    workbench_creation_request: entities.WorkbenchUpdateCreate,
+    workbench_creation_request: entities.WorkbenchCreate,
 ):
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
@@ -29,7 +29,7 @@ def stop_jupyter_workbench(workbench_stop_request: entities.WorkbenchStop):
     )()
 
 
-def update_jupyter_workbench(workbench_update_request: entities.WorkbenchUpdateCreate):
+def update_jupyter_workbench(workbench_update_request: entities.WorkbenchUpdate):
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,

@@ -83,7 +83,7 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchUpdateCreate:
+class WorkbenchCreate:
     workbench_type: str
     machine_type: str
     persistent_disk: str
@@ -95,7 +95,6 @@ class WorkbenchUpdateCreate:
     region: str
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
-    workbench_resource_id: Optional[str] = None
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
@@ -105,6 +104,11 @@ class WorkbenchUpdateCreate:
             if self.gpu_accelerator_type
             else "r-4-2-cpu-experimental-notebooks"
         )
+
+
+@dataclass
+class WorkbenchUpdate(WorkbenchCreate):
+    workbench_resource_id: str
 
 
 @dataclass
