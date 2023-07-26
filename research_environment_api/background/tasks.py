@@ -114,18 +114,22 @@ def start_compute_instance(
 ):
     with app.database_session() as session:
         instance_client = app.config.google_compute_engine_instances_client
-        operation = instance_client.start(
+        start_operation = instance_client.start(
             project=workspace_project_id,
             instance=workbench_resource_id,
             zone=instance_zone,
         )
         workbench_activity = models.WorkbenchActivity(
-            gcp_identifier=operation.name,
+            gcp_identifier=start_operation.name,
             build_type=build_type,
             invoker_email=user_email,
         )
         session.add(workbench_activity)
         session.commit()
+
+    operation = operations.InstanceOperation(
+        project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
+    )
 
     return operation, None
 

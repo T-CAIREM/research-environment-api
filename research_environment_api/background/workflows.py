@@ -55,6 +55,6 @@ def start_jupyter_workbench(
             instance_zone=instance_zone,
             build_type=enums.BuildType.JUPYTER_STOP,
         ),
-        tasks.check_polling_future_status.s(),
+        tasks.check_operation_status.s(),
         tasks.process_compute_instance_status.s(),
     )
