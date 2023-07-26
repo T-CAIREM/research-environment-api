@@ -46,7 +46,7 @@ def create_workspace(
     )
     return workflows.create_workspace(
         build=build, user_email=workspace_creation_request.user_email
-    )
+    )()
 
 
 def destroy_workspace(workspace_deletion_request: workspace_entities.WorkspaceDeletion):
@@ -58,7 +58,7 @@ def destroy_workspace(workspace_deletion_request: workspace_entities.WorkspaceDe
     )
     return workflows.destroy_workspace(
         build=build, user_email=workspace_deletion_request.user_email
-    )
+    )()
 
 
 def stop_jupyter_workbench(workbench_stop_request: workbench_entities.WorkbenchStop):

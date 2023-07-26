@@ -8,9 +8,7 @@ from research_environment_api.modules.workspace_management.enums import Region
 
 
 class WorkspaceCreationRequest(Schema):
-    region = fields.Str(
-        required=True, validate=validate.OneOf([r.value for r in Region])
-    )
+    region = fields.Enum(Region, by_value=True, required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
 
@@ -18,9 +16,7 @@ class WorkspaceCreationRequest(Schema):
 class WorkspaceDeletionRequest(Schema):
     user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
-    region = fields.Str(
-        required=True, validate=validate.OneOf([r.value for r in Region])
-    )
+    region = fields.Enum(Region, by_value=True, required=True)
     workspace_id = fields.Str(required=True)
 
 

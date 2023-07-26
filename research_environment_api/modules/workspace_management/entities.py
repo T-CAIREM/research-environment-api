@@ -24,7 +24,7 @@ class WorkspaceCreation:
 
     def _workspace_project_id(self):
         workspace_project_id = (
-            f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region]}-"
+            f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region.value]}-"
             + "".join(random.choices(string.ascii_lowercase, k=5))
         )
         return workspace_project_id
