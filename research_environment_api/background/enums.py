@@ -8,3 +8,4 @@ class BuildType(StrEnum):
     RSTUDIO_CREATION = "rstudio_creation"
     JUPYTER_CREATION_RETRY = "jupyter_creation_retry"
     JUPYTER_STOP = "jupyter_stop"
+    JUPYTER_START = "jupyter_start"

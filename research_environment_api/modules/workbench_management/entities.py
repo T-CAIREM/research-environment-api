@@ -108,7 +108,7 @@ class WorkbenchCreation:
 
 
 @dataclass
-class WorkbenchStop:
+class WorkbenchStartStop:
     workbench_type: str
     workspace_project_id: str
     workbench_resource_id: str

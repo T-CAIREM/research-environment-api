@@ -68,3 +68,12 @@ def stop_jupyter_workbench(workbench_stop_request: workbench_entities.WorkbenchS
         instance_zone=workbench_stop_request.instance_zone,
         user_email=workbench_stop_request.user_email,
     )()
+
+
+def start_jupyter_workbench(workbench_start_request: entities.WorkbenchStartStop):
+    return workflows.start_jupyter_workbench(
+        workspace_project_id=workbench_start_request.workspace_project_id,
+        workbench_resource_id=workbench_start_request.workbench_resource_id,
+        instance_zone=workbench_start_request.instance_zone,
+        user_email=workbench_start_request.user_email
+    )()

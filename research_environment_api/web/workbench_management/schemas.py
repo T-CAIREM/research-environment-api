@@ -16,9 +16,9 @@ class WorkbenchCreationRequest(Schema):
     gpu_accelerator = fields.Str()
 
 
-class WorkbenchStopRequest(Schema):
+class WorkbenchStartStopRequest(Schema):
     workbench_type = fields.Str(required=True)
     user_email = fields.Str(required=True)
     workspace_project_id = fields.Str(requried=True)
     workbench_resource_id = fields.Str(required=True)
-    zone = fields.Str()
+    instance_zone = fields.Str()
