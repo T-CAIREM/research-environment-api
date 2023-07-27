@@ -4,10 +4,10 @@ from research_environment_api.background import builds, constants, workflows
 from research_environment_api.modules.workbench_management import (
     entities as workbench_entities,
 )
+from research_environment_api.modules.workbench_management import services
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
-from research_environment_api.modules.workbench_management import services
 
 
 def create_jupyter_workbench(
@@ -71,16 +71,20 @@ def stop_jupyter_workbench(workbench_stop_request: workbench_entities.WorkbenchS
     )()
 
 
-def start_jupyter_workbench(workbench_start_request: workbench_entities.WorkbenchStartStop):
+def start_jupyter_workbench(
+    workbench_start_request: workbench_entities.WorkbenchStartStop,
+):
     return workflows.start_jupyter_workbench(
         workspace_project_id=workbench_start_request.workspace_project_id,
         workbench_resource_id=workbench_start_request.workbench_resource_id,
         instance_zone=workbench_start_request.instance_zone,
-        user_email=workbench_start_request.user_email
+        user_email=workbench_start_request.user_email,
     )()
 
 
-def update_jupyter_workbench(workbench_update_request: workbench_entities.WorkbenchUpdate):
+def update_jupyter_workbench(
+    workbench_update_request: workbench_entities.WorkbenchUpdate,
+):
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,
@@ -121,6 +125,5 @@ def destroy_jupyter_workbench(
         jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
     )
     return workflows.destroy_jupyter_notebook(
-        build=build,
-        user_email=workbench_destroy_request.user_email
+        build=build, user_email=workbench_destroy_request.user_email
     )()

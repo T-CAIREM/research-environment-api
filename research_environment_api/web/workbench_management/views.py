@@ -53,7 +53,9 @@ def update_workbench():
 def destroy_workbench():
     body = request.get_json()
     workbench_destroy_request = schemas.WorkbenchCreateDestroyRequest().load(body)
-    workbench_destroy_entity = entities.WorkbenchCreateDestroy(**workbench_destroy_request)
+    workbench_destroy_entity = entities.WorkbenchCreateDestroy(
+        **workbench_destroy_request
+    )
     services.schedule_workbench_destroy(workbench_destroy_entity)
 
     return "", 200

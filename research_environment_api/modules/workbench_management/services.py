@@ -68,7 +68,9 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
-def schedule_workbench_create(workbench_creation_request: entities.WorkbenchCreateDestroy):
+def schedule_workbench_create(
+    workbench_creation_request: entities.WorkbenchCreateDestroy,
+):
     if workbench_creation_request.workbench_type == "jupyter":
         return schedulers.create_jupyter_notebook(workbench_creation_request)
     else:
@@ -101,7 +103,9 @@ def schedule_workbench_update(workbench_update_request: entities.WorkbenchUpdate
         pass
 
 
-def schedule_workbench_destroy(workbench_destroy_request: entities.WorkbenchCreateDestroy):
+def schedule_workbench_destroy(
+    workbench_destroy_request: entities.WorkbenchCreateDestroy,
+):
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
     else:
