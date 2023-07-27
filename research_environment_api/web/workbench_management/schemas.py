@@ -13,11 +13,8 @@ class WorkbenchCreationRequest(WorkbenchBaseClass):
     dataset = fields.Str(required=True)
     user_email = fields.Str(required=True)
     dataset_identifier = fields.Str(required=True)
-    user_email = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
-    region = fields.Str(
-        required=True, validate=validate.OneOf([r.value for r in Region])
-    )
+    region = fields.Enum(Region, by_value=True, required=True)
     persistent_disk = fields.Str(required=True)
     gpu_accelerator_type = fields.Str()
 
