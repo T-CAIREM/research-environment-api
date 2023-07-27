@@ -9,3 +9,4 @@ class BuildType(StrEnum):
     JUPYTER_CREATION_RETRY = "jupyter_creation_retry"
     JUPYTER_STOP = "jupyter_stop"
     JUPYTER_START = "jupyter_start"
+    JUPYTER_UPDATE = "jupyter_update"

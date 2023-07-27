@@ -84,7 +84,7 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchCreation:
+class WorkbenchCreate:
     workbench_type: str
     machine_type: str
     persistent_disk: str
@@ -105,6 +105,11 @@ class WorkbenchCreation:
             if self.gpu_accelerator_type
             else "r-4-2-cpu-experimental-notebooks"
         )
+
+
+@dataclass
+class WorkbenchUpdate(WorkbenchCreate):
+    workbench_resource_id: str
 
 
 @dataclass

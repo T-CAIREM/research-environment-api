@@ -60,6 +60,18 @@ def start_jupyter_workbench(
     )
 
 
+def update_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build,
+            build_type=enums.BuildType.JUPYTER_UPDATE,
+            user_email=user_email,
+        ),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(user_email=user_email),
+    )
+
+
 def create_workspace(
     build: cloudbuild_v1.Build,
     user_email: str,
