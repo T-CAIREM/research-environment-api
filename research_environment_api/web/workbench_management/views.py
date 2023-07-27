@@ -10,8 +10,8 @@ from research_environment_api.web.workbench_management import (
 @workbench_management_bp.post("/create")
 def create_workbench():
     body = request.get_json()
-    workbench_creation_request = schemas.WorkbenchCreationRequest().load(body)
-    workbench_entity = entities.WorkbenchCreate(**workbench_creation_request)
+    workbench_creation_request = schemas.WorkbenchCreateDestroyRequest().load(body)
+    workbench_entity = entities.WorkbenchCreateDestroy(**workbench_creation_request)
     services.schedule_workbench_create(workbench_entity)
 
     return "", 200
@@ -46,4 +46,14 @@ def update_workbench():
     workbench_update_entity = entities.WorkbenchUpdate(**workbench_update_request)
     services.schedule_workbench_update(workbench_update_entity)
 
-    return 200
+    return "", 200
+
+
+@workbench_management_bp.post("/destroy")
+def destroy_workbench():
+    body = request.get_json()
+    workbench_destroy_request = schemas.WorkbenchCreateDestroyRequest().load(body)
+    workbench_destroy_entity = entities.WorkbenchCreateDestroy(**workbench_destroy_request)
+    services.schedule_workbench_destroy(workbench_destroy_entity)
+
+    return "", 200

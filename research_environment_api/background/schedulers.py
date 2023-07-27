@@ -10,8 +10,8 @@ from research_environment_api.modules.workspace_management import (
 from research_environment_api.modules.workbench_management import services
 
 
-def create_jupyter_notebook(
-    workbench_creation_request: workbench_entities.WorkbenchCreate,
+def create_jupyter_workbench(
+    workbench_creation_request: workbench_entities.WorkbenchCreateDestroy,
 ):
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
@@ -101,4 +101,26 @@ def update_jupyter_workbench(workbench_update_request: workbench_entities.Workbe
     )
     return workflows.update_jupyter_workbench(
         build=build, user_email=workbench_update_request.user_email
+    )()
+
+
+def destroy_jupyter_workbench(
+    workbench_destroy_request: workbench_entities.WorkbenchCreateDestroy,
+):
+    build = builds.destroy_jupyter_workbench_build(
+        workspace_project_id=workbench_destroy_request.workspace_project_id,
+        region=workbench_destroy_request.region.value,
+        zone=zone,
+        machine_type=workbench_destroy_request.machine_type,
+        persistent_disk=workbench_destroy_request.persistent_disk,
+        gpu_accelerator_type=workbench_destroy_request.gpu_accelerator_type,
+        dataset_identifier=workbench_destroy_request.dataset_identifier,
+        user_email=workbench_destroy_request.user_email,
+        bucket_name=workbench_destroy_request.bucket_name,
+        vm_image=workbench_destroy_request.vm_image,
+        jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
+    )
+    return workflows.destroy_jupyter_notebook(
+        build=build,
+        user_email=workbench_destroy_request.user_email
     )()

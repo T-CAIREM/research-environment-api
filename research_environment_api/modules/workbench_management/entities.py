@@ -84,7 +84,7 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchCreate:
+class WorkbenchCreateDestroy:
     workbench_type: str
     machine_type: str
     persistent_disk: str
@@ -108,7 +108,7 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchUpdate(WorkbenchCreate):
+class WorkbenchUpdate(WorkbenchCreateDestroy):
     workbench_resource_id: str
 
 
