@@ -22,11 +22,11 @@ def _base_build() -> cloudbuild_v1.Build:
 
 
 def create_jupyter_workbench_build(
-    user_project_id: str,
+    workspace_project_id: str,
     region: str,
     zone: str,
     machine_type: str,
-    persistent_disk: int,
+    persistent_disk: str,
     gpu_accelerator_type: str,
     dataset_identifier: str,
     user_email: str,
@@ -39,7 +39,7 @@ def create_jupyter_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
-        "_PROJECT_ID": user_project_id,
+        "_PROJECT_ID": workspace_project_id,
         "_REGION": region,
         "_ZONE": zone,
         "_MACHINE_TYPE": machine_type,
@@ -85,6 +85,43 @@ def update_jupyter_workbench_build(
         "_GPU_ACCELERATOR": gpu_accelerator_type,
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+    }
+
+    return cloud_build
+
+
+def create_workspace_build(
+    billing_account_id: str,
+    workspace_project_id: str,
+    user_email: str,
+    region: str,
+):
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.CREATE_WORKSPACE_STEPS
+    cloud_build.substitutions = {
+        "_BILLING_ACCOUNT": billing_account_id,
+        "_PROJECT_ID": workspace_project_id,
+        "_EMAIL_ID": user_email,
+        "_APPENGINE_REGION": region,
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+    }
+
+    return cloud_build
+
+
+def destroy_workspace_build(
+    billing_account_id: str, workspace_project_id: str, user_email: str, region: str
+):
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.DESTROY_WORKSPACE_STEPS
+    cloud_build.substitutions = {
+        "_BILLING_ACCOUNT": billing_account_id,
+        "_PROJECT_ID": workspace_project_id,
+        "_EMAIL_ID": user_email,
+        "_APPENGINE_REGION": region,
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
 
     return cloud_build

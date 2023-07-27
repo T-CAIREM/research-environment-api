@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from celery import shared_task
 from google.api_core.future import polling
@@ -34,8 +34,8 @@ def start_cloud_build(
 @shared_task
 def process_cloud_build_result(
     build_id: str,
-    fallback_zones: List[str],
     user_email: str,
+    fallback_zones: Optional[List[str]] = None,
 ):
     build = app.config.google_cloud_build_client.get_build(
         project_id=app.config.project_id, id=build_id
@@ -105,6 +105,36 @@ def stop_compute_instance(
 
 
 @shared_task
+def start_compute_instance(
+    workspace_project_id: str,
+    workbench_resource_id: str,
+    user_email: str,
+    build_type: enums.BuildType,
+    instance_zone: str,
+):
+    with app.database_session() as session:
+        instance_client = app.config.google_compute_engine_instances_client
+        start_operation = instance_client.start(
+            project=workspace_project_id,
+            instance=workbench_resource_id,
+            zone=instance_zone,
+        )
+        workbench_activity = models.WorkbenchActivity(
+            gcp_identifier=start_operation.name,
+            build_type=build_type,
+            invoker_email=user_email,
+        )
+        session.add(workbench_activity)
+        session.commit()
+
+    operation = operations.InstanceOperation(
+        project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
+    )
+
+    return operation, None
+
+
+@shared_task
 def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
     # TODO: Figure a sensible way to process this.
     instance, operation_identifier = instance_operation_identifier_tuple
@@ -125,7 +155,7 @@ def check_operation_status(
     operation_context: Tuple[operations.Operation, Any],
 ) -> Any:
     operation, passthrough = operation_context
-    if not operation.done():
+    if not operation.is_done():
         raise self.retry(max_retries=None, countdown=30)
 
     return passthrough
