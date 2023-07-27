@@ -26,10 +26,10 @@ def delete_workspace():
     workspace_deletion_request = schemas.WorkspaceDeletionRequest().load(body)
     workspace_deletion_entity = entities.WorkspaceDeletion(**workspace_deletion_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.user_email)
+    # cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.user_email)
     deleted_google_workspace = services.delete_workspace(workspace_deletion_entity)
 
-    return deleted_google_workspace.text, 201
+    return deleted_google_workspace, 201
 
 
 @workspace_management_bp.get("/<email>")

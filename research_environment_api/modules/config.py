@@ -98,7 +98,7 @@ class Config:
             credentials=self.service_account_credentials
         )
         self.google_operations_client = (
-            self.google_cloud_build_client._transport._operations_client
+            self.google_cloud_build_client._transport.operations_client
         )
         self.google_app_engine_services_client = (
             google.cloud.appengine_admin.ServicesClient(

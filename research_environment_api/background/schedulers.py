@@ -13,7 +13,7 @@ from research_environment_api.modules.workspace_management import (
 def create_jupyter_notebook(
     workbench_creation_request: workbench_entities.WorkbenchCreate,
 ):
-    zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
+    zones = constants.AVAILABLE_ZONES[workbench_creation_request.region.value]
     zone, *fallback_zones = random.sample(zones, len(zones))
 
     build = builds.create_jupyter_workbench_build(
@@ -62,7 +62,7 @@ def destroy_workspace(workspace_deletion_request: workspace_entities.WorkspaceDe
     )()
 
 
-def stop_jupyter_workbench(workbench_stop_request: workbench_entities.WorkbenchStop):
+def stop_jupyter_workbench(workbench_stop_request: workbench_entities.WorkbenchStartStop):
     return workflows.stop_jupyter_workbench(
         workspace_project_id=workbench_stop_request.workspace_project_id,
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
@@ -91,7 +91,7 @@ def update_jupyter_workbench(
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
-        region=workbench_update_request.region,
+        region=workbench_update_request.region.value,
         machine_type=workbench_update_request.machine_type,
         persistent_disk=workbench_update_request.persistent_disk,
         gpu_accelerator_type=workbench_update_request.gpu_accelerator_type,

@@ -5,9 +5,9 @@ Revises: 3955e608c536
 Create Date: 2023-07-19 11:06:13.067945
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "13a4128a89fe"
@@ -24,10 +24,14 @@ def upgrade() -> None:
         sa.Column(
             "build_type",
             sa.Enum(
+                "WORKSPACE_CREATION",
+                "WORKSPACE_DELETION",
                 "JUPYTER_CREATION",
                 "RSTUDIO_CREATION",
                 "JUPYTER_CREATION_RETRY",
                 "JUPYTER_STOP",
+                "JUPYTER_START",
+                "JUPYTER_UPDATE",
                 name="buildtype",
             ),
             nullable=False,

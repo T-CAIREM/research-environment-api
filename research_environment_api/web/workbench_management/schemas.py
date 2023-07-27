@@ -10,8 +10,6 @@ class WorkbenchBaseClass(Schema):
 
 class WorkbenchCreationRequest(WorkbenchBaseClass):
     machine_type = fields.Str(required=True)
-    workspace_project_id = fields.Str(required=True)
-    dataset = fields.Str(required=True)
     user_email = fields.Str(required=True)
     dataset_identifier = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
