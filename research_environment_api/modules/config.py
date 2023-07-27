@@ -45,6 +45,7 @@ class Config:
         self.billing_account_creator_group_id = environ[
             "BILLING_ACCOUNT_CREATOR_GROUP_ID"
         ]
+        self.vpc_secure_perimeter_name = environ["VPC_SECURE_PERIMETER_NAME"]
         self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
         self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
         self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]

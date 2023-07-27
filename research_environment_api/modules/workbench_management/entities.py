@@ -10,6 +10,7 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.constants import (
     MACHINE_TYPE_TO_RESOURCE_MAP,
 )
+from research_environment_api.modules.workspace_management.enums import Region
 
 
 class WorkbenchType(StrEnum):
@@ -89,10 +90,10 @@ class WorkbenchCreation:
     persistent_disk: str
     gpu_accelerator_type: str
     workspace_project_id: str
-    dataset: str
-    email_id: str
+    dataset_identifier: str
+    user_email: str
     bucket_name: str
-    region: str
+    region: Region
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
