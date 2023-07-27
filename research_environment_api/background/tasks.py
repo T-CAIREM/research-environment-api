@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from celery import shared_task
 from google.api_core.future import polling
@@ -34,8 +34,8 @@ def start_cloud_build(
 @shared_task
 def process_cloud_build_result(
     build_id: str,
-    fallback_zones: List[str],
     user_email: str,
+    fallback_zones: Optional[List[str]] = None,
 ):
     build = app.config.google_cloud_build_client.get_build(
         project_id=app.config.project_id, id=build_id
@@ -155,7 +155,7 @@ def check_operation_status(
     operation_context: Tuple[operations.Operation, Any],
 ) -> Any:
     operation, passthrough = operation_context
-    if not operation.done():
+    if not operation.is_done():
         raise self.retry(max_retries=None, countdown=30)
 
     return passthrough
