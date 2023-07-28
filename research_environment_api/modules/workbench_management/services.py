@@ -33,8 +33,8 @@ def get_jupyter_workbench(
     workbench_resource_id: str,
 ) -> entities.Workbench:
     gce_instances = _fetch_gce_instances(gcp_project_id)
-    gce_instance = filter(
-        lambda instance: instance.name == workbench_resource_id, gce_instances
+    gce_instance = next(
+        filter(lambda instance: instance.name == workbench_resource_id, gce_instances)
     )
     return entities.Workbench.from_gce_instance(gce_instance)
 

@@ -21,7 +21,6 @@ class WorkbenchCreationRequest(WorkbenchBaseClass):
 class WorkbenchStartStopRequest(WorkbenchBaseClass):
     user_email = fields.Str(required=True)
     workbench_resource_id = fields.Str(required=True)
-    instance_zone = fields.Str()
 
 
 class WorkbenchUpdateRequest(WorkbenchCreationRequest):

@@ -65,10 +65,14 @@ def destroy_workspace(workspace_deletion_request: workspace_entities.WorkspaceDe
 def stop_jupyter_workbench(
     workbench_stop_request: workbench_entities.WorkbenchStartStop,
 ):
+    gce_instance = services.get_jupyter_workbench(
+        workbench_resource_id=workbench_stop_request.workbench_resource_id,
+        gcp_project_id=workbench_stop_request.workspace_project_id,
+    )
     return workflows.stop_jupyter_workbench(
         workspace_project_id=workbench_stop_request.workspace_project_id,
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
-        instance_zone=workbench_stop_request.instance_zone,
+        instance_zone=gce_instance.zone,
         user_email=workbench_stop_request.user_email,
     )()
 
@@ -76,10 +80,14 @@ def stop_jupyter_workbench(
 def start_jupyter_workbench(
     workbench_start_request: workbench_entities.WorkbenchStartStop,
 ):
+    gce_instance = services.get_jupyter_workbench(
+        workbench_resource_id=workbench_start_request.workbench_resource_id,
+        gcp_project_id=workbench_start_request.workspace_project_id,
+    )
     return workflows.start_jupyter_workbench(
         workspace_project_id=workbench_start_request.workspace_project_id,
         workbench_resource_id=workbench_start_request.workbench_resource_id,
-        instance_zone=workbench_start_request.instance_zone,
+        instance_zone=gce_instance.zone,
         user_email=workbench_start_request.user_email,
     )()
 

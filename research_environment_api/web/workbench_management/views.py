@@ -46,4 +46,4 @@ def update_workbench():
     workbench_update_entity = entities.WorkbenchUpdate(**workbench_update_request)
     services.schedule_workbench_update(workbench_update_entity)
 
-    return 200
+    return "", 200
