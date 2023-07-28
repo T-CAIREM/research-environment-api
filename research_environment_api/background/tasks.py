@@ -48,7 +48,9 @@ def process_cloud_build_result(
                 .filter_by(gcp_identifier=build.id)
                 .one()
             )
-            workbench_activity.build_status = build.status
+            workbench_activity.build_status = constants.CLOUD_BUILD_STATUS_MAP[
+                build.status
+            ]
             if not build.status == CloudBuild.Status.FAILURE:
                 return
 
@@ -80,7 +82,7 @@ def stop_compute_instance(
     user_email: str,
     build_type: enums.BuildType,
     instance_zone: str,
-) -> Tuple[operations.Operation, None]:
+) -> Tuple[operations.Operation, Any]:
     instance_client = app.config.google_compute_engine_instances_client
     stop_operation = instance_client.stop(
         project=workspace_project_id,
@@ -101,7 +103,7 @@ def stop_compute_instance(
         project_id=workspace_project_id, zone=instance_zone, name=stop_operation.name
     )
 
-    return operation, None
+    return operation, (operation, stop_operation.name)
 
 
 @shared_task
@@ -111,7 +113,7 @@ def start_compute_instance(
     user_email: str,
     build_type: enums.BuildType,
     instance_zone: str,
-):
+) -> Tuple[operations.Operation, Any]:
     with app.database_session() as session:
         instance_client = app.config.google_compute_engine_instances_client
         start_operation = instance_client.start(
@@ -131,13 +133,13 @@ def start_compute_instance(
         project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
     )
 
-    return operation, None
+    return operation, (operation, start_operation.name)
 
 
 @shared_task
 def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
     # TODO: Figure a sensible way to process this.
-    instance, operation_identifier = instance_operation_identifier_tuple
+    operation, operation_identifier = instance_operation_identifier_tuple
     with app.database_session() as session:
         workbench_activity = (
             session.query(models.WorkbenchActivity)
@@ -145,17 +147,17 @@ def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
             .one()
         )
         # FIXME: Makes no sense semantically.
-        workbench_activity.build_status = instance.status
+        workbench_activity.build_status = operation.status()
         session.commit()
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, max_retries=None, countdown=30)
 def check_operation_status(
     self,
     operation_context: Tuple[operations.Operation, Any],
 ) -> Any:
     operation, passthrough = operation_context
     if not operation.is_done():
-        raise self.retry(max_retries=None, countdown=30)
+        raise self.retry(countdown=30)
 
     return passthrough

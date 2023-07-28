@@ -4,6 +4,8 @@ import google.cloud.compute as compute
 from google.api_core import operation
 
 from research_environment_api.modules.app import app
+from google.cloud.compute_v1 import Operation as CloudOperation
+from research_environment_api.background.enums import ProcessStatus
 
 
 class Operation(ABC):
@@ -22,6 +24,14 @@ class InstanceOperation(Operation):
         self.project_id = project_id
         self.zone = zone
         self.name = name
+
+    def status(self):
+        operation = self._operation()
+        if operation.error.errors:
+            return ProcessStatus.FAILURE
+        if operation.status == CloudOperation.Status.DONE:
+            return ProcessStatus.SUCCESS
+        return ProcessStatus.IN_PROGRESS
 
     def is_done(self):
         return self._operation().done

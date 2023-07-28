@@ -39,16 +39,9 @@ def upgrade() -> None:
         sa.Column(
             "build_status",
             sa.Enum(
-                "STATUS_UNKNOWN",
-                "PENDING",
-                "QUEUED",
-                "WORKING",
-                "SUCCESS",
+                "IN_PROGRESS",
                 "FAILURE",
-                "INTERNAL_ERROR",
-                "TIMEOUT",
-                "CANCELLED",
-                "EXPIRED",
+                "SUCCESS",
                 name="status",
             ),
             nullable=False,

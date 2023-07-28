@@ -2,7 +2,7 @@ from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from research_environment_api.background.enums import BuildType
+from research_environment_api.background.enums import BuildType, ProcessStatus
 from research_environment_api.modules.model import ScopedModel
 
 
@@ -26,7 +26,7 @@ class WorkbenchActivity(Base):
     gcp_identifier: Mapped[str] = mapped_column(String(), nullable=False)
     invoker_email: Mapped[str] = mapped_column(String(), nullable=False)
     build_type: Mapped[BuildType] = mapped_column(Enum(BuildType), nullable=False)
-    build_status: Mapped[CloudBuild.Status] = mapped_column(
-        Enum(CloudBuild.Status), nullable=True
+    build_status: Mapped[ProcessStatus] = mapped_column(
+        Enum(ProcessStatus), nullable=True
     )
     build_error_information: Mapped[str] = mapped_column(String(), nullable=True)
