@@ -41,9 +41,21 @@ class Workbench:
     dataset_identifier: str
     cpu: float
     memory: float
+    disk_size: int
     type: WorkbenchType
     url: Optional[str]
     zone: Optional[str] = None
+    gpu_accelerator_type: Optional[str] = None
+
+    @staticmethod
+    def set_accelerator_type(instance):
+        if instance.guest_accelerators:
+            return instance.guest_accelerators[0].accelerator_type
+
+    @staticmethod
+    def set_disk_size(instance):
+        if instance.disks:
+            return instance.disks[0].disk_size_gb
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
@@ -66,6 +78,8 @@ class Workbench:
             url=maybe_proxy_url,
             zone=instance.zone,
             type=WorkbenchType.JUPYTER,
+            gpu_accelerator_type=cls.set_accelerator_type(instance),
+            disk_size=cls.set_disk_size(instance),
         )
 
     @classmethod
