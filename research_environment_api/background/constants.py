@@ -1,4 +1,3 @@
-from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 from google.cloud.compute_v1 import Operation
 from research_environment_api.background.enums import ProcessStatus
 
@@ -19,19 +18,6 @@ AVAILABLE_ZONES = {
 
 CLOUD_BUILD_ERROR_MESSAGE = {14: "insufficient resources"}
 
-
-CLOUD_BUILD_STATUS_MAP = {
-    CloudBuild.Status.PENDING: ProcessStatus.IN_PROGRESS,
-    CloudBuild.Status.QUEUED: ProcessStatus.IN_PROGRESS,
-    CloudBuild.Status.WORKING: ProcessStatus.IN_PROGRESS,
-    CloudBuild.Status.SUCCESS: ProcessStatus.SUCCESS,
-    CloudBuild.Status.FAILURE: ProcessStatus.FAILURE,
-    CloudBuild.Status.INTERNAL_ERROR: ProcessStatus.FAILURE,
-    CloudBuild.Status.TIMEOUT: ProcessStatus.FAILURE,
-    CloudBuild.Status.CANCELLED: ProcessStatus.FAILURE,
-    CloudBuild.Status.EXPIRED: ProcessStatus.FAILURE,
-    CloudBuild.Status.STATUS_UNKNOWN: ProcessStatus.FAILURE,
-}
 
 INSTANCE_STATUS_MAP = {
     Operation.Status.PENDING: ProcessStatus.IN_PROGRESS,

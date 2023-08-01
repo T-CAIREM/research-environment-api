@@ -12,7 +12,13 @@ class BuildType(StrEnum):
     JUPYTER_UPDATE = "jupyter_update"
 
 
-class ProcessStatus(StrEnum):
+class WorkflowStatus(StrEnum):
+    IN_PROGRESS = "in_progress"
+    FAILURE = "failure"
+    SUCCESS = "success"
+
+
+class OperationStatus(StrEnum):
     IN_PROGRESS = "in_progress"
     FAILURE = "failure"
     SUCCESS = "success"

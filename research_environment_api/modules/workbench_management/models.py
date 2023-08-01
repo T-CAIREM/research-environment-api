@@ -23,7 +23,6 @@ class WorkbenchMetadata(Base):
 class WorkbenchActivity(Base):
     __local_tablename__ = "workbench_activities"
 
-    gcp_identifier: Mapped[str] = mapped_column(String(), nullable=False)
     invoker_email: Mapped[str] = mapped_column(String(), nullable=False)
     build_type: Mapped[BuildType] = mapped_column(Enum(BuildType), nullable=False)
     build_status: Mapped[ProcessStatus] = mapped_column(

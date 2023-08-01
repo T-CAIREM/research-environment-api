@@ -12,9 +12,9 @@ def create_workbench():
     body = request.get_json()
     workbench_creation_request = schemas.WorkbenchCreationRequest().load(body)
     workbench_entity = entities.WorkbenchCreate(**workbench_creation_request)
-    services.schedule_workbench_create(workbench_entity)
+    workflow_id = services.schedule_workbench_create(workbench_entity)
 
-    return "", 200
+    return workflow_id, 200
 
 
 @workbench_management_bp.post("/stop")
@@ -22,9 +22,9 @@ def stop_workbench():
     body = request.get_json()
     workbench_stop_request = schemas.WorkbenchStartStopRequest().load(body)
     workbench_stop_entity = entities.WorkbenchStartStop(**workbench_stop_request)
-    services.schedule_workbench_stop(workbench_stop_entity)
+    workflow_id = services.schedule_workbench_stop(workbench_stop_entity)
 
-    return "", 200
+    return workflow_id, 200
 
 
 @workbench_management_bp.post("/start")
@@ -34,9 +34,9 @@ def start_workbench():
     jupyter_workbench_stop_entity = entities.WorkbenchStartStop(
         **workbench_stop_request
     )
-    services.schedule_workbench_start(jupyter_workbench_stop_entity)
+    workflow_id = services.schedule_workbench_start(jupyter_workbench_stop_entity)
 
-    return "", 200
+    return workflow_id, 200
 
 
 @workbench_management_bp.post("/update")
@@ -44,6 +44,6 @@ def update_workbench():
     body = request.get_json()
     workbench_update_request = schemas.WorkbenchUpdateRequest().load(body)
     workbench_update_entity = entities.WorkbenchUpdate(**workbench_update_request)
-    services.schedule_workbench_update(workbench_update_entity)
+    workflow_id = services.schedule_workbench_update(workbench_update_entity)
 
-    return "", 200
+    return workflow_id, 200
