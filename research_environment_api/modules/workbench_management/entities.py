@@ -44,6 +44,7 @@ class Workbench:
     disk_size: int
     type: WorkbenchType
     url: Optional[str]
+    machine_type: Optional[str]
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[str] = None
 
