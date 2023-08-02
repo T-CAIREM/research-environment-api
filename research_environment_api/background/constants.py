@@ -17,10 +17,3 @@ AVAILABLE_ZONES = {
 }
 
 CLOUD_BUILD_ERROR_MESSAGE = {14: "insufficient resources"}
-
-
-INSTANCE_STATUS_MAP = {
-    Operation.Status.PENDING: ProcessStatus.IN_PROGRESS,
-    Operation.Status.RUNNING: ProcessStatus.IN_PROGRESS,
-    Operation.Status.UNDEFINED_STATUS: ProcessStatus.FAILURE,
-}

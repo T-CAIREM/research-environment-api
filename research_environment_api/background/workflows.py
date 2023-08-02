@@ -7,7 +7,10 @@ from research_environment_api.background import enums, tasks
 
 
 def create_jupyter_notebook(
-    build: cloudbuild_v1.Build, user_email: str, fallback_zones: List[str], workbench_activity_id: str
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    fallback_zones: List[str],
+    workbench_activity_id: str,
 ):
     return chain(
         tasks.start_cloud_build.s(
@@ -15,7 +18,9 @@ def create_jupyter_notebook(
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
-            fallback_zones=fallback_zones, user_email=user_email, workbench_activity_id=workbench_activity_id
+            fallback_zones=fallback_zones,
+            user_email=user_email,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
     )
@@ -25,7 +30,7 @@ def stop_jupyter_workbench(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-    workbench_activity_id: str
+    workbench_activity_id: str,
 ):
     return chain(
         tasks.stop_compute_instance.s(
@@ -43,7 +48,7 @@ def start_jupyter_workbench(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-    workbench_activity_id: str
+    workbench_activity_id: str,
 ):
     return chain(
         tasks.start_compute_instance.s(
@@ -57,11 +62,11 @@ def start_jupyter_workbench(
     )
 
 
-def update_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str):
+def update_jupyter_workbench(
+    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
+):
     return chain(
-        tasks.start_cloud_build.s(
-            build=build
-        ),
+        tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
@@ -69,14 +74,10 @@ def update_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str, workbe
 
 
 def create_workspace(
-    build: cloudbuild_v1.Build,
-    user_email: str,
-    workbench_activity_id: str
+    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
 ):
     return chain(
-        tasks.start_cloud_build.s(
-            build=build
-        ),
+        tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
@@ -84,14 +85,10 @@ def create_workspace(
 
 
 def destroy_workspace(
-    build: cloudbuild_v1.Build,
-    user_email: str,
-    workbench_activity_id: str
+    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
 ):
     return chain(
-        tasks.start_cloud_build.s(
-            build=build
-        ),
+        tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),

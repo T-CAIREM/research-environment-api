@@ -48,16 +48,6 @@ class Workbench:
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[str] = None
 
-    @staticmethod
-    def set_accelerator_type(instance):
-        if instance.guest_accelerators:
-            return instance.guest_accelerators[0].accelerator_type
-
-    @staticmethod
-    def set_disk_size(instance):
-        if instance.disks:
-            return instance.disks[0].disk_size_gb
-
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
         maybe_proxy_url: Optional[str] = next(
@@ -79,8 +69,10 @@ class Workbench:
             url=maybe_proxy_url,
             zone=instance.zone,
             type=WorkbenchType.JUPYTER,
-            gpu_accelerator_type=cls.set_accelerator_type(instance),
-            disk_size=cls.set_disk_size(instance),
+            gpu_accelerator_type=instance.guest_accelerators[0].accelerator_type
+            if instance.guest_accelerators
+            else None,
+            disk_size=instance.disks[0].disk_size_gb if instance.disks else None,
         )
 
     @classmethod

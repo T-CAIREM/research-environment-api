@@ -9,7 +9,7 @@ from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 from research_environment_api.background.enums import OperationStatus
 
 
-CLOUD_BUILD_STATUS_MAP = {
+CLOUD_BUILD_OPERATION_STATUS_MAP = {
     CloudBuild.Status.PENDING: OperationStatus.IN_PROGRESS,
     CloudBuild.Status.QUEUED: OperationStatus.IN_PROGRESS,
     CloudBuild.Status.WORKING: OperationStatus.IN_PROGRESS,
@@ -25,11 +25,11 @@ CLOUD_BUILD_STATUS_MAP = {
 
 class Operation(ABC):
     @abstractmethod
-    def is_done(self):
+    def is_done(self) -> bool:
         return False
 
     @abstractmethod
-    def status(self):
+    def status(self) -> OperationStatus:
         return OperationStatus.FAILURE
 
 
@@ -44,15 +44,18 @@ class InstanceOperation(Operation):
         self.zone = zone
         self.name = name
 
-    def status(self):
+    def status(self) -> OperationStatus:
         operation = self._operation()
-        if operation.error.errors:
-            return OperationStatus.FAILURE
-        if operation.status == CloudOperation.Status.DONE:
-            return OperationStatus.SUCCESS
-        return OperationStatus.IN_PROGRESS
+        if operation.status != CloudOperation.Status.DONE:
+            return OperationStatus.IN_PROGRESS
 
-    def is_done(self):
+        return (
+            OperationStatus.FAILURE
+            if operation.error.errors
+            else OperationStatus.SUCCESS
+        )
+
+    def is_done(self) -> bool:
         return self._operation().done
 
     def _operation(self) -> compute.Operation:
@@ -64,12 +67,12 @@ class BuildOperation(Operation):
     def __init__(self, name: str):
         self.name = name
 
-    def status(self):
+    def status(self) -> OperationStatus:
         operation = self._operation()
 
-        return CLOUD_BUILD_STATUS_MAP[operation.status]
+        return CLOUD_BUILD_OPERATION_STATUS_MAP[operation.status]
 
-    def is_done(self):
+    def is_done(self) -> bool:
         return self._operation().done
 
     def _operation(self) -> operation.Operation:
