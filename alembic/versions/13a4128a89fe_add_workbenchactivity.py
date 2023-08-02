@@ -19,7 +19,6 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "workbench_workbench_activities",
-        sa.Column("gcp_identifier", sa.String(), nullable=False),
         sa.Column("invoker_username", sa.String(), nullable=False),
         sa.Column(
             "build_type",
