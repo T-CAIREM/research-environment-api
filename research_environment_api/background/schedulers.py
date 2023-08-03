@@ -109,12 +109,16 @@ def update_jupyter_workbench(
 
 
 def destroy_jupyter_workbench(
-    workbench_destroy_request: workbench_entities.WorkbenchCreateDestroy,
+    workbench_destroy_request: workbench_entities.WorkbenchUpdateDestroy,
 ):
+    gce_instance = services.get_jupyter_workbench(
+        workbench_resource_id=workbench_destroy_request.workbench_resource_id,
+        gcp_project_id=workbench_destroy_request.workspace_project_id,
+    )
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         region=workbench_destroy_request.region.value,
-        zone=zone,
+        zone=gce_instance.zone,
         machine_type=workbench_destroy_request.machine_type,
         persistent_disk=workbench_destroy_request.persistent_disk,
         gpu_accelerator_type=workbench_destroy_request.gpu_accelerator_type,
@@ -123,6 +127,7 @@ def destroy_jupyter_workbench(
         bucket_name=workbench_destroy_request.bucket_name,
         vm_image=workbench_destroy_request.vm_image,
         jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
+        workbench_resource_id=workbench_destroy_request.workbench_resource_id,
     )
     return workflows.destroy_jupyter_notebook(
         build=build, user_email=workbench_destroy_request.user_email

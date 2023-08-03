@@ -92,6 +92,7 @@ def update_jupyter_workbench_build(
 
 def destroy_jupyter_workbench_build(
     workspace_project_id: str,
+    workbench_resource_id: str,
     region: str,
     zone: str,
     machine_type: str,
@@ -103,8 +104,6 @@ def destroy_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
-    instance_name = random.choice(string.ascii_letters)
-
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -117,7 +116,7 @@ def destroy_jupyter_workbench_build(
         "_PERSISTENT_DISK": persistent_disk,
         "_GPU_ACCELERATOR": gpu_accelerator_type,
         "_VM_IMAGE": vm_image,
-        "_NAME": instance_name,
+        "_NAME": workbench_resource_id,
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
     }
