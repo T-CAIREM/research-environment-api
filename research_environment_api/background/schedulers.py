@@ -38,6 +38,7 @@ def create_jupyter_notebook(
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.create_jupyter_notebook(
                 build=build,
@@ -45,8 +46,6 @@ def create_jupyter_notebook(
                 fallback_zones=fallback_zones,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -68,14 +67,13 @@ def create_workspace(
                 invoker_email=workspace_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.create_workspace(
                 build=build,
                 user_email=workspace_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -97,14 +95,13 @@ def destroy_workspace(
                 invoker_email=workspace_deletion_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.destroy_workspace(
                 build=build,
                 user_email=workspace_deletion_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -123,6 +120,7 @@ def stop_jupyter_workbench(
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.stop_jupyter_workbench(
                 workspace_project_id=workbench_stop_request.workspace_project_id,
@@ -130,8 +128,6 @@ def stop_jupyter_workbench(
                 instance_zone=gce_instance.zone,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -150,6 +146,7 @@ def start_jupyter_workbench(
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.start_jupyter_workbench(
                 workspace_project_id=workbench_start_request.workspace_project_id,
@@ -157,8 +154,6 @@ def start_jupyter_workbench(
                 instance_zone=gce_instance.zone,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -192,13 +187,12 @@ def update_jupyter_workbench(
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.update_jupyter_workbench(
                 build=build,
                 user_email=workbench_update_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id

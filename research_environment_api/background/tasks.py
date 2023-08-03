@@ -11,7 +11,7 @@ from research_environment_api.background.enums import WorkflowStatus
 
 
 @shared_task
-def start_cloud_build(build: CloudBuild) -> Tuple[polling.PollingFuture, CloudBuild]:
+def start_cloud_build(build: CloudBuild) -> Tuple[polling.PollingFuture, Tuple[polling.PollingFuture, str]]:
     build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
@@ -21,14 +21,15 @@ def start_cloud_build(build: CloudBuild) -> Tuple[polling.PollingFuture, CloudBu
     return operation, (operation, cloud_build_id)
 
 
-@shared_task
+@shared_task(bind=True)
 def process_cloud_build_result(
-    operation_build_id_tuple: tuple,
+    self,
+    operation_context: Tuple[polling.PollingFuture, str],
     user_email: str,
     workbench_activity_id: str,
     fallback_zones: Optional[List[str]] = None,
 ):
-    operation, build_id = operation_build_id_tuple
+    operation, build_id = operation_context
     build = app.config.google_cloud_build_client.get_build(
         project_id=app.config.project_id, id=build_id
     )
@@ -63,14 +64,13 @@ def process_cloud_build_result(
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
             )
+            self.request.chain = None
 
 
 @shared_task
 def set_workflow_status(
-    operation: Optional[operations.Operation], workbench_activity_id: str
+    operation: operations.Operation, workbench_activity_id: str
 ) -> None:
-    if not operation:
-        return
     with app.database_session() as session:
         with session.begin():
             workbench_activity = (
