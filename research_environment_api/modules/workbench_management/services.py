@@ -75,24 +75,21 @@ def schedule_workbench_create(
     if workbench_creation_request.workbench_type == "jupyter":
         return schedulers.create_jupyter_workbench(workbench_creation_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.create_rstudio_workbench(workbench_creation_request)
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
     if workbench_stop_request.workbench_type == "jupyter":
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.stop_rstudio_workbench(workbench_stop_request)
 
 
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
     if workbench_start_request.workbench_type == "jupyter":
         return schedulers.start_jupyter_workbench(workbench_start_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.start_rstudio_workbench(workbench_start_request)
     pass
 
 
@@ -102,8 +99,7 @@ def schedule_workbench_update(
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.update_rstudio_workbench(workbench_update_request)
 
 
 def schedule_workbench_destroy(

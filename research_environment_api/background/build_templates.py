@@ -210,3 +210,152 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
         ],
     },
 ]
+
+CREATE_RSTUIDO_WORKBENCH_STEPS = [
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "vmcreation/python3.py",
+            "${_PROJECT_ID}",
+            "workspace-${_DATASET}-rstudio",
+        ],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_machine_type=${_MACHINE_TYPE}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_dataset=${_DATASET}",
+            "TF_VAR_status=RUNNING",
+            "TF_VAR_region=${_REGION}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_password=${_PASSWORD}",
+            "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+            "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "${_DATASET}",
+            "${_SERVICE_ACCOUNT}",
+            "${_MACHINE_TYPE}",
+            "${_REGION}",
+            "${_PERSISTENT_DISK}",
+            "${_BUCKET_NAME}",
+        ],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "deploy",
+            "appengine-rstudio/app.yaml",
+            "--image-url=${_IMAGE_URL}",
+            "--project=${_PROJECT_ID}",
+            "--bucket=gs://rstudio_appengine_deployment_files",
+            "--verbosity=debug",
+        ],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gsutil",
+        "args": [
+            "iam",
+            "ch",
+            "group:${_DATASET}@healthdatanexus.ai:objectAdmin",
+            "gs://${_PROJECT_ID}.appspot.com",
+        ],
+    },
+]
+
+STOP_RSTUIDO_WORKBENCH_STEPS = [
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "versions",
+            "stop",
+            "${_VERSION_ID}",
+            "--project=${_PROJECT_ID}",
+            "-q",
+        ],
+    }
+]
+
+
+START_RSTUIDO_WORKBENCH_STEPS = [
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "versions",
+            "start",
+            "${_VERSION_ID}",
+            "--project=${_PROJECT_ID}",
+            "-q",
+        ],
+    }
+]
+
+UPDATE_RSTUIDO_WORKBENCH_STEPS = [
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "vmcreation/python3.py",
+            "${_PROJECT_ID}",
+            "workspace-${_DATASET}-rstudio",
+        ],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_machine_type=${_MACHINE_TYPE}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_dataset=${_DATASET}",
+            "TF_VAR_status=RUNNING",
+            "TF_VAR_region=${_REGION}",
+            "TF_VAR_password=${_PASSWORD}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+            "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "${_SERVICE_ID}",
+            "${_SERVICE_ACCOUNT}",
+            "${_MACHINE_TYPE}",
+            "${_REGION}",
+            "${_PERSISTENT_DISK}",
+        ],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "deploy",
+            "appengine-rstudio/app.yaml",
+            "--image-url=${_IMAGE_URL}",
+            "--project=${_PROJECT_ID}",
+            "--bucket=gs://my-app-engine-abcd1-bucket1",
+            "--stop-previous-version",
+        ],
+    },
+]

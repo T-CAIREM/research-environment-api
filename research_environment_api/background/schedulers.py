@@ -34,7 +34,7 @@ def create_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_CREATION,
+                build_type=enums.BuildType.WORKBENCH_CREATION,
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -116,7 +116,7 @@ def stop_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_STOP,
+                build_type=enums.BuildType.WORKBENCH_STOP,
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -142,7 +142,7 @@ def start_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_START,
+                build_type=enums.BuildType.WORKBENCH_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -183,7 +183,7 @@ def update_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_UPDATE,
+                build_type=enums.BuildType.WORKBENCH_UPDATE,
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -235,3 +235,120 @@ def destroy_jupyter_workbench(
             )()
 
             return str(workbench_activity.id)
+
+
+def create_rstudio_workbench(
+    workbench_creation_request: workbench_entities.WorkbenchCreate,
+) -> str:
+    build = builds.create_rstudio_workbench_build(
+        workspace_project_id=workbench_creation_request.workspace_project_id,
+        region=workbench_creation_request.region.value,
+        machine_type=workbench_creation_request.machine_type,
+        persistent_disk=workbench_creation_request.persistent_disk,
+        dataset_identifier=workbench_creation_request.dataset_identifier,
+        user_email=workbench_creation_request.user_email,
+        bucket_name=workbench_creation_request.bucket_name,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.WORKBENCH_CREATION,
+                invoker_email=workbench_creation_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+
+            workflows.create_rstudio_workbench(
+                build=build,
+                user_email=workbench_creation_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            session.add(workbench_activity)
+
+            return workbench_activity.id
+
+
+def stop_rstudio_workbench(
+    workbench_stop_request: workbench_entities.WorkbenchStartStop,
+) -> str:
+    build = builds.stop_rstudio_workbench_build(
+        workspace_project_id=workbench_stop_request.workspace_project_id,
+        workbench_resource_id=workbench_stop_request.workbench_resource_id,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.WORKBENCH_STOP,
+                invoker_email=workbench_stop_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+
+            workflows.stop_rstudio_workbench(
+                build=build,
+                user_email=workbench_stop_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            session.add(workbench_activity)
+
+            return workbench_activity.id
+
+
+def start_rstudio_workbench(
+    workbench_start_request: workbench_entities.WorkbenchStartStop,
+) -> str:
+    build = builds.stop_rstudio_workbench_build(
+        workspace_project_id=workbench_start_request.workspace_project_id,
+        workbench_resource_id=workbench_start_request.workbench_resource_id,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.WORKBENCH_STOP,
+                invoker_email=workbench_start_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+
+            workflows.start_rstudio_workbench(
+                build=build,
+                user_email=workbench_start_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            session.add(workbench_activity)
+
+            return workbench_activity.id
+
+
+def update_rstudio_workbench(
+    workbench_update_request: workbench_entities.WorkbenchUpdate,
+) -> str:
+    build = builds.update_rstudio_workbench_build(
+        workspace_project_id=workbench_update_request.workspace_project_id,
+        region=workbench_update_request.region.value,
+        machine_type=workbench_update_request.machine_type,
+        persistent_disk=workbench_update_request.persistent_disk,
+        dataset_identifier=workbench_update_request.dataset_identifier,
+        user_email=workbench_update_request.user_email,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.WORKBENCH_STOP,
+                invoker_email=workbench_update_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+
+            workflows.update_rstudio_workbench(
+                build=build,
+                user_email=workbench_update_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            session.add(workbench_activity)
+
+            return workbench_activity.id
