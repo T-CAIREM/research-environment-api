@@ -41,9 +41,12 @@ class Workbench:
     dataset_identifier: str
     cpu: float
     memory: float
+    disk_size: int
     type: WorkbenchType
     url: Optional[str]
+    machine_type: Optional[str]
     zone: Optional[str] = None
+    gpu_accelerator_type: Optional[str] = None
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
@@ -57,6 +60,12 @@ class Workbench:
         )
         machine_type = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
+        gpu_accelerator_type = (
+            instance.guest_accelerators[0].accelerator_type
+            if instance.guest_accelerators
+            else None
+        )
+        disk_size = instance.disks[0].disk_size_gb if instance.disks else None
         return cls(
             gcp_identifier=str(instance.id),
             dataset_identifier=instance.labels["dataset_identifier"],
@@ -66,6 +75,8 @@ class Workbench:
             url=maybe_proxy_url,
             zone=instance.zone,
             type=WorkbenchType.JUPYTER,
+            gpu_accelerator_type=gpu_accelerator_type,
+            disk_size=disk_size,
         )
 
     @classmethod

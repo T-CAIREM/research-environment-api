@@ -10,8 +10,6 @@ class WorkbenchBaseClass(Schema):
 
 class WorkbenchCreateRequest(WorkbenchBaseClass):
     machine_type = fields.Str(required=True)
-    workspace_project_id = fields.Str(required=True)
-    dataset = fields.Str(required=True)
     user_email = fields.Str(required=True)
     dataset_identifier = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
@@ -23,7 +21,6 @@ class WorkbenchCreateRequest(WorkbenchBaseClass):
 class WorkbenchStartStopRequest(WorkbenchBaseClass):
     user_email = fields.Str(required=True)
     workbench_resource_id = fields.Str(required=True)
-    instance_zone = fields.Str()
 
 
 class WorkbenchUpdateDestroyRequest(WorkbenchCreateRequest):

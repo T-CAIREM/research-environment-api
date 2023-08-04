@@ -1,8 +1,8 @@
 from logging.config import fileConfig
 
-from alembic import context
 from dotenv import load_dotenv
 
+from alembic import context
 from research_environment_api.modules.app import app
 
 # Load environment variables
@@ -20,9 +20,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from research_environment_api.modules.model import ScopedModel
 import research_environment_api.modules.workbench_management.models
 import research_environment_api.modules.workspace_management.models
+from research_environment_api.modules.model import ScopedModel
 
 target_metadata = ScopedModel.metadata
 

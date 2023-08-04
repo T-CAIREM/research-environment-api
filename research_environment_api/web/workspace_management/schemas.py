@@ -13,11 +13,8 @@ class WorkspaceCreationRequest(Schema):
     billing_account_id = fields.Str(required=True)
 
 
-class WorkspaceDeletionRequest(Schema):
-    user_email = fields.Str(required=True, validate=validate.Email())
-    billing_account_id = fields.Str(required=True)
-    region = fields.Enum(Region, by_value=True, required=True)
-    workspace_id = fields.Str(required=True)
+class WorkspaceDeletionRequest(WorkspaceCreationRequest):
+    workspace_project_id = fields.Str(required=True)
 
 
 class ListActiveWorkspacesRequest(Schema):

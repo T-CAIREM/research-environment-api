@@ -34,7 +34,7 @@ def create_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
-    instance_name = random.choice(string.ascii_letters)
+    instance_name = "".join(random.choices(string.ascii_lowercase, k=5))
 
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS

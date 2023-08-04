@@ -5,9 +5,9 @@ Revises: 3955e608c536
 Create Date: 2023-07-19 11:06:13.067945
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "13a4128a89fe"
@@ -19,15 +19,18 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "workbench_workbench_activities",
-        sa.Column("gcp_identifier", sa.String(), nullable=False),
         sa.Column("invoker_username", sa.String(), nullable=False),
         sa.Column(
             "build_type",
             sa.Enum(
+                "WORKSPACE_CREATION",
+                "WORKSPACE_DELETION",
                 "JUPYTER_CREATION",
                 "RSTUDIO_CREATION",
                 "JUPYTER_CREATION_RETRY",
                 "JUPYTER_STOP",
+                "JUPYTER_START",
+                "JUPYTER_UPDATE",
                 name="buildtype",
             ),
             nullable=False,
@@ -35,16 +38,9 @@ def upgrade() -> None:
         sa.Column(
             "build_status",
             sa.Enum(
-                "STATUS_UNKNOWN",
-                "PENDING",
-                "QUEUED",
-                "WORKING",
-                "SUCCESS",
+                "IN_PROGRESS",
                 "FAILURE",
-                "INTERNAL_ERROR",
-                "TIMEOUT",
-                "CANCELLED",
-                "EXPIRED",
+                "SUCCESS",
                 name="status",
             ),
             nullable=False,
