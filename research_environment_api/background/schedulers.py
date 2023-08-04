@@ -46,8 +46,9 @@ def create_jupyter_workbench(
                 fallback_zones=fallback_zones,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def create_workspace(
@@ -74,8 +75,9 @@ def create_workspace(
                 user_email=workspace_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def destroy_workspace(
@@ -102,8 +104,9 @@ def destroy_workspace(
                 user_email=workspace_deletion_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def stop_jupyter_workbench(
@@ -128,8 +131,9 @@ def stop_jupyter_workbench(
                 instance_zone=gce_instance.zone,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def start_jupyter_workbench(
@@ -154,8 +158,9 @@ def start_jupyter_workbench(
                 instance_zone=gce_instance.zone,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def update_jupyter_workbench(
@@ -194,8 +199,9 @@ def update_jupyter_workbench(
                 user_email=workbench_update_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def destroy_jupyter_workbench(
@@ -233,8 +239,9 @@ def destroy_jupyter_workbench(
                 user_email=workbench_destroy_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return str(workbench_activity.id)
+        return str(workbench_activity.id)
 
 
 def create_rstudio_workbench(
@@ -264,8 +271,9 @@ def create_rstudio_workbench(
                 user_email=workbench_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return workbench_activity.id
+        return str(workbench_activity.id)
 
 
 def stop_rstudio_workbench(
@@ -290,8 +298,9 @@ def stop_rstudio_workbench(
                 user_email=workbench_stop_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return workbench_activity.id
+        return str(workbench_activity.id)
 
 
 def start_rstudio_workbench(
@@ -316,8 +325,9 @@ def start_rstudio_workbench(
                 user_email=workbench_start_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return workbench_activity.id
+        return str(workbench_activity.id)
 
 
 def update_rstudio_workbench(
@@ -345,10 +355,9 @@ def update_rstudio_workbench(
                 user_email=workbench_update_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            session.add(workbench_activity)
-
-            return workbench_activity.id
+        return str(workbench_activity.id)
 
 
 def destroy_rstudio_workbench(
@@ -378,5 +387,6 @@ def destroy_rstudio_workbench(
                 user_email=workbench_destroy_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
+        session.refresh(workbench_activity)
 
-            return workbench_activity.id
+        return str(workbench_activity.id)
