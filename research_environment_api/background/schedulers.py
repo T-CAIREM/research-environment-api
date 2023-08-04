@@ -12,7 +12,7 @@ from research_environment_api.modules.app import app
 
 
 def create_jupyter_workbench(
-    workbench_creation_request: workbench_entities.WorkbenchCreateDestroy,
+    workbench_creation_request: workbench_entities.WorkbenchCreate,
 ) -> str:
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
@@ -159,7 +159,7 @@ def start_jupyter_workbench(
 
 
 def update_jupyter_workbench(
-    workbench_update_request: workbench_entities.WorkbenchUpdate,
+    workbench_update_request: workbench_entities.WorkbenchUpdateDestroy,
 ) -> str:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
@@ -219,6 +219,17 @@ def destroy_jupyter_workbench(
         jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
         workbench_resource_id=workbench_destroy_request.workbench_resource_id,
     )
-    return workflows.destroy_jupyter_notebook(
-        build=build, user_email=workbench_destroy_request.user_email
-    )()
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.JUPYTER_DESTROY,
+                invoker_email=workbench_destroy_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.destroy_jupyter_notebook(
+                build=build, user_email=workbench_destroy_request.user_email
+            )()
+
+            return workbench_activity.id

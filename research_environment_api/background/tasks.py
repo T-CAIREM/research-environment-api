@@ -4,10 +4,9 @@ from celery import shared_task
 from google.api_core.future import polling
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import constants, enums, operations, workflows
+from research_environment_api.background import constants, operations, workflows
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models
-from research_environment_api.background.enums import WorkflowStatus
 
 
 @shared_task
