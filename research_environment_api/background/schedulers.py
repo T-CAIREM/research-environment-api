@@ -222,7 +222,7 @@ def destroy_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_DESTROY,
+                build_type=enums.BuildType.WORKBENCH_DESTROY,
                 invoker_email=workbench_destroy_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -257,14 +257,13 @@ def create_rstudio_workbench(
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.create_rstudio_workbench(
                 build=build,
                 user_email=workbench_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -284,14 +283,13 @@ def stop_rstudio_workbench(
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.stop_rstudio_workbench(
                 build=build,
                 user_email=workbench_stop_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-
-            session.add(workbench_activity)
 
             return workbench_activity.id
 
@@ -311,6 +309,7 @@ def start_rstudio_workbench(
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
+            session.add(workbench_activity)
 
             workflows.start_rstudio_workbench(
                 build=build,
@@ -318,13 +317,11 @@ def start_rstudio_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            session.add(workbench_activity)
-
             return workbench_activity.id
 
 
 def update_rstudio_workbench(
-    workbench_update_request: workbench_entities.WorkbenchUpdate,
+    workbench_update_request: workbench_entities.WorkbenchUpdateDestroy,
 ) -> str:
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -338,7 +335,7 @@ def update_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.WORKBENCH_STOP,
+                build_type=enums.BuildType.WORKBENCH_UPDATE,
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
             )
@@ -350,5 +347,36 @@ def update_rstudio_workbench(
             )()
 
             session.add(workbench_activity)
+
+            return workbench_activity.id
+
+
+def destroy_rstudio_workbench(
+    workbench_destroy_request: workbench_entities.WorkbenchUpdateDestroy,
+) -> str:
+    build = builds.destroy_rstudio_workbench_build(
+        workspace_project_id=workbench_destroy_request.workspace_project_id,
+        region=workbench_destroy_request.region.value,
+        machine_type=workbench_destroy_request.machine_type,
+        persistent_disk=workbench_destroy_request.persistent_disk,
+        dataset_identifier=workbench_destroy_request.dataset_identifier,
+        user_email=workbench_destroy_request.user_email,
+        bucket_name=workbench_destroy_request.bucket_name,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                build_type=enums.BuildType.WORKBENCH_DESTROY,
+                invoker_email=workbench_destroy_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.update_rstudio_workbench(
+                build=build,
+                user_email=workbench_destroy_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
 
             return workbench_activity.id

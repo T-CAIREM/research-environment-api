@@ -174,3 +174,21 @@ def update_rstudio_workbench(
         ),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
     )
+
+
+def destroy_rstudio_workbench(
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    workbench_activity_id: str,
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build,
+        ),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(
+            user_email=user_email,
+            workbench_activity_id=workbench_activity_id,
+        ),
+        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+    )

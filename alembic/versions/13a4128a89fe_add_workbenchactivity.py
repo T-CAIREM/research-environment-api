@@ -29,6 +29,7 @@ def upgrade() -> None:
                 "WORKBENCH_STOP",
                 "WORKBENCH_START",
                 "WORKBENCH_UPDATE",
+                "WORKBENCH_DESTROY",
                 name="buildtype",
             ),
             nullable=False,

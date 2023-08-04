@@ -108,5 +108,4 @@ def schedule_workbench_destroy(
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        schedulers.destroy_rstudio_workbench(workbench_destroy_request)

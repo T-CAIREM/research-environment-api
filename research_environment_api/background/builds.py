@@ -240,23 +240,46 @@ def update_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
 ) -> cloudbuild_v1.Build:
-
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUIDO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_MACHINE_TYPE": machine_type,
         "_PROJECT_ID": workspace_project_id,
-        "_STATUS": "RUNNING",
         "_REGION": region,
         "_DATASET": dataset_identifier,
-        "_SERVICE_ID": dataset_identifier,#to be tested
-        "_PASSWORD": "password",
+        "_SERVICE_ID": dataset_identifier,  # to be tested
         "_EMAIL_ID": user_email,
-        "_SERVICE_ACCOUNT": app.config.cloud_build_service_account_nam,
+        "_SERVICE_ACCOUNT": app.config.cloud_build_service_account_name,
         "_PERSISTENT_DISK": persistent_disk,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_DATA_PROJECT_NAME": app.config.data_project_name,
         "_IMAGE_URL": app.config.rstudio_image_url,
+    }
+
+    return cloud_build
+
+
+def destroy_rstudio_workbench_build(
+    workspace_project_id: str,
+    machine_type: str,
+    persistent_disk: str,
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.CREATE_RSTUIDO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type,
+        "_PROJECT_ID": workspace_project_id,
+        "_DATASET": dataset_identifier,
+        "_SERVICE_ID": dataset_identifier,
+        "_EMAIL_ID": user_email,
+        "_SERVICE_ACCOUNT": app.config.cloud_build_service_account_name,
+        "_PERSISTENT_DISK": persistent_disk,
+        "_BUCKET_NAME": bucket_name,
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_DATA_PROJECT_NAME": app.config.data_project_name,
     }
 
     return cloud_build

@@ -328,7 +328,7 @@ UPDATE_RSTUIDO_WORKBENCH_STEPS = [
             "TF_VAR_dataset=${_DATASET}",
             "TF_VAR_status=RUNNING",
             "TF_VAR_region=${_REGION}",
-            "TF_VAR_password=${_PASSWORD}",
+            "TF_VAR_password=password",
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
@@ -356,6 +356,60 @@ UPDATE_RSTUIDO_WORKBENCH_STEPS = [
             "--project=${_PROJECT_ID}",
             "--bucket=gs://my-app-engine-abcd1-bucket1",
             "--stop-previous-version",
+        ],
+    },
+]
+
+DESTROY_RSTUIDO_WORKBENCH_STEPS = [
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "vmcreation/python3.py",
+            "${_PROJECT_ID}",
+            "workspace-${_DATASET}-rstudio",
+        ],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vmcreation", "destroy", "-auto-approve"],
+        "env": [
+            "TF_VAR_machine_type=${_MACHINE_TYPE}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_dataset=${_DATASET}",
+            "TF_VAR_status=RUNNING",
+            "TF_VAR_region=region",
+            "TF_VAR_password=password",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+            "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+        ],
+    },
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "${_SERVICE_ID}",
+            "${_SERVICE_ACCOUNT}",
+            "${_MACHINE_TYPE}",
+            "region",
+            "${_PERSISTENT_DISK}",
+            "${_BUCKET_NAME}",
+        ],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "services",
+            "delete",
+            "${_DATASET}",
+            "--project=${_PROJECT_ID}",
         ],
     },
 ]
