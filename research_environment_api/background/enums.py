@@ -5,6 +5,7 @@ class BuildType(StrEnum):
     WORKSPACE_CREATION = "workspace_creation"
     WORKSPACE_DELETION = "workspace_deletion"
     JUPYTER_CREATION = "jupyter_creation"
+    JUPYTER_DESTROY = "jupyter_destroy"
     RSTUDIO_CREATION = "rstudio_creation"
     JUPYTER_CREATION_RETRY = "jupyter_creation_retry"
     JUPYTER_STOP = "jupyter_stop"

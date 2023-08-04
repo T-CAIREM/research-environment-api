@@ -8,7 +8,7 @@ class WorkbenchBaseClass(Schema):
     workspace_project_id = fields.Str(required=True)
 
 
-class WorkbenchCreationRequest(WorkbenchBaseClass):
+class WorkbenchCreateRequest(WorkbenchBaseClass):
     machine_type = fields.Str(required=True)
     workspace_project_id = fields.Str(required=True)
     dataset = fields.Str(required=True)
@@ -26,5 +26,5 @@ class WorkbenchStartStopRequest(WorkbenchBaseClass):
     instance_zone = fields.Str()
 
 
-class WorkbenchUpdateRequest(WorkbenchCreationRequest):
+class WorkbenchUpdateDestroyRequest(WorkbenchCreateRequest):
     workbench_resource_id = fields.Str(required=True)

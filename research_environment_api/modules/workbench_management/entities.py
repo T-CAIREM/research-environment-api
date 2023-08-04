@@ -108,7 +108,7 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchUpdate(WorkbenchCreate):
+class WorkbenchUpdateDestroy(WorkbenchCreate):
     workbench_resource_id: str
 
 
