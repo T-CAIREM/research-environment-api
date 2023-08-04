@@ -1,5 +1,3 @@
-from google.cloud.compute_v1 import Operation
-from research_environment_api.background.enums import ProcessStatus
 
 AVAILABLE_ZONES = {
     "us-central1": ["us-central1-a", "us-central1-b", "us-central1-c", "us-central1-f"],
