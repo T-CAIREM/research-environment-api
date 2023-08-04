@@ -118,7 +118,7 @@ def create_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
 
@@ -136,7 +136,7 @@ def stop_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
 
@@ -154,7 +154,7 @@ def start_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
 
@@ -172,7 +172,7 @@ def update_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
 
@@ -190,5 +190,5 @@ def destroy_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
