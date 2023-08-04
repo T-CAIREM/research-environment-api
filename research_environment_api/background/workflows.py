@@ -6,7 +6,7 @@ from google.cloud.devtools import cloudbuild_v1
 from research_environment_api.background import enums, tasks
 
 
-def create_jupyter_notebook(
+def create_jupyter_workbench(
     build: cloudbuild_v1.Build,
     user_email: str,
     fallback_zones: List[str],
@@ -73,7 +73,7 @@ def update_jupyter_workbench(
     )
 
 
-def destroy_jupyter_notebook(build: cloudbuild_v1.Build, user_email: str):
+def destroy_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str):
     return chain(
         tasks.start_cloud_build.s(
             build=build,

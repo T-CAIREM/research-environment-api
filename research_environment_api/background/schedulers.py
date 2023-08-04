@@ -40,7 +40,7 @@ def create_jupyter_workbench(
             )
             session.add(workbench_activity)
 
-            workflows.create_jupyter_notebook(
+            workflows.create_jupyter_workbench(
                 build=build,
                 user_email=workbench_creation_request.user_email,
                 fallback_zones=fallback_zones,
@@ -228,7 +228,7 @@ def destroy_jupyter_workbench(
             )
             session.add(workbench_activity)
 
-            workflows.destroy_jupyter_notebook(
+            workflows.destroy_jupyter_workbench(
                 build=build, user_email=workbench_destroy_request.user_email
             )()
 
