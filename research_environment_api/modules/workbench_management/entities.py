@@ -60,7 +60,11 @@ class Workbench:
         )
         machine_type = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
-        gpu_accelerator_type = instance.guest_accelerators[0].accelerator_type if instance.guest_accelerators else None
+        gpu_accelerator_type = (
+            instance.guest_accelerators[0].accelerator_type
+            if instance.guest_accelerators
+            else None
+        )
         disk_size = instance.disks[0].disk_size_gb if instance.disks else None
         return cls(
             gcp_identifier=str(instance.id),

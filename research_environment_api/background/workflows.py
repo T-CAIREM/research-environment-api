@@ -39,7 +39,6 @@ def stop_jupyter_workbench(
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
-        tasks.process_compute_instance_status.s(),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
     )
 
@@ -57,7 +56,6 @@ def start_jupyter_workbench(
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
-        tasks.process_compute_instance_status.s(),
         tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
     )
 
@@ -73,7 +71,9 @@ def update_jupyter_workbench(
     )
 
 
-def destroy_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str):
+def destroy_jupyter_workbench(
+    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
+):
     return chain(
         tasks.start_cloud_build.s(
             build=build,
@@ -82,6 +82,7 @@ def destroy_jupyter_workbench(build: cloudbuild_v1.Build, user_email: str):
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.set_workflow_status(workbench_activity_id=workbench_activity_id),
     )
 
 

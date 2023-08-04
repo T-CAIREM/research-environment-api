@@ -229,7 +229,9 @@ def destroy_jupyter_workbench(
             session.add(workbench_activity)
 
             workflows.destroy_jupyter_workbench(
-                build=build, user_email=workbench_destroy_request.user_email
+                build=build,
+                user_email=workbench_destroy_request.user_email,
+                workbench_activity_id=workbench_activity.id,
             )()
 
             return workbench_activity.id

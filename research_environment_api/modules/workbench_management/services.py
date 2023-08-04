@@ -95,7 +95,9 @@ def schedule_workbench_start(workbench_start_request):
     pass
 
 
-def schedule_workbench_update(workbench_update_request: entities.WorkbenchUpdateDestroy):
+def schedule_workbench_update(
+    workbench_update_request: entities.WorkbenchUpdateDestroy,
+):
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
     else:

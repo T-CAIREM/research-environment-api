@@ -10,7 +10,9 @@ from research_environment_api.modules.workbench_management import models
 
 
 @shared_task
-def start_cloud_build(build: CloudBuild) -> Tuple[polling.PollingFuture, Tuple[polling.PollingFuture, str]]:
+def start_cloud_build(
+    build: CloudBuild,
+) -> Tuple[polling.PollingFuture, Tuple[polling.PollingFuture, str]]:
     build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
@@ -57,7 +59,7 @@ def process_cloud_build_result(
             )
             new_zone, *new_fallback_zones = fallback_zones
             build.substitutions["_ZONE"] = new_zone
-            workflows.create_jupyter_notebook(
+            workflows.create_jupyter_workbench(
                 build=build,
                 fallback_zones=new_fallback_zones,
                 user_email=user_email,
@@ -97,7 +99,7 @@ def stop_compute_instance(
         project_id=workspace_project_id, zone=instance_zone, name=stop_operation.name
     )
 
-    return operation, (operation, stop_operation.name)
+    return operation, operation
 
 
 @shared_task
@@ -117,7 +119,7 @@ def start_compute_instance(
         project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
     )
 
-    return operation, (operation, start_operation.name)
+    return operation, operation
 
 
 @shared_task
