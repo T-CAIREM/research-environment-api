@@ -33,7 +33,6 @@ def delete_workspace():
 
 
 @workspace_management_bp.get("/<email>")
-@cache.cached(timeout=3600)
 def list_active_workspaces(email: str):
     list_active_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
         {"email": email}

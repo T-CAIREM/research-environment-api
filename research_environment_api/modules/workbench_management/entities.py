@@ -1,3 +1,4 @@
+from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Optional
@@ -7,10 +8,25 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management.constants import (
-    MACHINE_TYPE_TO_RESOURCE_MAP,
+
+ComputeEngineMachineResources = namedtuple(
+    "ComputeEngineMachoneResources", ["cpu", "memory"]
 )
-from research_environment_api.modules.workspace_management.enums import Region
+
+
+MACHINE_TYPE_TO_RESOURCE_MAP = {
+    "n1-standard-2": ComputeEngineMachineResources(2.0, 7.5),
+    "n1-standard-4": ComputeEngineMachineResources(4.0, 15.0),
+    "n1-standard-8": ComputeEngineMachineResources(8.0, 30.0),
+    "n1-standard-16": ComputeEngineMachineResources(16.0, 60.0),
+}
+
+
+class Region(StrEnum):
+    US_CENTRAL = "us-central1"
+    NORTHAMERICA_NORTHEAST = "northamerica-northeast1"
+    EUROPE_WEST = "europe-west3"
+    AUSTRALIA_SOUTHEAST = "australia-southeast1"
 
 
 class WorkbenchType(StrEnum):
@@ -21,6 +37,17 @@ class WorkbenchType(StrEnum):
 class WorkbenchStatus(StrEnum):
     RUNNING = "running"
     STOPPED = "stopped"
+
+
+class MachineType(StrEnum):
+    SMALL = "n1-standard-2"
+    MEDIUM = "n1-standard-4"
+    LARGE = "n1-standard-8"
+    XLARGE = "n1-standard-16"
+
+
+class GpuAcceleratorType(StrEnum):
+    TESLA_T4 = "NVIDIA_TESLA_T4"
 
 
 GCE_STATUS_MAP = {
@@ -43,40 +70,42 @@ class Workbench:
     memory: float
     disk_size: int
     type: WorkbenchType
-    url: Optional[str]
-    machine_type: Optional[str]
+    machine_type: MachineType
+    url: Optional[str] = None
     zone: Optional[str] = None
-    gpu_accelerator_type: Optional[str] = None
+    gpu_accelerator_type: Optional[GpuAcceleratorType] = None
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
         maybe_proxy_url: Optional[str] = next(
             (
-                metadata.value
+                f"https://{metadata.value}"
                 for metadata in instance.metadata.items
                 if metadata.key == "proxy-url"
             ),
             None,
         )
-        machine_type = instance.machine_type.split("/")[-1]
+        machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
             instance.guest_accelerators[0].accelerator_type
             if instance.guest_accelerators
             else None
         )
-        disk_size = instance.disks[0].disk_size_gb if instance.disks else None
+        # Assume a single disk atteched to the instance.
+        disk_size = instance.disks[0].disk_size_gb
         return cls(
             gcp_identifier=str(instance.id),
             dataset_identifier=instance.labels["dataset_identifier"],
             status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
+            machine_type=machine_type,
             url=maybe_proxy_url,
             zone=instance.zone,
             type=WorkbenchType.JUPYTER,
-            gpu_accelerator_type=gpu_accelerator_type,
             disk_size=disk_size,
+            gpu_accelerator_type=gpu_accelerator_type,
         )
 
     @classmethod
@@ -97,20 +126,19 @@ class Workbench:
 @dataclass
 class WorkbenchCreate:
     workbench_type: str
-    machine_type: str
-    persistent_disk: str
-    gpu_accelerator_type: str
+    machine_type: MachineType
+    disk_size: int
     workspace_project_id: str
     dataset_identifier: str
     user_email: str
     bucket_name: str
     region: Region
+    gpu_accelerator_type: Optional[GpuAcceleratorType]
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
-        self.persistent_disk = str(self.persistent_disk)
         self.vm_image = (
             "common-cu110-notebooks"
             if self.gpu_accelerator_type

@@ -7,7 +7,8 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     services as workbench_services,
 )
-from research_environment_api.modules.workspace_management import entities, enums
+from research_environment_api.modules.workbench_management.entities import Region
+from research_environment_api.modules.workspace_management import entities
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
@@ -22,17 +23,6 @@ def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
     gcp_projects = _list_active_google_projects(workspace_list_query)
 
     return [_build_workspace_entity(project) for project in gcp_projects]
-
-
-def _delete_google_project(workspace_deletion: entities.WorkspaceDeletion):
-    workspace_controller_client = app.config.legacy_workspace_controller_client
-
-    created_workspace = workspace_controller_client.delete_workspace(
-        gcp_project_id=workspace_deletion.workspace_id,
-        gcp_user_id=workspace_deletion.username,
-    )
-
-    return created_workspace
 
 
 def _list_active_google_projects(
@@ -58,5 +48,5 @@ def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
         gcp_project_id=gcp_project_id,
         billing_account_id=billing_account_id,
         workbenches=workbenches,
-        region=enums.Region(region),
+        region=Region(region),
     )

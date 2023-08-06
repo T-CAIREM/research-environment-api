@@ -1,10 +1,11 @@
 from marshmallow import Schema, fields, validate
 
 from research_environment_api.modules.workbench_management.entities import (
+    MachineType,
+    Region,
     WorkbenchStatus,
     WorkbenchType,
 )
-from research_environment_api.modules.workspace_management.enums import Region
 
 
 class WorkspaceCreationRequest(Schema):
@@ -27,6 +28,8 @@ class Workbench(Schema):
     dataset_identifier = fields.Str(required=True)
     cpu = fields.Float(required=True)
     memory = fields.Float(required=True)
+    disk_size = fields.Int(required=True)
+    machine_type = fields.Enum(MachineType, by_value=True, required=True)
     url = fields.URL(required=True)
     type = fields.Enum(WorkbenchType, by_value=True, required=True)
     zone = fields.Str()
