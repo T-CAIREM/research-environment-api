@@ -1,14 +1,14 @@
 import random
 
-from research_environment_api.background import builds, constants, workflows, enums
+from research_environment_api.background import builds, constants, enums, workflows
+from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     entities as workbench_entities,
 )
-from research_environment_api.modules.workbench_management import services, models
+from research_environment_api.modules.workbench_management import models, services
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
-from research_environment_api.modules.app import app
 
 
 def create_jupyter_workbench(
