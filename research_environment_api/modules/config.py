@@ -11,9 +11,6 @@ from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient
-from research_environment_api.library.legacy_api.client import (
-    WorkspaceControllerApiClient,
-)
 
 
 class AppEnv(StrEnum):
@@ -28,7 +25,6 @@ class Config:
         self._init_business_logic_config()
         self._init_database_config()
         self._init_google_clients()
-        self._init_legacy_workspace_controller_config()
         self._init_celery_config()
 
     def is_development(self):
@@ -109,16 +105,6 @@ class Config:
             google.cloud.appengine_admin.VersionsClient(
                 credentials=self.service_account_credentials,
             )
-        )
-
-    def _init_legacy_workspace_controller_config(self):
-        credentials = google.auth.jwt.Credentials.from_service_account_file(
-            environ["GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"],
-            audience=environ["GATEWAY_AUDIENCE"],
-        )
-        self.legacy_workspace_controller_client = WorkspaceControllerApiClient(
-            credentials=credentials,
-            api_url=environ["CLOUD_RESEARCH_ENVIRONMENTS_API_URL"],
         )
 
 

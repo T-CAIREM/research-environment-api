@@ -1,5 +1,4 @@
 locals {
-  legacy_cloud_research_environments_credentials_volume_name = "legacy_cloud_research_environments_credentials"
   service_account_credentials_volume_name                    = "service_account_credentials"
   services = [
     { name = "core", command = null },
@@ -20,13 +19,6 @@ resource "google_cloud_run_service" "api" {
   template {
     spec {
       volumes {
-        name = local.legacy_cloud_research_environments_credentials_volume_name
-        secret {
-          secret_name = var.legacy_cloud_research_environments_credentials_secret_name
-        }
-      }
-
-      volumes {
         name = local.service_account_credentials_volume_name
 
         secret {
@@ -37,11 +29,6 @@ resource "google_cloud_run_service" "api" {
       containers {
         image   = "${var.image_repository}:${var.image_tag}"
         command = each.value.command
-
-        volume_mounts {
-          name       = local.legacy_cloud_research_environments_credentials_volume_name
-          mount_path = "/app/legacy_workspace_research_environments_secret"
-        }
 
         volume_mounts {
           name       = local.service_account_credentials_volume_name
@@ -65,21 +52,6 @@ resource "google_cloud_run_service" "api" {
         env {
           name  = "BILLING_ACCOUNT_CREATOR_GROUP_ID"
           value = var.billing_account_creator_group_id
-        }
-
-        env {
-          name  = "CLOUD_RESEARCH_ENVIRONMENTS_API_URL"
-          value = var.legacy_cloud_research_environments_api_url
-        }
-
-        env {
-          name  = "GATEWAY_AUDIENCE"
-          value = var.legacy_cloud_research_environments_gateway_audience
-        }
-
-        env {
-          name  = "GATEWAY_SERVICE_ACCOUNT_CREDENTIALS_PATH"
-          value = "/app/legacy_workspace_research_environments_secret/legacy-workspace-controller-credentials"
         }
 
         env {
