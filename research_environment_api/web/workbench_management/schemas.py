@@ -33,6 +33,7 @@ class WorkbenchToggleStateRequest(WorkbenchBase):
 
 class WorkbenchUpdateRequest(WorkbenchBase):
     workbench_resource_id = fields.Str(required=True)
+    machine_type = fields.Enum(MachineType, by_value=True, required=True)
 
 
 class WorkbenchDestroyRequest(WorkbenchBase):

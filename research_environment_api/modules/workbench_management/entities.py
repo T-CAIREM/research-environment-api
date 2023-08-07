@@ -95,7 +95,7 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
-        region = instance.zone.rsplit('-', 1)[0]
+        region = instance.zone.rsplit("-", 1)[0]
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
@@ -154,7 +154,7 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchUpdateDestroy:
+class WorkbenchDestroy:
     workbench_type: str
     workspace_project_id: str
     workbench_resource_id: str
@@ -163,6 +163,10 @@ class WorkbenchUpdateDestroy:
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+
+
+class WorkbenchUpdate(WorkbenchDestroy):
+    machine_type: MachineType
 
 
 @dataclass

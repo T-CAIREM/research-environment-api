@@ -97,7 +97,7 @@ def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleSt
 
 
 def schedule_workbench_update(
-    workbench_update_request: entities.WorkbenchUpdateDestroy,
+    workbench_update_request: entities.WorkbenchUpdate,
 ):
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
@@ -107,7 +107,7 @@ def schedule_workbench_update(
 
 
 def schedule_workbench_destroy(
-    workbench_destroy_request: entities.WorkbenchUpdateDestroy,
+    workbench_destroy_request: entities.WorkbenchDestroy,
 ):
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
