@@ -79,7 +79,7 @@ def schedule_workbench_create(
         pass
 
 
-def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStartStop):
+def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
     if workbench_stop_request.workbench_type == "jupyter":
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
     else:
@@ -87,7 +87,7 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchStartStop)
         pass
 
 
-def schedule_workbench_start(workbench_start_request):
+def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
     if workbench_start_request.workbench_type == "jupyter":
         return schedulers.start_jupyter_workbench(workbench_start_request)
     else:

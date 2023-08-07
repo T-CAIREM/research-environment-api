@@ -21,7 +21,7 @@ def create_workbench():
 def stop_workbench():
     body = request.get_json()
     workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
-    workbench_stop_entity = entities.WorkbenchStartStop(**workbench_stop_request)
+    workbench_stop_entity = entities.WorkbenchToggleState(**workbench_stop_request)
     workflow_id = services.schedule_workbench_stop(workbench_stop_entity)
 
     return workflow_id, 200
@@ -31,7 +31,7 @@ def stop_workbench():
 def start_workbench():
     body = request.get_json()
     workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
-    jupyter_workbench_stop_entity = entities.WorkbenchStartStop(
+    jupyter_workbench_stop_entity = entities.WorkbenchToggleState(
         **workbench_stop_request
     )
     workflow_id = services.schedule_workbench_start(jupyter_workbench_stop_entity)

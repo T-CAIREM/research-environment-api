@@ -71,6 +71,9 @@ class Workbench:
     disk_size: int
     type: WorkbenchType
     machine_type: MachineType
+    region: Region
+    bucket_name: str
+    vm_image: str
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
@@ -92,11 +95,15 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
+        region = instance.zone.rsplit('-', 1)[0]
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
             gcp_identifier=str(instance.id),
             dataset_identifier=instance.labels["dataset_identifier"],
+            bucket_name=instance.labels["bucket_name"],
+            vm_image=instance.labels["vm_image"],
+            region=Region(region),
             status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
@@ -147,14 +154,20 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchUpdateDestroy(WorkbenchCreate):
-    workbench_resource_id: str
-
-
-@dataclass
-class WorkbenchStartStop:
+class WorkbenchUpdateDestroy:
     workbench_type: str
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
-    instance_zone: Optional[str] = None
+    jupyter_startup_script_bucket: str = field(init=False)
+
+    def __post_init__(self):
+        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+
+
+@dataclass
+class WorkbenchToggleState:
+    workbench_type: str
+    workspace_project_id: str
+    workbench_resource_id: str
+    user_email: str
