@@ -131,13 +131,17 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchCreate:
+class BaseWorkbenchEntity:
     workbench_type: str
+    workspace_project_id: str
+    user_email: str
+
+
+@dataclass
+class WorkbenchCreate(BaseWorkbenchEntity):
     machine_type: MachineType
     disk_size: int
-    workspace_project_id: str
     dataset_identifier: str
-    user_email: str
     bucket_name: str
     region: Region
     gpu_accelerator_type: Optional[GpuAcceleratorType]
@@ -154,19 +158,21 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchDestroy:
-    workbench_type: str
-    workspace_project_id: str
+class WorkbenchDestroy(BaseWorkbenchEntity):
     workbench_resource_id: str
-    user_email: str
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
 
 
-class WorkbenchUpdate(WorkbenchDestroy):
+class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
+    workbench_resource_id: str
+    jupyter_startup_script_bucket: str = field(init=False)
+
+    def __post_init__(self):
+        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
 
 
 @dataclass
