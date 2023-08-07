@@ -7,9 +7,8 @@ from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInsta
 from research_environment_api.background import schedulers
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import entities
-from research_environment_api.modules.workbench_management.constants import (
-    DEFAULT_APP_ENGINE_SERVICE_ID,
-)
+
+DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
 
 def list_workbenches(
@@ -32,9 +31,11 @@ def get_jupyter_workbench(
     gcp_project_id: str,
     workbench_resource_id: str,
 ) -> entities.Workbench:
+    # The API exposes instance IDs as strings for compatibility reasons.
+    instance_id = int(workbench_resource_id)
     gce_instances = _fetch_gce_instances(gcp_project_id)
     gce_instance = next(
-        filter(lambda instance: instance.name == workbench_resource_id, gce_instances)
+        filter(lambda instance: instance.id == instance_id, gce_instances)
     )
     return entities.Workbench.from_gce_instance(gce_instance)
 

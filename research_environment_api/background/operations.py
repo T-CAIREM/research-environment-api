@@ -2,12 +2,11 @@ from abc import ABC, abstractmethod
 
 import google.cloud.compute as compute
 from google.api_core import operation
-
-from research_environment_api.modules.app import app
 from google.cloud.compute_v1 import Operation as CloudOperation
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
-from research_environment_api.background.enums import OperationStatus
 
+from research_environment_api.background.enums import OperationStatus
+from research_environment_api.modules.app import app
 
 CLOUD_BUILD_OPERATION_STATUS_MAP = {
     CloudBuild.Status.PENDING: OperationStatus.IN_PROGRESS,

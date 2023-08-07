@@ -3,11 +3,17 @@ import string
 from dataclasses import dataclass, field
 from typing import List
 
-from research_environment_api.modules.workbench_management.entities import Workbench
-from research_environment_api.modules.workspace_management.constants import (
-    GOOGLE_REGIONS_SHORTCUTS,
+from research_environment_api.modules.workbench_management.entities import (
+    Region,
+    Workbench,
 )
-from research_environment_api.modules.workspace_management.enums import Region
+
+GOOGLE_REGIONS_SHORTCUTS = {
+    Region.US_CENTRAL.value: "us-c1",
+    Region.EUROPE_WEST.value: "eu-w3",
+    Region.NORTHAMERICA_NORTHEAST.value: "na-ne3",
+    Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
+}
 
 
 @dataclass

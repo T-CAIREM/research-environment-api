@@ -1,14 +1,14 @@
 import random
 
-from research_environment_api.background import builds, constants, workflows, enums
+from research_environment_api.background import builds, constants, enums, workflows
+from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     entities as workbench_entities,
 )
-from research_environment_api.modules.workbench_management import services, models
+from research_environment_api.modules.workbench_management import models, services
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
-from research_environment_api.modules.app import app
 
 
 def create_jupyter_workbench(
@@ -19,10 +19,10 @@ def create_jupyter_workbench(
 
     build = builds.create_jupyter_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
-        region=workbench_creation_request.region.value,
+        region=workbench_creation_request.region,
         zone=zone,
         machine_type=workbench_creation_request.machine_type,
-        persistent_disk=workbench_creation_request.persistent_disk,
+        disk_size=workbench_creation_request.disk_size,
         gpu_accelerator_type=workbench_creation_request.gpu_accelerator_type,
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
@@ -57,7 +57,7 @@ def create_workspace(
         billing_account_id=workspace_creation_request.billing_account_id,
         workspace_project_id=workspace_creation_request.workspace_project_id,
         user_email=workspace_creation_request.user_email,
-        region=workspace_creation_request.region.value,
+        region=workspace_creation_request.region,
     )
 
     with app.database_session() as session:
@@ -85,7 +85,7 @@ def destroy_workspace(
         billing_account_id=workspace_deletion_request.billing_account_id,
         workspace_project_id=workspace_deletion_request.workspace_project_id,
         user_email=workspace_deletion_request.user_email,
-        region=workspace_deletion_request.region.value,
+        region=workspace_deletion_request.region,
     )
 
     with app.database_session() as session:
@@ -167,9 +167,9 @@ def update_jupyter_workbench(
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
-        region=workbench_update_request.region.value,
+        region=workbench_update_request.region,
         machine_type=workbench_update_request.machine_type,
-        persistent_disk=workbench_update_request.persistent_disk,
+        disk_size=workbench_update_request.disk_size,
         gpu_accelerator_type=workbench_update_request.gpu_accelerator_type,
         dataset_identifier=workbench_update_request.dataset_identifier,
         user_email=workbench_update_request.user_email,
@@ -207,10 +207,10 @@ def destroy_jupyter_workbench(
     )
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
-        region=workbench_destroy_request.region.value,
+        region=workbench_destroy_request.region,
         zone=gce_instance.zone,
         machine_type=workbench_destroy_request.machine_type,
-        persistent_disk=workbench_destroy_request.persistent_disk,
+        disk_size=workbench_destroy_request.disk_size,
         gpu_accelerator_type=workbench_destroy_request.gpu_accelerator_type,
         dataset_identifier=workbench_destroy_request.dataset_identifier,
         user_email=workbench_destroy_request.user_email,

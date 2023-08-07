@@ -17,20 +17,20 @@ def create_workbench():
     return workflow_id, 200
 
 
-@workbench_management_bp.post("/stop")
+@workbench_management_bp.put("/stop")
 def stop_workbench():
     body = request.get_json()
-    workbench_stop_request = schemas.WorkbenchStartStopRequest().load(body)
+    workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
     workbench_stop_entity = entities.WorkbenchStartStop(**workbench_stop_request)
     workflow_id = services.schedule_workbench_stop(workbench_stop_entity)
 
     return workflow_id, 200
 
 
-@workbench_management_bp.post("/start")
+@workbench_management_bp.put("/start")
 def start_workbench():
     body = request.get_json()
-    workbench_stop_request = schemas.WorkbenchStartStopRequest().load(body)
+    workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
     jupyter_workbench_stop_entity = entities.WorkbenchStartStop(
         **workbench_stop_request
     )
@@ -39,10 +39,10 @@ def start_workbench():
     return workflow_id, 200
 
 
-@workbench_management_bp.post("/update")
+@workbench_management_bp.put("/update")
 def update_workbench():
     body = request.get_json()
-    workbench_update_request = schemas.WorkbenchUpdateDestroyRequest().load(body)
+    workbench_update_request = schemas.WorkbenchUpdateRequest().load(body)
     workbench_update_entity = entities.WorkbenchUpdateDestroy(
         **workbench_update_request
     )
@@ -51,10 +51,10 @@ def update_workbench():
     return workflow_id, 200
 
 
-@workbench_management_bp.post("/destroy")
+@workbench_management_bp.delete("/destroy")
 def destroy_workbench():
     body = request.get_json()
-    workbench_destroy_request = schemas.WorkbenchUpdateDestroyRequest().load(body)
+    workbench_destroy_request = schemas.WorkbenchDestroyRequest().load(body)
     workbench_destroy_entity = entities.WorkbenchUpdateDestroy(
         **workbench_destroy_request
     )
