@@ -47,7 +47,7 @@ def create_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def create_workspace(
@@ -75,7 +75,7 @@ def create_workspace(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def destroy_workspace(
@@ -103,7 +103,7 @@ def destroy_workspace(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def stop_jupyter_workbench(
@@ -129,7 +129,7 @@ def stop_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def start_jupyter_workbench(
@@ -155,7 +155,7 @@ def start_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def update_jupyter_workbench(
@@ -195,7 +195,7 @@ def update_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
 
 
 def destroy_jupyter_workbench(
@@ -234,4 +234,4 @@ def destroy_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity.id
+            return str(workbench_activity.id)
