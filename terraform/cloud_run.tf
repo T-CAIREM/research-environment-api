@@ -1,5 +1,5 @@
 locals {
-  service_account_credentials_volume_name                    = "service_account_credentials"
+  service_account_credentials_volume_name = "service_account_credentials"
   services = [
     { name = "core", command = null },
     { name = "celery", command = ["celery", "-A", "research_environment_api.celery_worker", "worker"] }
