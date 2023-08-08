@@ -14,7 +14,7 @@ from research_environment_api.modules.workspace_management import (
 
 def create_jupyter_workbench(
     workbench_creation_request: workbench_entities.WorkbenchCreate,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
 
@@ -48,12 +48,12 @@ def create_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def create_workspace(
     workspace_creation_request: workspace_entities.WorkspaceCreation,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     build = builds.create_workspace_build(
         billing_account_id=workspace_creation_request.billing_account_id,
         workspace_project_id=workspace_creation_request.workspace_project_id,
@@ -76,12 +76,12 @@ def create_workspace(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def destroy_workspace(
     workspace_deletion_request: workspace_entities.WorkspaceDeletion,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     build = builds.destroy_workspace_build(
         billing_account_id=workspace_deletion_request.billing_account_id,
         workspace_project_id=workspace_deletion_request.workspace_project_id,
@@ -104,12 +104,12 @@ def destroy_workspace(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def stop_jupyter_workbench(
     workbench_stop_request: workbench_entities.WorkbenchToggleState,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
         gcp_project_id=workbench_stop_request.workspace_project_id,
@@ -130,12 +130,12 @@ def stop_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def start_jupyter_workbench(
     workbench_start_request: workbench_entities.WorkbenchToggleState,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_start_request.workbench_resource_id,
         gcp_project_id=workbench_start_request.workspace_project_id,
@@ -156,12 +156,12 @@ def start_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def update_jupyter_workbench(
     workbench_update_request: workbench_entities.WorkbenchUpdate,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,
@@ -196,12 +196,12 @@ def update_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
 
 
 def destroy_jupyter_workbench(
     workbench_destroy_request: workbench_entities.WorkbenchDestroy,
-) -> models.WorkbenchActivity:
+) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_destroy_request.workbench_resource_id,
         gcp_project_id=workbench_destroy_request.workspace_project_id,
@@ -235,4 +235,4 @@ def destroy_jupyter_workbench(
                 workbench_activity_id=workbench_activity.id,
             )()
 
-            return workbench_activity
+            return workbench_activity.id
