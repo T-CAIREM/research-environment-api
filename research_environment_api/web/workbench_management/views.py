@@ -56,6 +56,8 @@ def destroy_workbench():
     body = request.get_json()
     workbench_destroy_request = schemas.WorkbenchDestroyRequest().load(body)
     workbench_destroy_entity = entities.WorkbenchDestroy(**workbench_destroy_request)
-    workbench_activity_id = services.schedule_workbench_destroy(workbench_destroy_entity)
+    workbench_activity_id = services.schedule_workbench_destroy(
+        workbench_destroy_entity
+    )
 
     return {"workflow_id": workbench_activity_id}, 200

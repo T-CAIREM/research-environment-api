@@ -66,7 +66,9 @@ def update_jupyter_workbench(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -77,7 +79,9 @@ def destroy_jupyter_workbench(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -88,7 +92,9 @@ def create_workspace(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -99,6 +105,8 @@ def destroy_workspace(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
