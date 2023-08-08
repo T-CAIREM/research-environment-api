@@ -1,8 +1,8 @@
 locals {
   service_account_credentials_volume_name = "service_account_credentials"
   services = [
-    { name = "core", command = null },
-    { name = "celery", command = "celery_endpoint.sh" }
+    { name = "core", command = null, cpu_throttling = true },
+    { name = "celery", command = ["/celery_endpoint.sh"], cpu_throttling = false }
   ]
 }
 
@@ -125,6 +125,7 @@ resource "google_cloud_run_service" "api" {
         "autoscaling.knative.dev/minScale"        = var.min_scale
         "autoscaling.knative.dev/maxScale"        = var.max_scale
         "run.googleapis.com/vpc-access-connector" = google_vpc_access_connector.connector.name
+        "run.googleapis.com/cpu-throttling"       = each.value.cpu_throttling
       }
     }
   }
