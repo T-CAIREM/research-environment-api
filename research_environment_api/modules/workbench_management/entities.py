@@ -95,7 +95,8 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
-        region = instance.zone.rsplit("-", 1)[0]
+        zone = instance.zone.split("/")[-1]
+        region = zone.rsplit("-", 1)[0]
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
