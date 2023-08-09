@@ -4,9 +4,15 @@ from celery import shared_task
 from google.api_core.future import polling
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import constants, operations, workflows
+from research_environment_api.background import (
+    constants,
+    operations,
+    workflows,
+    builds,
+    enums,
+)
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models
+from research_environment_api.modules.workbench_management import models, services
 
 
 @shared_task
@@ -66,6 +72,20 @@ def process_cloud_build_result(
                 workbench_activity_id=workbench_activity_id,
             )
             self.request.chain = None
+
+
+@shared_task(bind=True)
+def create_default_service_stopping_build(
+    self, operation: operations.Operation, workspace_project_id: str
+):
+    if operation.status() == enums.OperationStatus.FAILURE:
+        self.request.chain = None
+        return
+    version = services.get_default_app_engine_service(workspace_project_id)
+    stop_default_engine_build = builds.stop_rstudio_workbench_build(
+        workspace_project_id=workspace_project_id, workbench_resource_id=version.id
+    )
+    return stop_default_engine_build
 
 
 @shared_task

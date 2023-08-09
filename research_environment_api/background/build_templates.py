@@ -73,6 +73,22 @@ CREATE_WORKSPACE_STEPS = [
     },
     {
         "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "default",
+            "${_SERVICE_ACCOUNT}",
+            "n1-standard-1",
+            "${_REGION}",
+        ],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": ["app", "deploy", "std-appengine/app.yaml", "--project=${_PROJECT_ID}"],
+    },
+    {
+        "name": "python",
         "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
         "wait_for": ["-"],
     },
@@ -209,4 +225,18 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "--zone=${_ZONE}",
         ],
     },
+]
+
+STOP_RSTUDIO_WORKBENCH_STEPS = [
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "versions",
+            "stop",
+            "${_VERSION_ID}",
+            "--project=${_PROJECT_ID}",
+            "-q",
+        ],
+    }
 ]
