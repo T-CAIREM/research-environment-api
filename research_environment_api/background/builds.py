@@ -49,7 +49,7 @@ def create_jupyter_workbench_build(
         "_REGION": region.value,
         "_ZONE": zone,
         "_MACHINE_TYPE": machine_type.value,
-        "_PERSISTENT_DISK": str(disk_size),
+        "_DISK_SIZE": str(disk_size),
         "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,
