@@ -88,6 +88,21 @@ class Workbench:
             ),
             None,
         )
+        dataset_identifier = next(
+            metadata.value
+            for metadata in instance.metadata.items
+            if metadata.key == "dataset_identifier"
+        )
+        bucket_name = next(
+            metadata.value
+            for metadata in instance.metadata.items
+            if metadata.key == "bucket_name"
+        )
+        vm_image = next(
+            metadata.value
+            for metadata in instance.metadata.items
+            if metadata.key == "vm_image"
+        )
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
@@ -101,9 +116,9 @@ class Workbench:
         disk_size = instance.disks[0].disk_size_gb
         return cls(
             gcp_identifier=str(instance.id),
-            dataset_identifier=instance.labels["dataset_identifier"],
-            bucket_name=instance.labels["bucket_name"],
-            vm_image=instance.labels["vm_image"],
+            dataset_identifier=dataset_identifier,
+            bucket_name=bucket_name,
+            vm_image=vm_image,
             region=Region(region),
             status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
