@@ -110,7 +110,7 @@ class Workbench:
             memory=computing_resources.memory,
             machine_type=machine_type,
             url=maybe_proxy_url,
-            zone=instance.zone,
+            zone=zone,
             type=WorkbenchType.JUPYTER,
             disk_size=disk_size,
             gpu_accelerator_type=gpu_accelerator_type,
