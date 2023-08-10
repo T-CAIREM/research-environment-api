@@ -80,14 +80,17 @@ class Workbench:
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
-        maybe_proxy_url: Optional[str] = next(
-            (
-                f"https://{metadata.value}"
-                for metadata in instance.metadata.items
-                if metadata.key == "proxy-url"
-            ),
-            None,
+        metadata = {item.key: item.value for item in instance.metadata.items}
+        print(metadata)
+
+        maybe_proxy_url: Optional[str] = (
+            f"https://{metadata.get('proxy-url')}"
+            if metadata.get("proxy-url")
+            else None
         )
+        dataset_identifier = metadata["dataset_identifier"]
+        bucket_name = metadata["bucket_name"]
+        vm_image = metadata["vm_image"]
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
@@ -101,9 +104,9 @@ class Workbench:
         disk_size = instance.disks[0].disk_size_gb
         return cls(
             gcp_identifier=str(instance.id),
-            dataset_identifier=instance.labels["dataset_identifier"],
-            bucket_name=instance.labels["bucket_name"],
-            vm_image=instance.labels["vm_image"],
+            dataset_identifier=dataset_identifier,
+            bucket_name=bucket_name,
+            vm_image=vm_image,
             region=Region(region),
             status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
