@@ -148,7 +148,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     dataset_identifier: str
     bucket_name: str
     region: Region
-    gpu_accelerator_type: Optional[GpuAcceleratorType]
+    gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
