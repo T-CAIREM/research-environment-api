@@ -4,8 +4,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-jupyterlab",
+            "${_NAME}",
         ],
     },
     {
@@ -136,7 +135,6 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
             "${_INSTANCE_NAME}",
         ],
     },

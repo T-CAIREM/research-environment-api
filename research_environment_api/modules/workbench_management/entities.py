@@ -72,6 +72,7 @@ class Workbench:
     type: WorkbenchType
     machine_type: MachineType
     region: Region
+    name: str
     bucket_name: str
     vm_image: str
     url: Optional[str] = None
@@ -105,6 +106,7 @@ class Workbench:
         return cls(
             gcp_identifier=str(instance.id),
             dataset_identifier=dataset_identifier,
+            name=instance.name,
             bucket_name=bucket_name,
             vm_image=vm_image,
             region=Region(region),
@@ -170,6 +172,7 @@ class WorkbenchDestroy(BaseWorkbenchEntity):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
 
 
+@dataclass
 class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
     workbench_resource_id: str

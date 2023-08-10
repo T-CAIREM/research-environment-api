@@ -172,7 +172,7 @@ def update_jupyter_workbench(
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
-        workbench_resource_id=workbench_update_request.workbench_resource_id,
+        workbench_name=gce_instance.name,
         machine_type=workbench_update_request.machine_type,
         user_email=workbench_update_request.user_email,
         region=gce_instance.region,
