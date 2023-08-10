@@ -40,7 +40,13 @@ def create_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
-    instance_name = "".join(random.choices(string.ascii_lowercase, k=5))
+    instance_name = "-".join(
+        [
+            "jupyter",
+            dataset_identifier,
+            "".join(random.choices(string.ascii_lowercase, k=5)),
+        ]
+    )
 
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -74,14 +80,14 @@ def update_jupyter_workbench_build(
     bucket_name: str,
     vm_image: str,
     jupyter_startup_script_bucket: str,
-    workbench_resource_id: str,
+    workbench_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
-        "_INSTANCE_NAME": workbench_resource_id,
+        "_INSTANCE_NAME": workbench_name,
         "_REGION": region.value,
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,
