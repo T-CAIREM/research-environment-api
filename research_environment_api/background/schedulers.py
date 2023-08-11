@@ -183,6 +183,7 @@ def update_jupyter_workbench(
         zone=gce_instance.zone,
         vm_image=gce_instance.vm_image,
         jupyter_startup_script_bucket=workbench_update_request.jupyter_startup_script_bucket,
+        service_account_name=gce_instance.service_account_name,
     )
 
     with app.database_session() as session:
@@ -213,7 +214,7 @@ def destroy_jupyter_workbench(
     )
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
-        workbench_resource_id=workbench_destroy_request.workbench_resource_id,
+        workbench_name=gce_instance.name,
         user_email=workbench_destroy_request.user_email,
         region=gce_instance.region,
         machine_type=gce_instance.machine_type,
@@ -224,6 +225,7 @@ def destroy_jupyter_workbench(
         zone=gce_instance.zone,
         vm_image=gce_instance.vm_image,
         jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
+        service_account_name=gce_instance.service_account_name,
     )
     with app.database_session() as session:
         with session.begin():

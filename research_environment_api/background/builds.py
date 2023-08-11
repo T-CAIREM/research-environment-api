@@ -48,6 +48,14 @@ def create_jupyter_workbench_build(
         ]
     )
 
+    service_account_name = "-".join(
+        [
+            "jupyter",
+            dataset_identifier[:15],
+            "".join(random.choices(string.ascii_lowercase, k=5)),
+        ]
+    )
+
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -62,7 +70,8 @@ def create_jupyter_workbench_build(
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
-        "_NAME": instance_name,
+        "_INSTANCE_NAME": instance_name,
+        "_SERVICE_ACCOUNT_NAME": service_account_name,
     }
 
     return cloud_build
@@ -81,6 +90,7 @@ def update_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
     workbench_name: str,
+    service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
@@ -97,6 +107,7 @@ def update_jupyter_workbench_build(
         "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+        "_SERVICE_ACCOUNT_NAME": service_account_name,
     }
 
     return cloud_build
@@ -104,7 +115,6 @@ def update_jupyter_workbench_build(
 
 def destroy_jupyter_workbench_build(
     workspace_project_id: str,
-    workbench_resource_id: str,
     region: Region,
     zone: str,
     machine_type: MachineType,
@@ -115,6 +125,8 @@ def destroy_jupyter_workbench_build(
     bucket_name: str,
     vm_image: str,
     jupyter_startup_script_bucket: str,
+    workbench_name: str,
+    service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
@@ -128,9 +140,10 @@ def destroy_jupyter_workbench_build(
         "_DISK_SIZE": str(disk_size),
         "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
         "_VM_IMAGE": vm_image,
-        "_NAME": workbench_resource_id,
+        "_INSTANCE_NAME": workbench_name,
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+        "_SERVICE_ACCOUNT_NAME": service_account_name,
     }
 
     return cloud_build
