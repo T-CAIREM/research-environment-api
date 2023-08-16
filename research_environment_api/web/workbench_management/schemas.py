@@ -3,7 +3,6 @@ from marshmallow import Schema, fields
 from research_environment_api.modules.workbench_management.entities import (
     GpuAcceleratorType,
     MachineType,
-    Region,
     WorkbenchType,
 )
 
@@ -15,7 +14,6 @@ class WorkbenchBase(Schema):
 
 
 class WorkbenchCreateRequest(WorkbenchBase):
-    region = fields.Enum(Region, by_value=True, required=True)
     dataset_identifier = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
