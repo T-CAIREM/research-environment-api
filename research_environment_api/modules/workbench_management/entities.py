@@ -1,7 +1,9 @@
+import random
+import string
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Optional
+from typing import Iterable, Optional
 
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
@@ -58,6 +60,13 @@ GCE_STATUS_MAP = {
 
 RSTUDIO_STATUS_MAP = {
     "SERVING": WorkbenchStatus.RUNNING,
+}
+
+GOOGLE_REGIONS_SHORTCUTS = {
+    Region.US_CENTRAL.value: "us-c1",
+    Region.EUROPE_WEST.value: "eu-w3",
+    Region.NORTHAMERICA_NORTHEAST.value: "na-ne3",
+    Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
 }
 
 
@@ -188,3 +197,52 @@ class WorkbenchToggleState:
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
+
+
+@dataclass
+class WorkspaceCreation:
+    region: Region
+    user_email: str
+    workspace_project_id: str = field(init=False)
+    billing_account_id: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
+        self.workspace_project_id = self._workspace_project_id()
+
+    def _workspace_project_id(self):
+        workspace_project_id = (
+            f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region.value]}-"
+            + "".join(random.choices(string.ascii_lowercase, k=5))
+        )
+        return workspace_project_id
+
+
+@dataclass
+class WorkspaceDeletion:
+    workspace_project_id: str
+    region: Region
+    user_email: str
+    billing_account_id: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
+
+
+@dataclass
+class WorkspaceListQuery:
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
+
+
+@dataclass
+class Workspace:
+    gcp_project_id: str
+    billing_account_id: str
+    region: str
+    workbenches: Iterable[Workbench]

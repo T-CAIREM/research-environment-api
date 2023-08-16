@@ -21,7 +21,6 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 import research_environment_api.modules.workbench_management.models
-import research_environment_api.modules.workspace_management.models
 from research_environment_api.modules.model import ScopedModel
 
 target_metadata = ScopedModel.metadata
