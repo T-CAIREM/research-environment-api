@@ -84,6 +84,7 @@ class Workbench:
     name: str
     bucket_name: str
     vm_image: str
+    service_account_name: str
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
@@ -101,6 +102,7 @@ class Workbench:
         dataset_identifier = metadata["dataset_identifier"]
         bucket_name = metadata["bucket_name"]
         vm_image = metadata["vm_image"]
+        service_account_name = metadata["service_account_name"]
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
@@ -128,6 +130,7 @@ class Workbench:
             type=WorkbenchType.JUPYTER,
             disk_size=disk_size,
             gpu_accelerator_type=gpu_accelerator_type,
+            service_account_name=service_account_name,
         )
 
     @classmethod

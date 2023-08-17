@@ -4,7 +4,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_NAME}",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -31,7 +31,8 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_vm_image=${_VM_IMAGE}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
-            "TF_VAR_name=${_NAME}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
     {
@@ -161,6 +162,8 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
 ]
@@ -171,8 +174,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-jupyterlab",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -194,6 +196,8 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_persistent_disk=${_DISK_SIZE}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
     {
@@ -202,7 +206,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "compute",
             "disks",
             "delete",
-            "${_NAME}-data",
+            "${_INSTANCE_NAME}-data",
             "--project=${_PROJECT_ID}",
             "--zone=${_ZONE}",
         ],
