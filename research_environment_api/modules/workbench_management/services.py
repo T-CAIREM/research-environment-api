@@ -20,19 +20,31 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
     return schedulers.destroy_workspace(workspace_deletion)
 
 
-def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery):
-    gcp_projects = _list_active_google_projects(workspace_list_query)
+def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery) -> Iterable[entities.Workspace]:
+    gcp_projects = _list_active_google_projects(workspace_list_query.username)
 
     return [_build_workspace_entity(project) for project in gcp_projects]
 
 
-def _list_active_google_projects(
-    workspace_list_query: entities.WorkspaceListQuery,
-) -> Iterable[GoogleProject]:
-    filtering_query = f"labels.cloud_identity_username:{workspace_list_query.username} lifecycleState:ACTIVE"
+def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
     return app.config.google_cloud_resource_client.search_projects(
         query=filtering_query
     ).projects
+
+
+def _list_active_google_projects(
+    username: str,
+) -> Iterable[GoogleProject]:
+    filtering_query = f"labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
+    return _filter_google_projects(filtering_query)
+
+
+def get_active_google_project(
+    project_id: str,
+    username: str,
+) -> GoogleProject:
+    filtering_query = f"id:{project_id} labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
+    return _filter_google_projects(filtering_query)[0]
 
 
 def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
@@ -112,10 +124,10 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
 
 
 def schedule_workbench_create(
-    workbench_creation_request: entities.WorkbenchCreate,
+    workbench_creation: entities.WorkbenchCreate,
 ):
-    if workbench_creation_request.workbench_type == "jupyter":
-        return schedulers.create_jupyter_workbench(workbench_creation_request)
+    if workbench_creation.workbench_type == "jupyter":
+        return schedulers.create_jupyter_workbench(workbench_creation)
     else:
         # TODO: Integrate RStudio
         pass
