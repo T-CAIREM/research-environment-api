@@ -10,6 +10,9 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.modules.app import app
+from research_environment_api.modules.workbench_management.models import (
+    WorkbenchActivity,
+)
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
@@ -85,12 +88,17 @@ class Workbench:
     bucket_name: str
     vm_image: str
     service_account_name: str
+    workflow_in_progress: Optional[WorkbenchActivity] = None
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
 
     @classmethod
-    def from_gce_instance(cls, instance: ComputeEngineInstance):
+    def from_gce_instance(
+        cls,
+        instance: ComputeEngineInstance,
+        workflows_in_progress: Iterable[WorkbenchActivity],
+    ):
         metadata = {item.key: item.value for item in instance.metadata.items}
         print(metadata)
 
@@ -112,6 +120,13 @@ class Workbench:
         )
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
+        workflow_in_progress = next(
+            filter(
+                lambda workflow: workflow.workbench_id == str(instance.id),
+                workflows_in_progress,
+            ),
+            None,
+        )
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
@@ -131,6 +146,7 @@ class Workbench:
             disk_size=disk_size,
             gpu_accelerator_type=gpu_accelerator_type,
             service_account_name=service_account_name,
+            workflow_in_progress=workflow_in_progress,
         )
 
     @classmethod
@@ -249,3 +265,9 @@ class Workspace:
     billing_account_id: str
     region: str
     workbenches: Iterable[Workbench]
+    workflow_in_progress: Optional[WorkbenchActivity] = None
+
+
+@dataclass
+class GoogleEntityScaffolding:
+    gcp_project_id: str

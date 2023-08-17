@@ -36,6 +36,7 @@ def create_jupyter_workbench(
                 build_type=enums.BuildType.JUPYTER_CREATION,
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workbench_creation_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -66,6 +67,7 @@ def create_workspace(
                 build_type=enums.BuildType.WORKSPACE_CREATION,
                 invoker_email=workspace_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workspace_creation_request.workspace_project_id,
             )
             session.add(workbench_activity)
 
@@ -94,6 +96,7 @@ def destroy_workspace(
                 build_type=enums.BuildType.WORKSPACE_DELETION,
                 invoker_email=workspace_deletion_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workspace_deletion_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -120,6 +123,8 @@ def stop_jupyter_workbench(
                 build_type=enums.BuildType.JUPYTER_STOP,
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_stop_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -147,6 +152,8 @@ def start_jupyter_workbench(
                 build_type=enums.BuildType.JUPYTER_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_start_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -190,6 +197,8 @@ def update_jupyter_workbench(
                 build_type=enums.BuildType.JUPYTER_UPDATE,
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_update_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -231,6 +240,8 @@ def destroy_jupyter_workbench(
                 build_type=enums.BuildType.JUPYTER_DESTROY,
                 invoker_email=workbench_destroy_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_destroy_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
