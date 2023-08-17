@@ -244,8 +244,14 @@ class WorkspaceListQuery:
 
 
 @dataclass
+class BillingInfo:
+    billing_enabled: bool
+    billing_account_id: str
+
+
+@dataclass
 class Workspace:
     gcp_project_id: str
-    billing_account_id: str
+    billing_info: BillingInfo
     region: str
     workbenches: Iterable[Workbench]
