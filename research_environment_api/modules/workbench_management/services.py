@@ -26,13 +26,13 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
 
 def list_active_workspaces(
     workspace_list_query: entities.WorkspaceListQuery,
-) -> Iterable[Union[entities.Workspace, entities.GoogleEntityScaffolding]]:
+) -> Iterable[Union[entities.Workspace, entities.EntityScaffolding]]:
     gcp_projects = _list_active_google_projects(workspace_list_query.username)
     workflows_in_progress = monitoring_services.list_active_workflows(
         workspace_list_query.email
     )
     build_scaffolding = [
-        entities.GoogleEntityScaffolding(workflow.workspace_id)
+        entities.EntityScaffolding(workflow.workspace_id)
         for workflow in workflows_in_progress
         if workflow.build_type == enums.BuildType.WORKSPACE_CREATION
     ]
@@ -101,7 +101,8 @@ def _match_workspace_workflow(
 ):
     return next(
         filter(
-            lambda workflow: workflow.workspace_id == gcp_project_id,
+            lambda workflow: workflow.workspace_id == gcp_project_id
+            and workflow.build_type == enums.BuildType.WORKSPACE_CREATION,
             workflows_in_progress,
         ),
         None,
@@ -111,7 +112,7 @@ def _match_workspace_workflow(
 def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
-) -> Iterable[Union[entities.Workbench, entities.GoogleEntityScaffolding]]:
+) -> Iterable[Union[entities.Workbench, entities.EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
     app_engine_services = _fetch_app_engine_services(gcp_project_id)
 
@@ -125,7 +126,7 @@ def list_workbenches(
     ]
 
     workbench_scaffolding = [
-        entities.GoogleEntityScaffolding(gcp_project_id=workflow.workspace_id)
+        entities.EntityScaffolding(gcp_project_id=workflow.workspace_id)
         for workflow in workflows_in_progress
         if workflow.workspace_id == gcp_project_id
         and workflow.build_type == enums.BuildType.JUPYTER_CREATION

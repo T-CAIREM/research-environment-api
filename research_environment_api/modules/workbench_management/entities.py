@@ -117,11 +117,12 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
+        stringified_instance_id = str(instance.id)
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
         workflow_in_progress = next(
             filter(
-                lambda workflow: workflow.workbench_id == str(instance.id),
+                lambda workflow: workflow.workbench_id == stringified_instance_id,
                 workflows_in_progress,
             ),
             None,
@@ -129,7 +130,7 @@ class Workbench:
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
-            gcp_identifier=str(instance.id),
+            gcp_identifier=stringified_instance_id,
             dataset_identifier=dataset_identifier,
             name=instance.name,
             bucket_name=bucket_name,
@@ -274,5 +275,5 @@ class Workspace:
 
 
 @dataclass
-class GoogleEntityScaffolding:
+class EntityScaffolding:
     gcp_project_id: str

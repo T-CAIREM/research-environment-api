@@ -6,6 +6,8 @@ from research_environment_api.modules.workbench_management.entities import (
     WorkbenchStatus,
     WorkbenchType,
 )
+from research_environment_api.web.workflow.schemas import Workflow
+from marshmallow_oneofschema import OneOfSchema
 
 
 class WorkspaceCreationRequest(Schema):
@@ -33,6 +35,15 @@ class Workbench(Schema):
     url = fields.URL(required=True)
     type = fields.Enum(WorkbenchType, by_value=True, required=True)
     zone = fields.Str()
+    workflow_in_progress = fields.Nested(Workflow)
+
+
+class EntityScaffolding(Schema):
+    gcp_project_id = fields.Str(required=True)
+
+
+class EntityScaffoldingWorkbenchSchema(OneOfSchema):
+    type_schemas = {"Workbench": Workbench, "EntityScaffolding": EntityScaffolding}
 
 
 class BillingInfo(Schema):
@@ -44,4 +55,9 @@ class Workspace(Schema):
     gcp_project_id = fields.Str(required=True)
     region = fields.Enum(Region, by_value=True, required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
-    workbenches = fields.Nested(Workbench, many=True)
+    workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
+    workflow_in_progress = fields.Nested(Workflow)
+
+
+class EntityScaffoldingWorkspaceSchema(OneOfSchema):
+    type_schemas = {"Workspace": Workspace, "EntityScaffolding": EntityScaffolding}
