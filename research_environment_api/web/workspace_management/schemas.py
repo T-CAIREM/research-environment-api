@@ -35,8 +35,13 @@ class Workbench(Schema):
     zone = fields.Str()
 
 
+class BillingInfo(Schema):
+    billing_account_id = fields.Str(required=True)
+    billing_enabled = fields.Boolean(required=True)
+
+
 class Workspace(Schema):
     gcp_project_id = fields.Str(required=True)
     region = fields.Enum(Region, by_value=True, required=True)
-    billing_account_id = fields.Str(required=True)
+    billing_info = fields.Nested(BillingInfo, required=True)
     workbenches = fields.Nested(Workbench, many=True)
