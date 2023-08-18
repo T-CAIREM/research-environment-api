@@ -7,8 +7,11 @@ from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProj
 
 from research_environment_api.background import schedulers, enums
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities, models
-from research_environment_api.modules.monitoring import services as monitoring_services
+from research_environment_api.modules.workbench_management import (
+    entities,
+    models,
+    monitoring as monitoring_services,
+)
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
