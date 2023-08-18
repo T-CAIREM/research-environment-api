@@ -20,7 +20,9 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
     return schedulers.destroy_workspace(workspace_deletion)
 
 
-def list_active_workspaces(workspace_list_query: entities.WorkspaceListQuery) -> Iterable[entities.Workspace]:
+def list_active_workspaces(
+    workspace_list_query: entities.WorkspaceListQuery,
+) -> Iterable[entities.Workspace]:
     gcp_projects = _list_active_google_projects(workspace_list_query.username)
 
     return [_build_workspace_entity(project) for project in gcp_projects]
