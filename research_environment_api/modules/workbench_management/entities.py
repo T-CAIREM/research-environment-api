@@ -92,7 +92,6 @@ class Workbench:
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
         metadata = {item.key: item.value for item in instance.metadata.items}
-        print(metadata)
 
         maybe_proxy_url: Optional[str] = (
             f"https://{metadata.get('proxy-url')}"
