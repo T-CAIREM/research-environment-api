@@ -69,8 +69,15 @@ def _build_workspace_entity(
     billing_info = app.config.google_cloud_billing_client.get_project_billing_info(
         name=gcp_project.name
     )
+    raw_billing_account_name = billing_info.billing_account_name
     # Format: billingAccounts/<billing_account_id>
-    _, billing_account_id = billing_info.billing_account_name.split("/")
+    if raw_billing_account_name:
+        _, raw_billing_account_name = billing_info.billing_account_name.split("/")
+
+    billing_info_entity = entities.BillingInfo(
+        billing_account_id=raw_billing_account_name,
+        billing_enabled=billing_info.billing_enabled,
+    )
     workbenches = list_workbenches(
         gcp_project_id=gcp_project_id, workflows_in_progress=workflows_in_progress
     )
@@ -79,7 +86,7 @@ def _build_workspace_entity(
     )
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
-        billing_account_id=billing_account_id,
+        billing_info=billing_info_entity,
         workbenches=workbenches,
         region=entities.Region(region),
         workflow_in_progress=workspace_workflow_in_progress,

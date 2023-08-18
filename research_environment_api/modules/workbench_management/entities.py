@@ -100,7 +100,6 @@ class Workbench:
         workflows_in_progress: Iterable[WorkbenchActivity],
     ):
         metadata = {item.key: item.value for item in instance.metadata.items}
-        print(metadata)
 
         maybe_proxy_url: Optional[str] = (
             f"https://{metadata.get('proxy-url')}"
@@ -260,9 +259,15 @@ class WorkspaceListQuery:
 
 
 @dataclass
+class BillingInfo:
+    billing_enabled: bool
+    billing_account_id: str
+
+
+@dataclass
 class Workspace:
     gcp_project_id: str
-    billing_account_id: str
+    billing_info: BillingInfo
     region: str
     workbenches: Iterable[Workbench]
     workflow_in_progress: Optional[WorkbenchActivity] = None
