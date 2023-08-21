@@ -32,7 +32,7 @@ def list_active_workspaces(
         workspace_list_query.email
     )
     build_scaffolding = [
-        entities.EntityScaffolding(workflow.workspace_id)
+        entities.EntityScaffolding(id=workflow.id, gcp_project_id=workflow.workspace_id)
         for workflow in workflows_in_progress
         if workflow.build_type == enums.BuildType.WORKSPACE_CREATION
     ]
@@ -126,7 +126,7 @@ def list_workbenches(
     ]
 
     workbench_scaffolding = [
-        entities.EntityScaffolding(gcp_project_id=workflow.workspace_id)
+        entities.EntityScaffolding(id=workflow.id, gcp_project_id=workflow.workspace_id)
         for workflow in workflows_in_progress
         if workflow.workspace_id == gcp_project_id
         and workflow.build_type == enums.BuildType.JUPYTER_CREATION

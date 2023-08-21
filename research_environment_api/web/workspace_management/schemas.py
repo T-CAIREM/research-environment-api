@@ -33,12 +33,15 @@ class Workbench(Schema):
     disk_size = fields.Int(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
     url = fields.URL(required=True)
-    type = fields.Enum(WorkbenchType, by_value=True, required=True)
+    workbench_type = fields.Enum(
+        WorkbenchType, by_value=True, required=True, attribute="type"
+    )
     zone = fields.Str()
     workflow_in_progress = fields.Nested(Workflow)
 
 
 class EntityScaffolding(Schema):
+    id = fields.str(required=True)
     gcp_project_id = fields.Str(required=True)
 
 

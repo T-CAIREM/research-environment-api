@@ -276,4 +276,5 @@ class Workspace:
 
 @dataclass
 class EntityScaffolding:
+    id: str
     gcp_project_id: str
