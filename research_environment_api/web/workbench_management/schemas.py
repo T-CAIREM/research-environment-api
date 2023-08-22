@@ -36,3 +36,7 @@ class WorkbenchUpdateRequest(WorkbenchBase):
 
 class WorkbenchDestroyRequest(WorkbenchBase):
     workbench_resource_id = fields.Str(required=True)
+
+
+class WorkbenchWorkflowIdentifier(Schema):
+    workflow_id = fields.Str(required=True)

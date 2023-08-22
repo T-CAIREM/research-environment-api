@@ -9,6 +9,23 @@ from research_environment_api.web.identity_management import (
 
 @identity_management_bp.post("/create")
 def create_cloud_identity():
+    """Creates a cloud identity.
+    ---
+    post:
+      tags:
+        - identity_management
+      description: Creates a cloud identity.
+      requestBody:
+        content:
+          application/json:
+            schema: IdentityProvisioningRequest
+      responses:
+        200:
+          description: Returns the created cloud identity.
+          content:
+            application/json:
+              schema: ProvisionedIdentity
+    """
     body = request.get_json()
     identity_provisioning_request = schemas.IdentityProvisioningRequest().load(body)
     cloud_identity_creation_entity = entities.CloudIdentityCreation(
