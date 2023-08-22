@@ -31,9 +31,8 @@ def create_workspace():
     workspace_creation_request = schemas.WorkspaceCreationRequest().load(body)
     workspace_creation_entity = entities.WorkspaceCreation(**workspace_creation_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_creation_entity.user_email)
     workbench_activity_id = services.create_workspace(workspace_creation_entity)
-    workflow_identifier = schemas.WorkspaceWorkflowIdentifier(
+    workflow_identifier = schemas.WorkspaceWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
@@ -65,7 +64,7 @@ def delete_workspace():
 
     cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.user_email)
     workbench_activity_id = services.delete_workspace(workspace_deletion_entity)
-    workflow_identifier = schemas.WorkspaceWorkflowIdentifier.dump(
+    workflow_identifier = schemas.WorkspaceWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 

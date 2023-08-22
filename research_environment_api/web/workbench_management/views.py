@@ -40,7 +40,7 @@ def create_workbench():
         **workbench_creation_request, region=workspace_region
     )
     workbench_activity_id = services.schedule_workbench_create(workbench_entity)
-    workflow_identifier = schemas.WorkbenchWorkflowIdentifier(
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
@@ -70,7 +70,7 @@ def stop_workbench():
     workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
     workbench_stop_entity = entities.WorkbenchToggleState(**workbench_stop_request)
     workbench_activity_id = services.schedule_workbench_stop(workbench_stop_entity)
-    workflow_identifier = schemas.WorkbenchWorkflowIdentifier(
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
@@ -104,7 +104,7 @@ def start_workbench():
     workbench_activity_id = services.schedule_workbench_start(
         jupyter_workbench_stop_entity
     )
-    workflow_identifier = schemas.WorkbenchWorkflowIdentifier(
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
@@ -134,7 +134,7 @@ def update_workbench():
     workbench_update_request = schemas.WorkbenchUpdateRequest().load(body)
     workbench_update_entity = entities.WorkbenchUpdate(**workbench_update_request)
     workbench_activity_id = services.schedule_workbench_update(workbench_update_entity)
-    workflow_identifier = schemas.WorkbenchWorkflowIdentifier(
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
@@ -166,7 +166,7 @@ def destroy_workbench():
     workbench_activity_id = services.schedule_workbench_destroy(
         workbench_destroy_entity
     )
-    workflow_identifier = schemas.WorkbenchWorkflowIdentifier(
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
 
