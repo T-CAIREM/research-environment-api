@@ -1,7 +1,6 @@
 from typing import Any, List, Optional, Tuple
 
 from celery import shared_task
-from google.api_core.future import polling
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
 from research_environment_api.background import (
@@ -18,7 +17,7 @@ from research_environment_api.modules.workbench_management import models, servic
 @shared_task
 def start_cloud_build(
     build: CloudBuild,
-) -> Tuple[polling.PollingFuture, Tuple[polling.PollingFuture, str]]:
+) -> Tuple[operations.BuildOperation, Tuple[operations.BuildOperation, str]]:
     build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
@@ -31,11 +30,11 @@ def start_cloud_build(
 @shared_task(bind=True)
 def process_cloud_build_result(
     self,
-    operation_context: Tuple[polling.PollingFuture, str],
+    operation_context: Tuple[operations.BuildOperation, str],
     user_email: str,
     workbench_activity_id: str,
     fallback_zones: Optional[List[str]] = None,
-):
+) -> Optional[operations.BuildOperation]:
     operation, build_id = operation_context
     build = app.config.google_cloud_build_client.get_build(
         project_id=app.config.project_id, id=build_id
@@ -91,9 +90,7 @@ def create_default_service_stopping_build(self, workspace_project_id: str):
 
 
 @shared_task
-def set_workflow_status(
-    operation: operations.Operation, workbench_activity_id: str
-) -> None:
+def set_workflow_status(operation: operations.Operation, workbench_activity_id: str):
     with app.database_session() as session:
         with session.begin():
             workbench_activity = (
@@ -109,7 +106,7 @@ def stop_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-) -> Tuple[operations.Operation, Any]:
+) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     stop_operation = instance_client.stop(
         project=workspace_project_id,
@@ -129,7 +126,7 @@ def start_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-) -> Tuple[operations.Operation, Any]:
+) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     start_operation = instance_client.start(
         project=workspace_project_id,

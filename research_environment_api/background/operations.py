@@ -2,24 +2,9 @@ from abc import ABC, abstractmethod
 
 import google.cloud.compute as compute
 from google.api_core import operation
-from google.cloud.compute_v1 import Operation as CloudOperation
-from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
 from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.app import app
-
-CLOUD_BUILD_OPERATION_STATUS_MAP = {
-    CloudBuild.Status.PENDING: OperationStatus.IN_PROGRESS,
-    CloudBuild.Status.QUEUED: OperationStatus.IN_PROGRESS,
-    CloudBuild.Status.WORKING: OperationStatus.IN_PROGRESS,
-    CloudBuild.Status.SUCCESS: OperationStatus.SUCCESS,
-    CloudBuild.Status.FAILURE: OperationStatus.FAILURE,
-    CloudBuild.Status.INTERNAL_ERROR: OperationStatus.FAILURE,
-    CloudBuild.Status.TIMEOUT: OperationStatus.FAILURE,
-    CloudBuild.Status.CANCELLED: OperationStatus.FAILURE,
-    CloudBuild.Status.EXPIRED: OperationStatus.FAILURE,
-    CloudBuild.Status.STATUS_UNKNOWN: OperationStatus.FAILURE,
-}
 
 
 class Operation(ABC):
@@ -45,13 +30,11 @@ class InstanceOperation(Operation):
 
     def status(self) -> OperationStatus:
         operation = self._operation()
-        if operation.status != CloudOperation.Status.DONE:
+        if not operation.done:
             return OperationStatus.IN_PROGRESS
 
         return (
-            OperationStatus.FAILURE
-            if operation.error.errors
-            else OperationStatus.SUCCESS
+            OperationStatus.FAILURE if operation.error.code else OperationStatus.SUCCESS
         )
 
     def is_done(self) -> bool:
@@ -68,8 +51,12 @@ class BuildOperation(Operation):
 
     def status(self) -> OperationStatus:
         operation = self._operation()
+        if not operation.done:
+            return OperationStatus.IN_PROGRESS
 
-        return CLOUD_BUILD_OPERATION_STATUS_MAP[operation.status]
+        return (
+            OperationStatus.FAILURE if operation.error.code else OperationStatus.SUCCESS
+        )
 
     def is_done(self) -> bool:
         return self._operation().done
