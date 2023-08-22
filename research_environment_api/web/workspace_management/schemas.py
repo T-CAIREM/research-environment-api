@@ -45,3 +45,7 @@ class Workspace(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
     workbenches = fields.Nested(Workbench, many=True)
+
+
+class WorkspaceWorkflowIdentifier(Schema):
+    workflow_id = fields.Str(required=True)
