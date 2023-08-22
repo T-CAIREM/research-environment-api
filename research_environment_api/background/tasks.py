@@ -3,13 +3,7 @@ from typing import Any, List, Optional, Tuple
 from celery import shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import (
-    constants,
-    operations,
-    workflows,
-    builds,
-    enums,
-)
+from research_environment_api.background import builds, constants, operations, workflows
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models, services
 
@@ -76,12 +70,14 @@ def process_cloud_build_result(
 
 
 @shared_task(bind=True)
-def create_default_service_stopping_build(self, workspace_project_id: str):
-    versions = services.get_default_app_engine_service(
+def create_default_service_stopping_build(
+    self, _operation: operations.Operation, workspace_project_id: str
+) -> CloudBuild:
+    versions = services.get_app_engine_service_versions(
         workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
     )
     # The default service will only ever have one version.
-    default_version = versions[0]
+    default_version = next(iter(versions))
     stop_default_engine_build = builds.stop_rstudio_workbench_build(
         workspace_project_id=workspace_project_id,
         workbench_resource_id=default_version.id,
