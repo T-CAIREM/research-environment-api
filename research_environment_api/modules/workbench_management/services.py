@@ -69,18 +69,20 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
-def get_default_app_engine_service(
+def get_app_engine_service_versions(
     workspace_project_id: str,
-) -> AppEngineService:
+    service_id: str,
+) -> Iterable[AppEngineVersion]:
     app_engine_services = app.config.google_app_engine_services_client.list_services(
         {"parent": f"apps/{workspace_project_id}"}
     )
-    for service in app_engine_services:
-        for version in app.config.google_app_engine_versions_client.list_versions(
-            {"parent": service.name}
-        ):
-            if service.id == DEFAULT_APP_ENGINE_SERVICE_ID:
-                return version
+    service = next(
+        service for service in app_engine_services if service.id == service_id
+    )
+    versions = app.config.google_app_engine_versions_client.list_versions(
+        {"parent": service.name}
+    )
+    return versions
 
 
 def schedule_workbench_create(

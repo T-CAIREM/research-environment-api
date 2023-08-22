@@ -57,7 +57,9 @@ def process_cloud_build_result(
                 workbench_activity.build_error_information = (
                     "No resources in any zone. Try again later"
                 )
-                return operation
+                # Short-circuit the workflow.
+                self.request.chain = None
+                return
 
             # Retry the workflow in the next fallback region.
             workbench_activity.build_error_information = (
@@ -75,15 +77,15 @@ def process_cloud_build_result(
 
 
 @shared_task(bind=True)
-def create_default_service_stopping_build(
-    self, operation: operations.Operation, workspace_project_id: str
-):
-    if operation.status() == enums.OperationStatus.FAILURE:
-        self.request.chain = None
-        return
-    version = services.get_default_app_engine_service(workspace_project_id)
+def create_default_service_stopping_build(self, workspace_project_id: str):
+    versions = services.get_default_app_engine_service(
+        workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
+    )
+    # The default service will only ever have one version.
+    default_version = versions[0]
     stop_default_engine_build = builds.stop_rstudio_workbench_build(
-        workspace_project_id=workspace_project_id, workbench_resource_id=version.id
+        workspace_project_id=workspace_project_id,
+        workbench_resource_id=default_version.id,
     )
     return stop_default_engine_build
 
