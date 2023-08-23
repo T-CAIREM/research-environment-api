@@ -1,5 +1,7 @@
 from celery import Celery
 
+from research_environment_api.background.tasks import WorkflowTask
+
 
 def create_celery(broker_url: str, result_backend: str) -> Celery:
     celery = Celery(
@@ -15,5 +17,6 @@ def create_celery(broker_url: str, result_backend: str) -> Celery:
     ]
     celery.conf.task_serializer = "pickle"
     celery.conf.result_serializer = "pickle"
+    celery.task_cls = WorkflowTask
 
     return celery
