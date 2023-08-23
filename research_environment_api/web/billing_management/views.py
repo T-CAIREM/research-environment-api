@@ -11,6 +11,26 @@ from research_environment_api.web.cache import cache
 @billing_management_bp.get("/<email>")
 @cache.cached(timeout=300)
 def list_billing_accounts(email: str):
+    """Lists a user's billing accounts.
+    ---
+    get:
+      tags:
+        - billing_management
+      description: Lists a user's billing accounts.
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+      responses:
+        200:
+          description: Returns a list of billing accounts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: BillingAccount
+    """
     list_billing_accounts_request = schemas.ListBillingAccountsRequest().load(
         {"email": email}
     )
@@ -26,6 +46,23 @@ def list_billing_accounts(email: str):
 
 @billing_management_bp.post("/share")
 def share_billing_account():
+    """Shares a billing account.
+    ---
+    post:
+      tags:
+        - billing_management
+      description: Shares a billing account.
+      requestBody:
+        content:
+          application/json:
+            schema: ShareBillingAccountRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
     body = request.get_json()
     share_billing_account_request = schemas.ShareBillingAccountRequest().load(body)
 
@@ -45,6 +82,23 @@ def share_billing_account():
 
 @billing_management_bp.post("/revoke_access")
 def revoke_billing_account_access():
+    """Revokes a user's access to a billing account.
+    ---
+    post:
+      tags:
+        - billing_management
+      description: Revokes a user's access to a billing account.
+      requestBody:
+        content:
+          application/json:
+            schema: RevokeBillingAccountAccessRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
     body = request.get_json()
     revoke_billing_account_access_request = (
         schemas.RevokeBillingAccountAccessRequest().load(body)

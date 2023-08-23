@@ -64,3 +64,7 @@ class Workspace(Schema):
 
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):
     type_schemas = {"Workspace": Workspace, "EntityScaffolding": EntityScaffolding}
+
+
+class WorkspaceWorkflowIdentifier(Schema):
+    workflow_id = fields.Str(required=True)
