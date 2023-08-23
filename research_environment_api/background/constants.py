@@ -1,5 +1,5 @@
 AVAILABLE_ZONES = {
-    "us-central1": ["us-central1-a", "us-central1-b", "us-central1-c", "us-central1-f"],
+    "us-central1": ["us-central1-a", "us-central1-b", "us-central1-c"],
     "northamerica-northeast1": [
         "northamerica-northeast1-a",
         "northamerica-northeast1-b",
