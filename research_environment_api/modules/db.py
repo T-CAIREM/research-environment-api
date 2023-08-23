@@ -24,9 +24,10 @@ def create_cloud_sql_engine(
     instance_connection_name: str,
     database_name: str,
 ) -> sqlalchemy.engine.base.Engine:
-    connector = Connector(credentials=service_account_credentials)
-
     def getconn() -> pg8000.dbapi.Connection:
+        # The connector needs to be inside of `getconn` to work with Celery workers/threads.
+        # Otherwise, the connector is not initialized properly and tasks hang on the connection indefinitely.
+        connector = Connector(credentials=service_account_credentials)
         iam_service_account_user = _generate_credentials_user(
             service_account_credentials
         )
