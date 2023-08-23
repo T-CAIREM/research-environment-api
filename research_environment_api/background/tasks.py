@@ -1,11 +1,21 @@
 from typing import Any, List, Optional, Tuple
 
-from celery import shared_task
+from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
 from research_environment_api.background import builds, constants, operations, workflows
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models, services
+
+
+class WorkflowTask(Task):
+    def skip_to_last_step(self):
+        # The first element of the list is the last task in the chain.
+        self.request.chain = self.request.chain[:1]
+
+    def kill_chain(self):
+        # Kills the existing chain without any cleanup.
+        self.request.chain = None
 
 
 @shared_task
@@ -48,11 +58,11 @@ def process_cloud_build_result(
             if not fallback_zones:
                 # FIXME: Why does this error assume that there were insufficient resources?
                 workbench_activity.build_error_information = (
-                    "No resources in any zone. Try again later"
+                    "Workflow failed in all available zones. Please try again later."
                 )
                 # Short-circuit the workflow.
-                self.request.chain = None
-                return
+                self.skip_to_last_step()
+                return operation
 
             # Retry the workflow in the next fallback region.
             workbench_activity.build_error_information = (
@@ -66,7 +76,7 @@ def process_cloud_build_result(
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
             )
-            self.request.chain = None
+            self.kill_chain()
 
 
 @shared_task(bind=True)
