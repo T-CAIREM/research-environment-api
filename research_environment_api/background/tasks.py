@@ -75,7 +75,7 @@ def process_cloud_build_result(
                 fallback_zones=new_fallback_zones,
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
-            )
+            )()
             self.kill_chain()
 
 
