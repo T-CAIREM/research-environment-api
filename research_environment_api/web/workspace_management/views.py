@@ -62,7 +62,6 @@ def delete_workspace():
     workspace_deletion_request = schemas.WorkspaceDeletionRequest().load(body)
     workspace_deletion_entity = entities.WorkspaceDeletion(**workspace_deletion_request)
 
-    cache.delete_memoized(list_active_workspaces, workspace_deletion_entity.user_email)
     workbench_activity_id = services.delete_workspace(workspace_deletion_entity)
     workflow_identifier = schemas.WorkspaceWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
