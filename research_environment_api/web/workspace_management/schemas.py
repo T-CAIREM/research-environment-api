@@ -41,7 +41,7 @@ class Workbench(Schema):
 
 
 class EntityScaffolding(Schema):
-    id = fields.str(required=True)
+    id = fields.Str(required=True)
     gcp_project_id = fields.Str(required=True)
 
 
