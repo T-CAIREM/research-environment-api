@@ -66,7 +66,9 @@ def update_jupyter_workbench(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -77,18 +79,33 @@ def destroy_jupyter_workbench(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
 
 def create_workspace(
-    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    workbench_activity_id: str,
+    workspace_project_id: str,
 ):
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
+        tasks.create_default_service_stopping_build.s(
+            workspace_project_id=workspace_project_id
+        ),
+        tasks.start_cloud_build.s(),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -99,7 +116,9 @@ def destroy_workspace(
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
-        tasks.process_cloud_build_result.s(user_email=user_email),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 

@@ -1,7 +1,9 @@
+import random
+import string
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Optional
+from typing import Iterable, Optional
 
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
@@ -60,6 +62,13 @@ RSTUDIO_STATUS_MAP = {
     "SERVING": WorkbenchStatus.RUNNING,
 }
 
+GOOGLE_REGIONS_SHORTCUTS = {
+    Region.US_CENTRAL.value: "us-c1",
+    Region.EUROPE_WEST.value: "eu-w3",
+    Region.NORTHAMERICA_NORTHEAST.value: "na-ne3",
+    Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
+}
+
 
 @dataclass
 class Workbench:
@@ -72,22 +81,27 @@ class Workbench:
     type: WorkbenchType
     machine_type: MachineType
     region: Region
+    name: str
     bucket_name: str
     vm_image: str
+    service_account_name: str
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
 
     @classmethod
     def from_gce_instance(cls, instance: ComputeEngineInstance):
-        maybe_proxy_url: Optional[str] = next(
-            (
-                f"https://{metadata.value}"
-                for metadata in instance.metadata.items
-                if metadata.key == "proxy-url"
-            ),
-            None,
+        metadata = {item.key: item.value for item in instance.metadata.items}
+
+        maybe_proxy_url: Optional[str] = (
+            f"https://{metadata.get('proxy-url')}"
+            if metadata.get("proxy-url")
+            else None
         )
+        dataset_identifier = metadata["dataset_identifier"]
+        bucket_name = metadata["bucket_name"]
+        vm_image = metadata["vm_image"]
+        service_account_name = metadata["service_account_name"]
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
@@ -95,24 +109,27 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
-        region = instance.zone.rsplit('-', 1)[0]
+        zone = instance.zone.split("/")[-1]
+        region = zone.rsplit("-", 1)[0]
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
             gcp_identifier=str(instance.id),
-            dataset_identifier=instance.labels["dataset_identifier"],
-            bucket_name=instance.labels["bucket_name"],
-            vm_image=instance.labels["vm_image"],
+            dataset_identifier=dataset_identifier,
+            name=instance.name,
+            bucket_name=bucket_name,
+            vm_image=vm_image,
             region=Region(region),
             status=GCE_STATUS_MAP[instance.status],
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
             machine_type=machine_type,
             url=maybe_proxy_url,
-            zone=instance.zone,
+            zone=zone,
             type=WorkbenchType.JUPYTER,
             disk_size=disk_size,
             gpu_accelerator_type=gpu_accelerator_type,
+            service_account_name=service_account_name,
         )
 
     @classmethod
@@ -131,16 +148,20 @@ class Workbench:
 
 
 @dataclass
-class WorkbenchCreate:
+class BaseWorkbenchEntity:
     workbench_type: str
+    workspace_project_id: str
+    user_email: str
+
+
+@dataclass
+class WorkbenchCreate(BaseWorkbenchEntity):
     machine_type: MachineType
     disk_size: int
-    workspace_project_id: str
     dataset_identifier: str
-    user_email: str
     bucket_name: str
     region: Region
-    gpu_accelerator_type: Optional[GpuAcceleratorType]
+    gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     vm_image: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
 
@@ -154,11 +175,18 @@ class WorkbenchCreate:
 
 
 @dataclass
-class WorkbenchUpdateDestroy:
-    workbench_type: str
-    workspace_project_id: str
+class WorkbenchDestroy(BaseWorkbenchEntity):
     workbench_resource_id: str
-    user_email: str
+    jupyter_startup_script_bucket: str = field(init=False)
+
+    def __post_init__(self):
+        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+
+
+@dataclass
+class WorkbenchUpdate(BaseWorkbenchEntity):
+    machine_type: MachineType
+    workbench_resource_id: str
     jupyter_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
@@ -171,3 +199,58 @@ class WorkbenchToggleState:
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
+
+
+@dataclass
+class WorkspaceCreation:
+    region: Region
+    user_email: str
+    workspace_project_id: str = field(init=False)
+    billing_account_id: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
+        self.workspace_project_id = self._workspace_project_id()
+
+    def _workspace_project_id(self):
+        workspace_project_id = (
+            f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region.value]}-"
+            + "".join(random.choices(string.ascii_lowercase, k=5))
+        )
+        return workspace_project_id
+
+
+@dataclass
+class WorkspaceDeletion:
+    workspace_project_id: str
+    region: Region
+    user_email: str
+    billing_account_id: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
+
+
+@dataclass
+class WorkspaceListQuery:
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
+
+
+@dataclass
+class BillingInfo:
+    billing_enabled: bool
+    billing_account_id: str
+
+
+@dataclass
+class Workspace:
+    gcp_project_id: str
+    billing_info: BillingInfo
+    region: str
+    workbenches: Iterable[Workbench]

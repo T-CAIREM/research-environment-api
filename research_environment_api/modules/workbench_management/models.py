@@ -10,15 +10,6 @@ class Base(ScopedModel):
     __table_prefix__ = "workbench_"
 
 
-class WorkbenchMetadata(Base):
-    __local_tablename__ = "workbench_metadata"
-
-    gcp_identifier: Mapped[str] = mapped_column(String())
-    dataset_slug: Mapped[str] = mapped_column(String())
-    dataset_version: Mapped[str] = mapped_column(String())
-    zone: Mapped[str] = mapped_column(String())
-
-
 class WorkbenchActivity(Base):
     __local_tablename__ = "workbench_activities"
 

@@ -1,18 +1,27 @@
 from typing import Any, List, Optional, Tuple
 
-from celery import shared_task
-from google.api_core.future import polling
+from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import constants, operations, workflows
+from research_environment_api.background import builds, constants, operations, workflows
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models
+from research_environment_api.modules.workbench_management import models, services
+
+
+class WorkflowTask(Task):
+    def skip_to_last_step(self):
+        # The first element of the list is the last task in the chain.
+        self.request.chain = self.request.chain[:1]
+
+    def kill_chain(self):
+        # Kills the existing chain without any cleanup.
+        self.request.chain = None
 
 
 @shared_task
 def start_cloud_build(
     build: CloudBuild,
-) -> Tuple[polling.PollingFuture, Tuple[polling.PollingFuture, str]]:
+) -> Tuple[operations.BuildOperation, Tuple[operations.BuildOperation, str]]:
     build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
@@ -25,11 +34,11 @@ def start_cloud_build(
 @shared_task(bind=True)
 def process_cloud_build_result(
     self,
-    operation_context: Tuple[polling.PollingFuture, str],
+    operation_context: Tuple[operations.BuildOperation, str],
     user_email: str,
     workbench_activity_id: str,
     fallback_zones: Optional[List[str]] = None,
-):
+) -> Optional[operations.BuildOperation]:
     operation, build_id = operation_context
     build = app.config.google_cloud_build_client.get_build(
         project_id=app.config.project_id, id=build_id
@@ -49,8 +58,10 @@ def process_cloud_build_result(
             if not fallback_zones:
                 # FIXME: Why does this error assume that there were insufficient resources?
                 workbench_activity.build_error_information = (
-                    "No resources in any zone. Try again later"
+                    "Workflow failed in all available zones. Please try again later."
                 )
+                # Short-circuit the workflow.
+                self.skip_to_last_step()
                 return operation
 
             # Retry the workflow in the next fallback region.
@@ -64,14 +75,28 @@ def process_cloud_build_result(
                 fallback_zones=new_fallback_zones,
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
-            )
-            self.request.chain = None
+            )()
+            self.kill_chain()
+
+
+@shared_task(bind=True)
+def create_default_service_stopping_build(
+    self, _operation: operations.Operation, workspace_project_id: str
+) -> CloudBuild:
+    versions = services.get_app_engine_service_versions(
+        workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
+    )
+    # The default service will only ever have one version.
+    default_version = next(iter(versions))
+    stop_default_engine_build = builds.stop_rstudio_workbench_build(
+        workspace_project_id=workspace_project_id,
+        workbench_resource_id=default_version.id,
+    )
+    return stop_default_engine_build
 
 
 @shared_task
-def set_workflow_status(
-    operation: operations.Operation, workbench_activity_id: str
-) -> None:
+def set_workflow_status(operation: operations.Operation, workbench_activity_id: str):
     with app.database_session() as session:
         with session.begin():
             workbench_activity = (
@@ -87,7 +112,7 @@ def stop_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-) -> Tuple[operations.Operation, Any]:
+) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     stop_operation = instance_client.stop(
         project=workspace_project_id,
@@ -107,7 +132,7 @@ def start_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-) -> Tuple[operations.Operation, Any]:
+) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     start_operation = instance_client.start(
         project=workspace_project_id,

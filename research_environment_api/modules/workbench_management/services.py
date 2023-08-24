@@ -3,12 +3,74 @@ from typing import Iterable, Tuple
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
 from research_environment_api.background import schedulers
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import entities
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
+
+
+def create_workspace(workspace_creation: entities.WorkspaceCreation):
+    return schedulers.create_workspace(workspace_creation)
+
+
+def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
+    return schedulers.destroy_workspace(workspace_deletion)
+
+
+def list_active_workspaces(
+    workspace_list_query: entities.WorkspaceListQuery,
+) -> Iterable[entities.Workspace]:
+    gcp_projects = _list_active_google_projects(workspace_list_query.username)
+
+    return [_build_workspace_entity(project) for project in gcp_projects]
+
+
+def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
+    return app.config.google_cloud_resource_client.search_projects(
+        query=filtering_query
+    ).projects
+
+
+def _list_active_google_projects(
+    username: str,
+) -> Iterable[GoogleProject]:
+    filtering_query = f"labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
+    return _filter_google_projects(filtering_query)
+
+
+def get_active_google_project(
+    project_id: str,
+    username: str,
+) -> GoogleProject:
+    filtering_query = f"id:{project_id} labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
+    return _filter_google_projects(filtering_query)[0]
+
+
+def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
+    gcp_project_id = gcp_project.project_id
+    region = gcp_project.labels["region"]
+    billing_info = app.config.google_cloud_billing_client.get_project_billing_info(
+        name=gcp_project.name
+    )
+    raw_billing_account_name = billing_info.billing_account_name
+    # Format: billingAccounts/<billing_account_id>
+    if raw_billing_account_name:
+        _, raw_billing_account_name = billing_info.billing_account_name.split("/")
+
+    billing_info_entity = entities.BillingInfo(
+        billing_account_id=raw_billing_account_name,
+        billing_enabled=billing_info.billing_enabled,
+    )
+    workbenches = list_workbenches(gcp_project_id=gcp_project_id)
+    return entities.Workspace(
+        gcp_project_id=gcp_project_id,
+        billing_info=billing_info_entity,
+        workbenches=workbenches,
+        region=entities.Region(region),
+    )
 
 
 def list_workbenches(
@@ -69,11 +131,27 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
+def get_app_engine_service_versions(
+    workspace_project_id: str,
+    service_id: str,
+) -> Iterable[AppEngineVersion]:
+    app_engine_services = app.config.google_app_engine_services_client.list_services(
+        {"parent": f"apps/{workspace_project_id}"}
+    )
+    service = next(
+        service for service in app_engine_services if service.id == service_id
+    )
+    versions = app.config.google_app_engine_versions_client.list_versions(
+        {"parent": service.name}
+    )
+    return versions
+
+
 def schedule_workbench_create(
-    workbench_creation_request: entities.WorkbenchCreate,
+    workbench_creation: entities.WorkbenchCreate,
 ):
-    if workbench_creation_request.workbench_type == "jupyter":
-        return schedulers.create_jupyter_workbench(workbench_creation_request)
+    if workbench_creation.workbench_type == "jupyter":
+        return schedulers.create_jupyter_workbench(workbench_creation)
     else:
         return schedulers.create_rstudio_workbench(workbench_creation_request)
 
@@ -94,7 +172,7 @@ def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleSt
 
 
 def schedule_workbench_update(
-    workbench_update_request: entities.WorkbenchUpdateDestroy,
+    workbench_update_request: entities.WorkbenchUpdate,
 ):
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
@@ -103,7 +181,7 @@ def schedule_workbench_update(
 
 
 def schedule_workbench_destroy(
-    workbench_destroy_request: entities.WorkbenchUpdateDestroy,
+    workbench_destroy_request: entities.WorkbenchDestroy,
 ):
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)

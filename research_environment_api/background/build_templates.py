@@ -4,8 +4,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-jupyterlab",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -32,7 +31,8 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_vm_image=${_VM_IMAGE}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
-            "TF_VAR_name=${_NAME}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
     {
@@ -70,6 +70,22 @@ CREATE_WORKSPACE_STEPS = [
             "TF_VAR_app_eng_location=${_APPENGINE_REGION}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
         ],
+    },
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "appengine-rstudio/python3.py",
+            "default",
+            "${_SERVICE_ACCOUNT}",
+            "n1-standard-1",
+            "${_REGION}",
+        ],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": ["app", "deploy", "std-appengine/app.yaml", "--project=${_PROJECT_ID}"],
     },
     {
         "name": "python",
@@ -136,7 +152,6 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
             "${_INSTANCE_NAME}",
         ],
     },
@@ -163,6 +178,8 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
 ]
@@ -173,8 +190,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "notebookcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-jupyterlab",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -196,6 +212,8 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_persistent_disk=${_DISK_SIZE}",
             "TF_VAR_zone=${_ZONE}",
             "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
     {
@@ -204,11 +222,25 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "compute",
             "disks",
             "delete",
-            "${_NAME}-data",
+            "${_INSTANCE_NAME}-data",
             "--project=${_PROJECT_ID}",
             "--zone=${_ZONE}",
         ],
     },
+]
+
+STOP_RSTUDIO_WORKBENCH_STEPS = [
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "versions",
+            "stop",
+            "${_VERSION_ID}",
+            "--project=${_PROJECT_ID}",
+            "-q",
+        ],
+    }
 ]
 
 CREATE_RSTUIDO_WORKBENCH_STEPS = [
