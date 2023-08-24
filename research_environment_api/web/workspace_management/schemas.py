@@ -4,6 +4,7 @@ from research_environment_api.modules.workbench_management.entities import (
     MachineType,
     Region,
     WorkbenchStatus,
+    WorkspaceStatus,
     WorkbenchType,
 )
 from research_environment_api.web.workflow.schemas import Workflow
@@ -42,6 +43,7 @@ class Workbench(Schema):
 
 class EntityScaffolding(Schema):
     id = fields.Str(required=True)
+    status = fields.Str(required=True)
     gcp_project_id = fields.Str(required=True)
 
 
@@ -59,7 +61,7 @@ class Workspace(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
     workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
-    workflow_in_progress = fields.Nested(Workflow)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
 
 
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):

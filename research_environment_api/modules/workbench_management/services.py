@@ -87,12 +87,13 @@ def _build_workspace_entity(
     workspace_workflow_in_progress = _match_workspace_workflow(
         gcp_project_id, workflows_in_progress
     )
+    status = entities.WORKBENCH_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress] if workspace_workflow_in_progress else entities.WorkspaceStatus.RUNNING
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
         region=entities.Region(region),
-        workflow_in_progress=workspace_workflow_in_progress,
+        status=status,
     )
 
 
@@ -102,7 +103,7 @@ def _match_workspace_workflow(
     return next(
         filter(
             lambda workflow: workflow.workspace_id == gcp_project_id
-            and workflow.build_type == enums.BuildType.WORKSPACE_CREATION,
+            and workflow.build_type in [enums.BuildType.WORKSPACE_CREATION, enums.BuildType.WORKSPACE_DELETION],
             workflows_in_progress,
         ),
         None,

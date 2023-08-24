@@ -293,7 +293,7 @@ class Workspace:
     billing_info: BillingInfo
     region: str
     workbenches: Iterable[Workbench]
-    workflow_in_progress: Optional[WorkbenchActivity] = None
+    status: WorkspaceStatus
 
 
 @dataclass
