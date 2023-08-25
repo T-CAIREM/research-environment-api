@@ -7,7 +7,6 @@ from research_environment_api.modules.workbench_management.entities import (
     WorkspaceStatus,
     WorkbenchType,
 )
-from research_environment_api.web.workflow.schemas import Workflow
 from marshmallow_oneofschema import OneOfSchema
 
 
@@ -38,7 +37,6 @@ class Workbench(Schema):
         WorkbenchType, by_value=True, required=True, attribute="type"
     )
     zone = fields.Str()
-    workflow_in_progress = fields.Nested(Workflow)
 
 
 class EntityScaffolding(Schema):

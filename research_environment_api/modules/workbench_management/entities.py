@@ -51,7 +51,7 @@ class WorkbenchStatus(StrEnum):
 
 
 class WorkspaceStatus(StrEnum):
-    RUNNING = "running"
+    CREATED = "created"
     CREATING = "creating"
     DESTROYING = "destroying"
 
