@@ -243,14 +243,13 @@ STOP_RSTUDIO_WORKBENCH_STEPS = [
     }
 ]
 
-CREATE_RSTUIDO_WORKBENCH_STEPS = [
+CREATE_RSTUDIO_WORKBENCH_STEPS = [
     {
         "name": "python",
         "args": [
             "python3",
             "vmcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-rstudio",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -261,6 +260,7 @@ CREATE_RSTUIDO_WORKBENCH_STEPS = [
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vmcreation", "apply", "-auto-approve"],
         "env": [
+            "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_dataset=${_DATASET}",
@@ -270,6 +270,7 @@ CREATE_RSTUIDO_WORKBENCH_STEPS = [
             "TF_VAR_password=${_PASSWORD}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT}",
         ],
     },
     {
@@ -277,11 +278,11 @@ CREATE_RSTUIDO_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "appengine-rstudio/python3.py",
-            "${_DATASET}",
+            "${_INSTANCE_NAME}",
             "${_SERVICE_ACCOUNT}",
             "${_MACHINE_TYPE}",
             "${_REGION}",
-            "${_PERSISTENT_DISK}",
+            "${_DISK_SIZE}",
             "${_BUCKET_NAME}",
         ],
     },
@@ -308,22 +309,8 @@ CREATE_RSTUIDO_WORKBENCH_STEPS = [
     },
 ]
 
-STOP_RSTUIDO_WORKBENCH_STEPS = [
-    {
-        "name": "gcr.io/cloud-builders/gcloud",
-        "args": [
-            "app",
-            "versions",
-            "stop",
-            "${_VERSION_ID}",
-            "--project=${_PROJECT_ID}",
-            "-q",
-        ],
-    }
-]
 
-
-START_RSTUIDO_WORKBENCH_STEPS = [
+START_RSTUDIO_WORKBENCH_STEPS = [
     {
         "name": "gcr.io/cloud-builders/gcloud",
         "args": [
@@ -337,14 +324,14 @@ START_RSTUIDO_WORKBENCH_STEPS = [
     }
 ]
 
-UPDATE_RSTUIDO_WORKBENCH_STEPS = [
+UPDATE_RSTUDIO_WORKBENCH_STEPS = [
     {
         "name": "python",
         "args": [
             "python3",
             "vmcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-rstudio",
+            "${_INSTANCE_NAME}",
+
         ],
     },
     {
@@ -375,7 +362,7 @@ UPDATE_RSTUIDO_WORKBENCH_STEPS = [
             "${_SERVICE_ACCOUNT}",
             "${_MACHINE_TYPE}",
             "${_REGION}",
-            "${_PERSISTENT_DISK}",
+            "${_DISK_SIZE}",
         ],
     },
     {
@@ -392,7 +379,7 @@ UPDATE_RSTUIDO_WORKBENCH_STEPS = [
     },
 ]
 
-DESTROY_RSTUIDO_WORKBENCH_STEPS = [
+DESTROY_RSTUDIO_WORKBENCH_STEPS = [
     {
         "name": "python",
         "args": [
@@ -430,7 +417,7 @@ DESTROY_RSTUIDO_WORKBENCH_STEPS = [
             "${_SERVICE_ACCOUNT}",
             "${_MACHINE_TYPE}",
             "region",
-            "${_PERSISTENT_DISK}",
+            "${_DISK_SIZE}",
             "${_BUCKET_NAME}",
         ],
     },

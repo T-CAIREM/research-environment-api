@@ -3,17 +3,12 @@ import uuid
 
 from research_environment_api.background import builds, constants, enums, workflows
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import (
-    entities as workbench_entities,
-)
+from research_environment_api.modules.workbench_management import entities
 from research_environment_api.modules.workbench_management import models, services
-from research_environment_api.modules.workspace_management import (
-    entities as workspace_entities,
-)
 
 
 def create_jupyter_workbench(
-    workbench_creation_request: workbench_entities.WorkbenchCreate,
+    workbench_creation_request: entities.WorkbenchCreate,
 ) -> uuid.UUID:
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
@@ -53,7 +48,7 @@ def create_jupyter_workbench(
 
 
 def create_workspace(
-    workspace_creation_request: workspace_entities.WorkspaceCreation,
+    workspace_creation_request: entities.WorkspaceCreation,
 ) -> uuid.UUID:
     build = builds.create_workspace_build(
         billing_account_id=workspace_creation_request.billing_account_id,
@@ -83,7 +78,7 @@ def create_workspace(
 
 
 def destroy_workspace(
-    workspace_deletion_request: workspace_entities.WorkspaceDeletion,
+    workspace_deletion_request: entities.WorkspaceDeletion,
 ) -> uuid.UUID:
     build = builds.destroy_workspace_build(
         billing_account_id=workspace_deletion_request.billing_account_id,
@@ -112,7 +107,7 @@ def destroy_workspace(
 
 
 def stop_jupyter_workbench(
-    workbench_stop_request: workbench_entities.WorkbenchToggleState,
+    workbench_stop_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
@@ -139,7 +134,7 @@ def stop_jupyter_workbench(
 
 
 def start_jupyter_workbench(
-    workbench_start_request: workbench_entities.WorkbenchToggleState,
+    workbench_start_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_start_request.workbench_resource_id,
@@ -148,7 +143,7 @@ def start_jupyter_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.JUPYTER_START,
+                build_type=enums.BuildType.WORKBENCH_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
                 id=uuid.uuid4(),
@@ -166,7 +161,7 @@ def start_jupyter_workbench(
 
 
 def update_jupyter_workbench(
-    workbench_update_request: workbench_entities.WorkbenchUpdateDestroy,
+    workbench_update_request: entities.WorkbenchUpdate,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
@@ -208,7 +203,7 @@ def update_jupyter_workbench(
 
 
 def destroy_jupyter_workbench(
-    workbench_destroy_request: workbench_entities.WorkbenchUpdateDestroy,
+    workbench_destroy_request: entities.WorkbenchDestroy,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_destroy_request.workbench_resource_id,
@@ -249,13 +244,13 @@ def destroy_jupyter_workbench(
 
 
 def create_rstudio_workbench(
-    workbench_creation_request: workbench_entities.WorkbenchCreate,
-) -> str:
+    workbench_creation_request: entities.WorkbenchCreate,
+) -> uuid.UUID:
     build = builds.create_rstudio_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
         region=workbench_creation_request.region.value,
         machine_type=workbench_creation_request.machine_type,
-        persistent_disk=workbench_creation_request.persistent_disk,
+        disk_size=workbench_creation_request.disk_size,
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
@@ -267,6 +262,7 @@ def create_rstudio_workbench(
                 build_type=enums.BuildType.WORKBENCH_CREATION,
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -275,14 +271,13 @@ def create_rstudio_workbench(
                 user_email=workbench_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-        session.refresh(workbench_activity)
 
-        return str(workbench_activity.id)
+            return workbench_activity.id
 
 
 def stop_rstudio_workbench(
-    workbench_stop_request: workbench_entities.WorkbenchStartStop,
-) -> str:
+    workbench_stop_request: entities.WorkbenchToggleState,
+) -> uuid.UUID:
     build = builds.stop_rstudio_workbench_build(
         workspace_project_id=workbench_stop_request.workspace_project_id,
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
@@ -294,6 +289,7 @@ def stop_rstudio_workbench(
                 build_type=enums.BuildType.WORKBENCH_STOP,
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -302,14 +298,13 @@ def stop_rstudio_workbench(
                 user_email=workbench_stop_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-        session.refresh(workbench_activity)
 
-        return str(workbench_activity.id)
+            return workbench_activity.id
 
 
 def start_rstudio_workbench(
-    workbench_start_request: workbench_entities.WorkbenchStartStop,
-) -> str:
+    workbench_start_request: entities.WorkbenchToggleState,
+) -> uuid.UUID:
     build = builds.stop_rstudio_workbench_build(
         workspace_project_id=workbench_start_request.workspace_project_id,
         workbench_resource_id=workbench_start_request.workbench_resource_id,
@@ -321,6 +316,7 @@ def start_rstudio_workbench(
                 build_type=enums.BuildType.WORKBENCH_STOP,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -329,21 +325,27 @@ def start_rstudio_workbench(
                 user_email=workbench_start_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-        session.refresh(workbench_activity)
 
-        return str(workbench_activity.id)
+            return workbench_activity.id
 
 
 def update_rstudio_workbench(
-    workbench_update_request: workbench_entities.WorkbenchUpdateDestroy,
-) -> str:
+    workbench_update_request: entities.WorkbenchUpdate,
+) -> uuid.UUID:
+    app_engine_instance = services.get_rstudio_workbench(
+        workbench_update_request.workspace_project_id,
+        workbench_update_request.workbench_resource_id,
+    )
+
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
-        region=workbench_update_request.region.value,
+        region=app_engine_instance.region,
         machine_type=workbench_update_request.machine_type,
-        persistent_disk=workbench_update_request.persistent_disk,
-        dataset_identifier=workbench_update_request.dataset_identifier,
+        disk_size=app_engine_instance.disk_size,
+        dataset_identifier=app_engine_instance.dataset_identifier,
         user_email=workbench_update_request.user_email,
+        instance_name=app_engine_instance.name,
+        service_account_name=app_engine_instance.service_account_name,
     )
 
     with app.database_session() as session:
@@ -352,6 +354,7 @@ def update_rstudio_workbench(
                 build_type=enums.BuildType.WORKBENCH_UPDATE,
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                id=uuid.uuid4(),
             )
 
             workflows.update_rstudio_workbench(
@@ -359,22 +362,27 @@ def update_rstudio_workbench(
                 user_email=workbench_update_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-        session.refresh(workbench_activity)
 
-        return str(workbench_activity.id)
+            return workbench_activity.id
 
 
 def destroy_rstudio_workbench(
-    workbench_destroy_request: workbench_entities.WorkbenchUpdateDestroy,
-) -> str:
+    workbench_destroy_request: entities.WorkbenchDestroy,
+) -> uuid.UUID:
+    app_engine_instance = services.get_rstudio_workbench(
+        workbench_destroy_request.workspace_project_id,
+        workbench_destroy_request.workbench_resource_id,
+    )
+
     build = builds.destroy_rstudio_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
-        region=workbench_destroy_request.region.value,
-        machine_type=workbench_destroy_request.machine_type,
-        persistent_disk=workbench_destroy_request.persistent_disk,
-        dataset_identifier=workbench_destroy_request.dataset_identifier,
         user_email=workbench_destroy_request.user_email,
-        bucket_name=workbench_destroy_request.bucket_name,
+        instance_name=app_engine_instance.name,
+        bucket_name=app_engine_instance.bucket_name,
+        dataset_identifier=app_engine_instance.dataset_identifier,
+        disk_size=app_engine_instance.disk_size,
+        machine_type=app_engine_instance.machine_type,
+        service_account_name=app_engine_instance.service_account_name,
     )
 
     with app.database_session() as session:
@@ -383,6 +391,7 @@ def destroy_rstudio_workbench(
                 build_type=enums.BuildType.WORKBENCH_DESTROY,
                 invoker_email=workbench_destroy_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -391,6 +400,5 @@ def destroy_rstudio_workbench(
                 user_email=workbench_destroy_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
-        session.refresh(workbench_activity)
 
             return workbench_activity.id

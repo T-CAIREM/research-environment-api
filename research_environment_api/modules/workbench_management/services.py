@@ -102,6 +102,23 @@ def get_jupyter_workbench(
     return entities.Workbench.from_gce_instance(gce_instance)
 
 
+def get_rstudio_workbench(
+    gcp_project_id: str,
+    workbench_resource_id: str,
+) -> entities.Workbench:
+    # The API exposes instance IDs as strings for compatibility reasons.
+    app_engine_services = _fetch_app_engine_services(gcp_project_id)
+    app_service, app_version = next(
+        filter(
+            lambda service, version: version.id == workbench_resource_id,
+            app_engine_services,
+        )
+    )
+    return entities.Workbench.from_app_engine_service_and_version(
+        app_service, app_version
+    )
+
+
 def _fetch_app_engine_services(
     gcp_project_id: str,
 ) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
@@ -153,7 +170,7 @@ def schedule_workbench_create(
     if workbench_creation.workbench_type == "jupyter":
         return schedulers.create_jupyter_workbench(workbench_creation)
     else:
-        return schedulers.create_rstudio_workbench(workbench_creation_request)
+        return schedulers.create_rstudio_workbench(workbench_creation)
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):

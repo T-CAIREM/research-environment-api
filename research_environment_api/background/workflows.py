@@ -137,6 +137,7 @@ def create_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
+        tasks.save_app_engine_metadata.s(substitutions=build.substitutions),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 

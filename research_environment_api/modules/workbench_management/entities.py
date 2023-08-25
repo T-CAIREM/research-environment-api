@@ -10,6 +10,7 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.modules.app import app
+from research_environment_api.modules.workbench_management import models
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
@@ -136,15 +137,29 @@ class Workbench:
     def from_app_engine_service_and_version(
         cls, service: AppEngineService, version: AppEngineVersion
     ):
-        return cls(
-            gcp_identifier=version.id,
-            dataset_identifier=service.labels["dataset_identifier"],
-            status=RSTUDIO_STATUS_MAP[version.serving_status],
-            cpu=version.resources.cpu,
-            memory=version.resources.memory_gb,
-            url=version.version_url,
-            type=WorkbenchType.RSTUDIO,
-        )
+        with app.database_session() as session:
+            app_engine_metadata = (
+                session.query(models.AppEngineMetadata)
+                .filter_by(instance_id=version.id)
+                .one()
+            )
+
+            return cls(
+                gcp_identifier=version.id,
+                dataset_identifier=app_engine_metadata.dataset_identifier,
+                status=RSTUDIO_STATUS_MAP[version.serving_status],
+                cpu=version.resources.cpu,
+                memory=version.resources.memory_gb,
+                url=version.version_url,
+                type=WorkbenchType.RSTUDIO,
+                service_account_name=version.service_account,
+                bucket_name=app_engine_metadata.bucket_name,
+                vm_image=app_engine_metadata.vm_image,
+                region=app_engine_metadata.region,
+                name=version.id,
+                disk_size=app_engine_metadata.disk_size,
+                machine_type=app_engine_metadata.machine_type,
+            )
 
 
 @dataclass

@@ -79,9 +79,9 @@ def process_cloud_build_result(
             self.kill_chain()
 
 
-@shared_task(bind=True)
+@shared_task
 def create_default_service_stopping_build(
-    self, _operation: operations.Operation, workspace_project_id: str
+    _operation: operations.Operation, workspace_project_id: str
 ) -> CloudBuild:
     versions = services.get_app_engine_service_versions(
         workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
@@ -147,21 +147,6 @@ def start_compute_instance(
     return operation, operation
 
 
-@shared_task
-def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
-    # TODO: Figure a sensible way to process this.
-    operation, operation_identifier = instance_operation_identifier_tuple
-    with app.database_session() as session:
-        workbench_activity = (
-            session.query(models.WorkbenchActivity)
-            .filter_by(gcp_identifier=operation_identifier)
-            .one()
-        )
-        # FIXME: Makes no sense semantically.
-        workbench_activity.build_status = operation.status()
-        session.commit()
-
-
 @shared_task(bind=True, max_retries=None, countdown=30)
 def check_operation_status(
     self,
@@ -171,4 +156,25 @@ def check_operation_status(
     if not operation.is_done():
         raise self.retry(countdown=30)
 
+    return passthrough
+
+
+@shared_task
+def save_app_engine_metadata(passthrough, substitutions: dict):
+    *_, latest_version = services.get_app_engine_service_versions(
+        substitutions["_PROJECT_ID"], substitutions["_INSTANCE_NAME"]
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            app_engine_metadata = models.AppEngineMetadata(
+                instance_id=latest_version.id,
+                dataset_identifier=substitutions["_DATASET"],
+                bucket_name=substitutions["_BUCKET_NAME"],
+                vm_image=substitutions["_IMAGE_URL"],
+                region=substitutions["_REGION"],
+                disk_size=substitutions["_DISK_SIZE"],
+                machine_type=substitutions["_MACHINE_TYPE"],
+            )
+            session.add(app_engine_metadata)
     return passthrough
