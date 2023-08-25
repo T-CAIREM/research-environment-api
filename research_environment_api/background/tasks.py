@@ -3,7 +3,13 @@ from typing import Any, List, Optional, Tuple
 from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import builds, constants, operations, workflows
+from research_environment_api.background import (
+    build_templates,
+    builds,
+    constants,
+    operations,
+    workflows,
+)
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models, services
 
@@ -55,21 +61,23 @@ def process_cloud_build_result(
             if not build.status == CloudBuild.Status.FAILURE:
                 return operation
 
-            if not fallback_zones:
-                # FIXME: Why does this error assume that there were insufficient resources?
+            last_step_exit_code = build.steps[-1].exit_code
+            recoverable_error = constants.CLOUD_BUILD_ERROR_MESSAGE.get(
+                last_step_exit_code
+            )
+            is_recoverable = fallback_zones and recoverable_error
+            if not is_recoverable:
                 workbench_activity.build_error_information = (
-                    "Workflow failed in all available zones. Please try again later."
+                    recoverable_error
+                    or "The resource could not be provisioned. Please try again later."
                 )
-                # Short-circuit the workflow.
                 self.skip_to_last_step()
                 return operation
 
             # Retry the workflow in the next fallback region.
-            workbench_activity.build_error_information = (
-                constants.CLOUD_BUILD_ERROR_MESSAGE[build.steps[-1].exit_code]
-            )
             new_zone, *new_fallback_zones = fallback_zones
             build.substitutions["_ZONE"] = new_zone
+            build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
             workflows.create_jupyter_workbench(
                 build=build,
                 fallback_zones=new_fallback_zones,

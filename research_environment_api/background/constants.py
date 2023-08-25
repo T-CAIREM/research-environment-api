@@ -13,4 +13,6 @@ AVAILABLE_ZONES = {
     ],
 }
 
-CLOUD_BUILD_ERROR_MESSAGE = {14: "insufficient resources"}
+CLOUD_BUILD_ERROR_MESSAGE = {
+    14: "Insufficient resources in the selected region. Please try again later."
+}
