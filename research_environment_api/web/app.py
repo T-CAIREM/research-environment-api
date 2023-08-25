@@ -43,11 +43,15 @@ def create_app():
     from research_environment_api.web.workspace_management import (
         workspace_management_bp,
     )
+    from research_environment_api.web.workflow import (
+        workflow_bp,
+    )
 
     app.register_blueprint(identity_management_bp, url_prefix="/identity")
     app.register_blueprint(billing_management_bp, url_prefix="/billing")
     app.register_blueprint(workspace_management_bp, url_prefix="/workspace")
     app.register_blueprint(workbench_management_bp, url_prefix="/workbench")
+    app.register_blueprint(workflow_bp, url_prefix="/workflow")
 
     cache.init_app(app)
 

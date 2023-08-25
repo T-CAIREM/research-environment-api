@@ -4,8 +4,10 @@ from research_environment_api.modules.workbench_management.entities import (
     MachineType,
     Region,
     WorkbenchStatus,
+    WorkspaceStatus,
     WorkbenchType,
 )
+from marshmallow_oneofschema import OneOfSchema
 
 
 class WorkspaceCreationRequest(Schema):
@@ -31,8 +33,20 @@ class Workbench(Schema):
     disk_size = fields.Int(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
     url = fields.URL(required=True)
-    type = fields.Enum(WorkbenchType, by_value=True, required=True)
+    workbench_type = fields.Enum(
+        WorkbenchType, by_value=True, required=True, attribute="type"
+    )
     zone = fields.Str()
+
+
+class EntityScaffolding(Schema):
+    id = fields.Str(required=True)
+    status = fields.Str(required=True)
+    gcp_project_id = fields.Str(required=True)
+
+
+class EntityScaffoldingWorkbenchSchema(OneOfSchema):
+    type_schemas = {"Workbench": Workbench, "EntityScaffolding": EntityScaffolding}
 
 
 class BillingInfo(Schema):
@@ -44,7 +58,12 @@ class Workspace(Schema):
     gcp_project_id = fields.Str(required=True)
     region = fields.Enum(Region, by_value=True, required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
-    workbenches = fields.Nested(Workbench, many=True)
+    workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+
+
+class EntityScaffoldingWorkspaceSchema(OneOfSchema):
+    type_schemas = {"Workspace": Workspace, "EntityScaffolding": EntityScaffolding}
 
 
 class WorkspaceWorkflowIdentifier(Schema):

@@ -3,13 +3,17 @@ import string
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.modules.app import app
+from research_environment_api.modules.workbench_management.models import (
+    WorkbenchActivity,
+)
+from research_environment_api.background.enums import BuildType
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
@@ -39,6 +43,17 @@ class WorkbenchType(StrEnum):
 class WorkbenchStatus(StrEnum):
     RUNNING = "running"
     STOPPED = "stopped"
+    STOPPING = "stopping"
+    UPDATING = "updating"
+    DESTROYING = "destroying"
+    CREATING = "creating"
+    STARTING = "starting"
+
+
+class WorkspaceStatus(StrEnum):
+    CREATED = "created"
+    CREATING = "creating"
+    DESTROYING = "destroying"
 
 
 class MachineType(StrEnum):
@@ -55,6 +70,13 @@ class GpuAcceleratorType(StrEnum):
 GCE_STATUS_MAP = {
     "RUNNING": WorkbenchStatus.RUNNING,
     "TERMINATED": WorkbenchStatus.STOPPED,
+}
+WORKBENCH_ACTIVITY_TYPE_MAP = {
+    BuildType.JUPYTER_CREATION: WorkbenchStatus.CREATING,
+    BuildType.JUPYTER_DESTROY: WorkbenchStatus.DESTROYING,
+    BuildType.JUPYTER_STOP: WorkbenchStatus.STOPPING,
+    BuildType.JUPYTER_START: WorkbenchStatus.STARTING,
+    BuildType.JUPYTER_UPDATE: WorkbenchStatus.UPDATING,
 }
 
 
@@ -73,7 +95,7 @@ GOOGLE_REGIONS_SHORTCUTS = {
 @dataclass
 class Workbench:
     gcp_identifier: str
-    status: str
+    status: WorkbenchStatus
     dataset_identifier: str
     cpu: float
     memory: float
@@ -90,7 +112,11 @@ class Workbench:
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
 
     @classmethod
-    def from_gce_instance(cls, instance: ComputeEngineInstance):
+    def from_gce_instance(
+        cls,
+        instance: ComputeEngineInstance,
+        workflows_in_progress: Iterable[WorkbenchActivity],
+    ):
         metadata = {item.key: item.value for item in instance.metadata.items}
 
         maybe_proxy_url: Optional[str] = (
@@ -109,18 +135,31 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
+        instance_id = str(instance.id)
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
+        workflow_in_progress = next(
+            filter(
+                lambda workflow: workflow.workbench_id == instance_id,
+                workflows_in_progress,
+            ),
+            None,
+        )
+        status = (
+            WORKBENCH_ACTIVITY_TYPE_MAP[workflow_in_progress.build_type]
+            if workflow_in_progress
+            else GCE_STATUS_MAP[instance.status]
+        )
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
-            gcp_identifier=str(instance.id),
+            gcp_identifier=instance_id,
             dataset_identifier=dataset_identifier,
             name=instance.name,
             bucket_name=bucket_name,
             vm_image=vm_image,
             region=Region(region),
-            status=GCE_STATUS_MAP[instance.status],
+            status=status,
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
             machine_type=machine_type,
@@ -254,3 +293,11 @@ class Workspace:
     billing_info: BillingInfo
     region: str
     workbenches: Iterable[Workbench]
+    status: WorkspaceStatus
+
+
+@dataclass
+class EntityScaffolding:
+    id: str
+    status: Union[WorkbenchStatus, WorkspaceStatus]
+    gcp_project_id: str
