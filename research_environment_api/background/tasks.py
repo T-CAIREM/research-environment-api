@@ -1,11 +1,21 @@
 from typing import Any, List, Optional, Tuple
 
-from celery import shared_task
+from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
-from research_environment_api.background import constants, operations, workflows
+from research_environment_api.background import builds, constants, operations, workflows
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models
+from research_environment_api.modules.workbench_management import models, services
+
+
+class WorkflowTask(Task):
+    def skip_to_last_step(self):
+        # The first element of the list is the last task in the chain.
+        self.request.chain = self.request.chain[:1]
+
+    def kill_chain(self):
+        # Kills the existing chain without any cleanup.
+        self.request.chain = None
 
 
 @shared_task
@@ -48,8 +58,10 @@ def process_cloud_build_result(
             if not fallback_zones:
                 # FIXME: Why does this error assume that there were insufficient resources?
                 workbench_activity.build_error_information = (
-                    "No resources in any zone. Try again later"
+                    "Workflow failed in all available zones. Please try again later."
                 )
+                # Short-circuit the workflow.
+                self.skip_to_last_step()
                 return operation
 
             # Retry the workflow in the next fallback region.
@@ -63,8 +75,24 @@ def process_cloud_build_result(
                 fallback_zones=new_fallback_zones,
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
-            )
-            self.request.chain = None
+            )()
+            self.kill_chain()
+
+
+@shared_task(bind=True)
+def create_default_service_stopping_build(
+    self, _operation: operations.Operation, workspace_project_id: str
+) -> CloudBuild:
+    versions = services.get_app_engine_service_versions(
+        workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
+    )
+    # The default service will only ever have one version.
+    default_version = next(iter(versions))
+    stop_default_engine_build = builds.stop_rstudio_workbench_build(
+        workspace_project_id=workspace_project_id,
+        workbench_resource_id=default_version.id,
+    )
+    return stop_default_engine_build
 
 
 @shared_task

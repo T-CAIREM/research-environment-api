@@ -68,6 +68,7 @@ def create_workspace(
                 invoker_email=workspace_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
                 workspace_id=workspace_creation_request.workspace_project_id,
+                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -75,6 +76,7 @@ def create_workspace(
                 build=build,
                 user_email=workspace_creation_request.user_email,
                 workbench_activity_id=workbench_activity.id,
+                workspace_project_id=workspace_creation_request.workspace_project_id,
             )()
 
             return workbench_activity.id

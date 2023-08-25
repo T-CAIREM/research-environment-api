@@ -161,7 +161,9 @@ def create_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
+        "_REGION": region.value,
         "_APPENGINE_REGION": region.value,
+        "_SERVICE_ACCOUNT": app.config.cloud_build_service_account_name,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
@@ -181,6 +183,19 @@ def destroy_workspace_build(
         "_APPENGINE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+    }
+
+    return cloud_build
+
+
+def stop_rstudio_workbench_build(
+    workspace_project_id: str, workbench_resource_id: str
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.STOP_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_PROJECT_ID": workspace_project_id,
+        "_VERSION_ID": workbench_resource_id,
     }
 
     return cloud_build
