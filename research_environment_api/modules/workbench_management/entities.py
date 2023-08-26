@@ -9,11 +9,11 @@ from google.cloud.appengine_admin_v1.types.service import Service as AppEngineSe
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
+from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.models import (
     WorkbenchActivity,
 )
-from research_environment_api.background.enums import BuildType
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]

@@ -1,8 +1,5 @@
-from research_environment_api.web.workflow import (
-    workflow_bp,
-)
 from research_environment_api.modules.workbench_management import monitoring
-from research_environment_api.web.workflow import schemas
+from research_environment_api.web.workflow import schemas, workflow_bp
 
 
 @workflow_bp.get("/<workflow_id>")

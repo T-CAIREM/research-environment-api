@@ -1,13 +1,13 @@
 from marshmallow import Schema, fields, validate
+from marshmallow_oneofschema import OneOfSchema
 
 from research_environment_api.modules.workbench_management.entities import (
     MachineType,
     Region,
     WorkbenchStatus,
-    WorkspaceStatus,
     WorkbenchType,
+    WorkspaceStatus,
 )
-from marshmallow_oneofschema import OneOfSchema
 
 
 class WorkspaceCreationRequest(Schema):

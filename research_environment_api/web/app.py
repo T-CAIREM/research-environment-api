@@ -40,11 +40,9 @@ def create_app():
     from research_environment_api.web.workbench_management import (
         workbench_management_bp,
     )
+    from research_environment_api.web.workflow import workflow_bp
     from research_environment_api.web.workspace_management import (
         workspace_management_bp,
-    )
-    from research_environment_api.web.workflow import (
-        workflow_bp,
     )
 
     app.register_blueprint(identity_management_bp, url_prefix="/identity")

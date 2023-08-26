@@ -5,11 +5,10 @@ from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVe
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
-from research_environment_api.background import schedulers, enums
+from research_environment_api.background import enums, schedulers
 from research_environment_api.modules.app import app
+from research_environment_api.modules.workbench_management import entities, models
 from research_environment_api.modules.workbench_management import (
-    entities,
-    models,
     monitoring as monitoring_services,
 )
 
