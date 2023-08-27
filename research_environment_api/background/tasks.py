@@ -15,6 +15,10 @@ from research_environment_api.modules.workbench_management import models, servic
 
 
 class WorkflowTask(Task):
+    autoretry_for = (Exception,)
+    max_retries = 10
+    retry_backoff = True
+
     def skip_to_last_step(self):
         # The first element of the list is the last task in the chain.
         self.request.chain = self.request.chain[:1]
@@ -155,19 +159,9 @@ def start_compute_instance(
     return operation, operation
 
 
-@shared_task
-def process_compute_instance_status(instance_operation_identifier_tuple: tuple):
-    # TODO: Figure a sensible way to process this.
-    operation, operation_identifier = instance_operation_identifier_tuple
-    with app.database_session() as session:
-        workbench_activity = (
-            session.query(models.WorkbenchActivity)
-            .filter_by(gcp_identifier=operation_identifier)
-            .one()
-        )
-        # FIXME: Makes no sense semantically.
-        workbench_activity.build_status = operation.status()
-        session.commit()
+@shared_task(max_retries=None, countdown=30)
+def check_vertex_ai_setup_status(instance_id: int):
+    pass
 
 
 @shared_task(bind=True, max_retries=None, countdown=30)
