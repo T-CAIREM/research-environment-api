@@ -142,7 +142,7 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
-        instance_id = str(instance.id)
+        instance_id = instance.name
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
         workflow_in_progress = next(

@@ -1,3 +1,5 @@
+import random
+import string
 from typing import Iterable, Optional, Tuple, Union
 
 from google import api_core
@@ -161,14 +163,13 @@ def list_workbenches(
 
 def get_jupyter_workbench(
     gcp_project_id: str,
-    workbench_resource_id: str,
+    workbench_name: str,
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
-    instance_id = int(workbench_resource_id)
     gce_instances = _fetch_gce_instances(gcp_project_id)
     gce_instance = next(
-        filter(lambda instance: instance.id == instance_id, gce_instances)
+        filter(lambda instance: instance.name == workbench_name, gce_instances)
     )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
@@ -278,3 +279,7 @@ def schedule_workbench_destroy(
     else:
         # TODO: Integrate RStudio
         pass
+
+
+def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
+    return f"{dataset_identifier[:15]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
