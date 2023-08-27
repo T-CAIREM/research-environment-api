@@ -6,6 +6,7 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     entities,
     models,
+    monitoring,
     services,
 )
 
@@ -115,9 +116,13 @@ def destroy_workspace(
 def stop_jupyter_workbench(
     workbench_stop_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
+    workflows_in_progress = monitoring.list_active_workflows(
+        workbench_stop_request.user_email
+    )
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
         gcp_project_id=workbench_stop_request.workspace_project_id,
+        workflows_in_progress=workflows_in_progress,
     )
     with app.database_session() as session:
         with session.begin():
@@ -144,9 +149,13 @@ def stop_jupyter_workbench(
 def start_jupyter_workbench(
     workbench_start_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
+    workflows_in_progress = monitoring.list_active_workflows(
+        workbench_start_request.user_email
+    )
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_start_request.workbench_resource_id,
         gcp_project_id=workbench_start_request.workspace_project_id,
+        workflows_in_progress=workflows_in_progress,
     )
     with app.database_session() as session:
         with session.begin():
@@ -173,9 +182,13 @@ def start_jupyter_workbench(
 def update_jupyter_workbench(
     workbench_update_request: entities.WorkbenchUpdate,
 ) -> uuid.UUID:
+    workflows_in_progress = monitoring.list_active_workflows(
+        workbench_update_request.user_email
+    )
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,
+        workflows_in_progress=workflows_in_progress,
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -217,9 +230,13 @@ def update_jupyter_workbench(
 def destroy_jupyter_workbench(
     workbench_destroy_request: entities.WorkbenchDestroy,
 ) -> uuid.UUID:
+    workflows_in_progress = monitoring.list_active_workflows(
+        workbench_destroy_request.user_email
+    )
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_destroy_request.workbench_resource_id,
         gcp_project_id=workbench_destroy_request.workspace_project_id,
+        workflows_in_progress=workflows_in_progress,
     )
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,

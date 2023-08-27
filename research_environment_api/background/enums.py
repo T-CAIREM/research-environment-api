@@ -7,7 +7,6 @@ class BuildType(StrEnum):
     JUPYTER_CREATION = "jupyter_creation"
     JUPYTER_DESTROY = "jupyter_destroy"
     RSTUDIO_CREATION = "rstudio_creation"
-    JUPYTER_CREATION_RETRY = "jupyter_creation_retry"
     JUPYTER_STOP = "jupyter_stop"
     JUPYTER_START = "jupyter_start"
     JUPYTER_UPDATE = "jupyter_update"

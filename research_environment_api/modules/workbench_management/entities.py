@@ -69,8 +69,11 @@ class GpuAcceleratorType(StrEnum):
 
 GCE_STATUS_MAP = {
     "RUNNING": WorkbenchStatus.RUNNING,
+    # There's a brief moment where, after the workflow is finished, a GCE instance has the STAGING status
+    "STAGING": WorkbenchStatus.RUNNING,
     "TERMINATED": WorkbenchStatus.STOPPED,
 }
+
 WORKBENCH_ACTIVITY_TYPE_MAP = {
     BuildType.JUPYTER_CREATION: WorkbenchStatus.CREATING,
     BuildType.JUPYTER_DESTROY: WorkbenchStatus.DESTROYING,
@@ -78,7 +81,6 @@ WORKBENCH_ACTIVITY_TYPE_MAP = {
     BuildType.JUPYTER_START: WorkbenchStatus.STARTING,
     BuildType.JUPYTER_UPDATE: WorkbenchStatus.UPDATING,
 }
-
 
 RSTUDIO_STATUS_MAP = {
     "SERVING": WorkbenchStatus.RUNNING,

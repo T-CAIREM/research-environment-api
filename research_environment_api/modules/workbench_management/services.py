@@ -93,7 +93,7 @@ def _build_workspace_entity(
     status = (
         entities.WORKBENCH_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress]
         if workspace_workflow_in_progress
-        else entities.WorkspaceStatus.RUNNING
+        else entities.WorkspaceStatus.CREATED
     )
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
@@ -150,6 +150,7 @@ def list_workbenches(
 def get_jupyter_workbench(
     gcp_project_id: str,
     workbench_resource_id: str,
+    workflows_in_progress: Iterable[models.WorkbenchActivity],
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
     instance_id = int(workbench_resource_id)
@@ -157,7 +158,7 @@ def get_jupyter_workbench(
     gce_instance = next(
         filter(lambda instance: instance.id == instance_id, gce_instances)
     )
-    return entities.Workbench.from_gce_instance(gce_instance)
+    return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
 
 def _fetch_app_engine_services(
