@@ -1,5 +1,6 @@
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
+from google import api_core
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
@@ -30,7 +31,14 @@ def list_active_workspaces(
     workflows_in_progress = monitoring_services.list_active_workflows(
         workspace_list_query.email
     )
-    build_scaffolding = [
+    provisioned_workspaces = [
+        _build_workspace_entity(project, workflows_in_progress)
+        for project in gcp_projects
+    ]
+    provisioned_workspace_ids = [
+        workspace.gcp_project_id for workspace in provisioned_workspaces
+    ]
+    workspace_scaffoldings = [
         entities.EntityScaffolding(
             id=workflow.id,
             gcp_project_id=workflow.workspace_id,
@@ -38,11 +46,9 @@ def list_active_workspaces(
         )
         for workflow in workflows_in_progress
         if workflow.build_type == enums.BuildType.WORKSPACE_CREATION
+        and workflow.workspace_id not in provisioned_workspace_ids
     ]
-    return [
-        _build_workspace_entity(project, workflows_in_progress)
-        for project in gcp_projects
-    ] + build_scaffolding
+    return provisioned_workspaces + workspace_scaffoldings
 
 
 def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
@@ -91,7 +97,7 @@ def _build_workspace_entity(
         gcp_project_id, workflows_in_progress
     )
     status = (
-        entities.WORKBENCH_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress]
+        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
         if workspace_workflow_in_progress
         else entities.WorkspaceStatus.CREATED
     )
@@ -106,7 +112,7 @@ def _build_workspace_entity(
 
 def _match_workspace_workflow(
     gcp_project_id: str, workflows_in_progress: Iterable[models.WorkbenchActivity]
-):
+) -> Optional[models.WorkbenchActivity]:
     return next(
         filter(
             lambda workflow: workflow.workspace_id == gcp_project_id
@@ -134,7 +140,12 @@ def list_workbenches(
         for service, version in app_engine_services
     ]
 
-    workbench_scaffolding = [
+    provisioned_workbenches = gce_instance_workbenches + app_engine_workbenches
+    provisioned_workbench_ids = [
+        workbench.gcp_identifier for workbench in provisioned_workbenches
+    ]
+
+    workbench_scaffoldings = [
         entities.EntityScaffolding(
             id=workflow.id,
             gcp_project_id=workflow.workspace_id,
@@ -143,14 +154,15 @@ def list_workbenches(
         for workflow in workflows_in_progress
         if workflow.workspace_id == gcp_project_id
         and workflow.build_type == enums.BuildType.JUPYTER_CREATION
+        and workflow.workbench_id not in provisioned_workbench_ids
     ]
-    return gce_instance_workbenches + app_engine_workbenches + workbench_scaffolding
+    return provisioned_workbenches + workbench_scaffoldings
 
 
 def get_jupyter_workbench(
     gcp_project_id: str,
     workbench_resource_id: str,
-    workflows_in_progress: Iterable[models.WorkbenchActivity],
+    user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
     instance_id = int(workbench_resource_id)
@@ -158,15 +170,22 @@ def get_jupyter_workbench(
     gce_instance = next(
         filter(lambda instance: instance.id == instance_id, gce_instances)
     )
+    workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
 
 def _fetch_app_engine_services(
     gcp_project_id: str,
 ) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
-    app_engine_services = app.config.google_app_engine_services_client.list_services(
-        {"parent": f"apps/{gcp_project_id}"}
-    )
+    try:
+        app_engine_services = (
+            app.config.google_app_engine_services_client.list_services(
+                {"parent": f"apps/{gcp_project_id}"}
+            )
+        )
+    except api_core.exceptions.NotFound:
+        return []
+
     return [
         (service, version)
         for service in app_engine_services
@@ -178,11 +197,19 @@ def _fetch_app_engine_services(
 
 
 def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
-    gce_instances_per_zone = (
-        app.config.google_compute_engine_instances_client.aggregated_list(
-            project=gcp_project_id
+    try:
+        gce_instances_per_zone = (
+            app.config.google_compute_engine_instances_client.aggregated_list(
+                project=gcp_project_id
+            )
         )
-    )
+    except api_core.exceptions.Forbidden as e:
+        # HACK: Workspaces in the middle of provisioning are visible but do not have the required APIs enabled yet.
+        if "Compute Engine API has not been used in project" in e.message:
+            return []
+        else:
+            raise e
+
     return [
         instance
         for zone, instances_in_region in gce_instances_per_zone
