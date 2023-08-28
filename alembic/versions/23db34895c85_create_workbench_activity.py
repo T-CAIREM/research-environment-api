@@ -1,4 +1,4 @@
-"""abc
+"""Create WorkbenchActivity
 
 Revision ID: 23db34895c85
 Revises: 
