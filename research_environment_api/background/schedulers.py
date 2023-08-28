@@ -3,8 +3,11 @@ import uuid
 
 from research_environment_api.background import builds, constants, enums, workflows
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities
-from research_environment_api.modules.workbench_management import models, services
+from research_environment_api.modules.workbench_management import (
+    entities,
+    models,
+    services,
+)
 
 
 def create_jupyter_workbench(
