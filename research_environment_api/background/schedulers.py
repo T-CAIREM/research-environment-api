@@ -274,6 +274,10 @@ def destroy_jupyter_workbench(
 def create_rstudio_workbench(
     workbench_creation_request: entities.WorkbenchCreate,
 ) -> uuid.UUID:
+    dataset_identifier = workbench_creation_request.dataset_identifier
+    instance_name = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    service_account_name = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+
     build = builds.create_rstudio_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
         region=workbench_creation_request.region.value,
@@ -282,15 +286,19 @@ def create_rstudio_workbench(
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
+        instance_name=instance_name,
+        service_account_name=service_account_name,
     )
 
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workspace_id=workbench_creation_request.workspace_project_id,
+                workbench_id=instance_name,
                 build_type=enums.BuildType.WORKBENCH_CREATION,
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
-                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -314,10 +322,12 @@ def stop_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workspace_id=workbench_stop_request.workspace_project_id,
+                workbench_id=workbench_stop_request.workbench_resource_id,
                 build_type=enums.BuildType.WORKBENCH_STOP,
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
-                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -341,10 +351,12 @@ def start_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workspace_id=workbench_start_request.workspace_project_id,
+                workbench_id=workbench_start_request.workbench_resource_id,
                 build_type=enums.BuildType.WORKBENCH_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
-                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 
@@ -379,9 +391,11 @@ def update_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workbench_update_request.workspace_project_id,
+                workbench_id=workbench_update_request.workbench_resource_id,
                 build_type=enums.BuildType.WORKBENCH_UPDATE,
                 invoker_email=workbench_update_request.user_email,
-                build_status=enums.WorkflowStatus.IN_PROGRESS,
                 id=uuid.uuid4(),
             )
 
@@ -416,10 +430,12 @@ def destroy_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workspace_id=workbench_destroy_request.workspace_project_id,
+                workbench_id=workbench_destroy_request.workbench_resource_id,
                 build_type=enums.BuildType.WORKBENCH_DESTROY,
                 invoker_email=workbench_destroy_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
-                id=uuid.uuid4(),
             )
             session.add(workbench_activity)
 

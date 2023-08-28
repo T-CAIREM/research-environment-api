@@ -54,6 +54,8 @@ def upgrade() -> None:
         ),
         sa.Column("build_error_information", sa.String(), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("workspace_id", sa.String(), nullable=False),
+        sa.Column("workbench_id", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

@@ -199,27 +199,9 @@ def create_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
+    instance_name: str,
+    service_account_name: str,
 ) -> cloudbuild_v1.Build:
-    password = "".join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in range(13)
-    ) + "".join(random.choice(string.digits))
-
-    instance_name = "-".join(
-        [
-            "rstudio",
-            dataset_identifier[:15],
-            "".join(random.choices(string.ascii_lowercase, k=5)),
-        ]
-    )
-
-    service_account_name = "-".join(
-        [
-            "rstudio",
-            dataset_identifier[:15],
-            "".join(random.choices(string.ascii_lowercase, k=5)),
-        ]
-    )
-
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -229,7 +211,6 @@ def create_rstudio_workbench_build(
         "_DATASET": dataset_identifier,
         "_REGION": region,
         "_EMAIL_ID": user_email,
-        "_PASSWORD": password,
         "_SERVICE_ACCOUNT": service_account_name,
         "_DISK_SIZE": str(disk_size),
         "_BUCKET_NAME": bucket_name,

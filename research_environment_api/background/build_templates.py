@@ -270,7 +270,6 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_status=RUNNING",
             "TF_VAR_region=${_REGION}",
             "TF_VAR_emailid=${_EMAIL_ID}",
-            "TF_VAR_password=${_PASSWORD}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT}",

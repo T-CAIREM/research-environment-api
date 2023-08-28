@@ -188,6 +188,7 @@ class Workbench:
                 .one()
             )
             service_account = next(iter(version.service_account.split("@")))
+            url = (version.version_url).replace(f"{version.id}-dot-", "")
 
             return cls(
                 gcp_identifier=version.id,
@@ -195,15 +196,15 @@ class Workbench:
                 status=RSTUDIO_STATUS_MAP[version.serving_status.name],
                 cpu=version.resources.cpu,
                 memory=version.resources.memory_gb,
-                url=version.version_url,
+                url=url,
                 type=WorkbenchType.RSTUDIO,
                 service_account_name=service_account,
                 bucket_name=app_engine_metadata.bucket_name,
                 vm_image=app_engine_metadata.vm_image,
-                region=app_engine_metadata.region,
+                region=Region(app_engine_metadata.region),
                 name=version.id,
                 disk_size=app_engine_metadata.disk_size,
-                machine_type=app_engine_metadata.machine_type,
+                machine_type=MachineType(app_engine_metadata.machine_type),
             )
 
 
