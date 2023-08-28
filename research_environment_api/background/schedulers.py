@@ -126,8 +126,8 @@ def stop_jupyter_workbench(
     workbench_stop_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
-        workbench_resource_id=workbench_stop_request.workbench_resource_id,
         gcp_project_id=workbench_stop_request.workspace_project_id,
+        workbench_name=workbench_stop_request.workbench_resource_id,
         user_email=workbench_stop_request.user_email,
     )
     with app.database_session() as session:
@@ -156,8 +156,8 @@ def start_jupyter_workbench(
     workbench_start_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
-        workbench_resource_id=workbench_start_request.workbench_resource_id,
         gcp_project_id=workbench_start_request.workspace_project_id,
+        workbench_name=workbench_start_request.workbench_resource_id,
         user_email=workbench_start_request.user_email,
     )
     with app.database_session() as session:
@@ -186,8 +186,8 @@ def update_jupyter_workbench(
     workbench_update_request: entities.WorkbenchUpdate,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
-        workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,
+        workbench_name=workbench_update_request.workbench_resource_id,
         user_email=workbench_update_request.user_email,
     )
     build = builds.update_jupyter_workbench_build(
@@ -231,8 +231,8 @@ def destroy_jupyter_workbench(
     workbench_destroy_request: entities.WorkbenchDestroy,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
-        workbench_name=workbench_destroy_request.workbench_resource_id,
         gcp_project_id=workbench_destroy_request.workspace_project_id,
+        workbench_name=workbench_destroy_request.workbench_resource_id,
         user_email=workbench_destroy_request.user_email,
     )
     build = builds.destroy_jupyter_workbench_build(
