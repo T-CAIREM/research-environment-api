@@ -1,5 +1,3 @@
-import random
-import string
 from typing import Optional
 
 from google.cloud.devtools import cloudbuild_v1
@@ -33,6 +31,8 @@ def create_jupyter_workbench_build(
     zone: str,
     machine_type: MachineType,
     disk_size: int,
+    instance_name: str,
+    service_account_name: str,
     gpu_accelerator_type: Optional[GpuAcceleratorType],
     dataset_identifier: str,
     user_email: str,
@@ -40,22 +40,6 @@ def create_jupyter_workbench_build(
     vm_image: str,
     jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
-    instance_name = "-".join(
-        [
-            "jupyter",
-            dataset_identifier,
-            "".join(random.choices(string.ascii_lowercase, k=5)),
-        ]
-    )
-
-    service_account_name = "-".join(
-        [
-            "jupyter",
-            dataset_identifier[:15],
-            "".join(random.choices(string.ascii_lowercase, k=5)),
-        ]
-    )
-
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {

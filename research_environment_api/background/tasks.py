@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple, TypeVar
 
 from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
@@ -12,6 +12,8 @@ from research_environment_api.background import (
 )
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import models, services
+
+T = TypeVar("T")
 
 
 class WorkflowTask(Task):
@@ -84,6 +86,9 @@ def process_cloud_build_result(
             build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
             workflows.create_jupyter_workbench(
                 build=build,
+                workspace_project_id=build.substitutions["_PROJECT_ID"],
+                instance_zone=new_zone,
+                instance_name=build.substitutions["_INSTANCE_NAME"],
                 fallback_zones=new_fallback_zones,
                 user_email=user_email,
                 workbench_activity_id=workbench_activity_id,
@@ -159,16 +164,33 @@ def start_compute_instance(
     return operation, operation
 
 
-@shared_task(max_retries=None, countdown=30)
-def check_vertex_ai_setup_status(instance_id: int):
-    pass
+@shared_task(bind=True, max_retries=None, countdown=30)
+def check_vertex_ai_setup_status(
+    self,
+    passthrough: T,
+    workspace_project_id: str,
+    instance_zone: str,
+    instance_name: str,
+) -> T:
+    instance_client = app.config.google_compute_engine_instances_client
+    instance = instance_client.get(
+        project=workspace_project_id,
+        zone=instance_zone,
+        instance=instance_name,
+    )
+
+    metadata = {item.key: item.value for item in instance.metadata.items}
+    if "proxy-url" not in metadata:
+        self.retry(countdown=30)
+
+    return passthrough
 
 
 @shared_task(bind=True, max_retries=None, countdown=30)
 def check_operation_status(
     self,
-    operation_context: Tuple[operations.Operation, Any],
-) -> Any:
+    operation_context: Tuple[operations.Operation, T],
+) -> T:
     operation, passthrough = operation_context
     if not operation.is_done():
         raise self.retry(countdown=30)
