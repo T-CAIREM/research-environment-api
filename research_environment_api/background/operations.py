@@ -33,9 +33,7 @@ class InstanceOperation(Operation):
         if not operation.done:
             return OperationStatus.IN_PROGRESS
 
-        return (
-            OperationStatus.FAILURE if operation.error.code else OperationStatus.SUCCESS
-        )
+        return OperationStatus.FAILURE if operation.error else OperationStatus.SUCCESS
 
     def is_done(self) -> bool:
         return self._operation().done

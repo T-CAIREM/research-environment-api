@@ -1,13 +1,19 @@
-from typing import Iterable, Tuple
+import random
+import string
+from typing import Iterable, Optional, Tuple, Union
 
+from google import api_core
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
-from research_environment_api.background import schedulers
+from research_environment_api.background import enums, schedulers
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities
+from research_environment_api.modules.workbench_management import entities, models
+from research_environment_api.modules.workbench_management import (
+    monitoring as monitoring_services,
+)
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
@@ -22,10 +28,29 @@ def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
 
 def list_active_workspaces(
     workspace_list_query: entities.WorkspaceListQuery,
-) -> Iterable[entities.Workspace]:
+) -> Iterable[Union[entities.Workspace, entities.EntityScaffolding]]:
     gcp_projects = _list_active_google_projects(workspace_list_query.username)
-
-    return [_build_workspace_entity(project) for project in gcp_projects]
+    workflows_in_progress = monitoring_services.list_active_workflows(
+        workspace_list_query.email
+    )
+    provisioned_workspaces = [
+        _build_workspace_entity(project, workflows_in_progress)
+        for project in gcp_projects
+    ]
+    provisioned_workspace_ids = [
+        workspace.gcp_project_id for workspace in provisioned_workspaces
+    ]
+    workspace_scaffoldings = [
+        entities.EntityScaffolding(
+            id=workflow.id,
+            gcp_project_id=workflow.workspace_id,
+            status=entities.WorkspaceStatus.CREATING,
+        )
+        for workflow in workflows_in_progress
+        if workflow.build_type == enums.BuildType.WORKSPACE_CREATION
+        and workflow.workspace_id not in provisioned_workspace_ids
+    ]
+    return provisioned_workspaces + workspace_scaffoldings
 
 
 def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
@@ -49,7 +74,10 @@ def get_active_google_project(
     return _filter_google_projects(filtering_query)[0]
 
 
-def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
+def _build_workspace_entity(
+    gcp_project: GoogleProject,
+    workflows_in_progress: Iterable[models.WorkbenchActivity],
+) -> entities.Workspace:
     gcp_project_id = gcp_project.project_id
     region = gcp_project.labels["region"]
     billing_info = app.config.google_cloud_billing_client.get_project_billing_info(
@@ -64,42 +92,87 @@ def _build_workspace_entity(gcp_project: GoogleProject) -> entities.Workspace:
         billing_account_id=raw_billing_account_name,
         billing_enabled=billing_info.billing_enabled,
     )
-    workbenches = list_workbenches(gcp_project_id=gcp_project_id)
+    workbenches = list_workbenches(
+        gcp_project_id=gcp_project_id, workflows_in_progress=workflows_in_progress
+    )
+    workspace_workflow_in_progress = _match_workspace_workflow(
+        gcp_project_id, workflows_in_progress
+    )
+    status = (
+        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
+        if workspace_workflow_in_progress
+        else entities.WorkspaceStatus.CREATED
+    )
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
         region=entities.Region(region),
+        status=status,
+    )
+
+
+def _match_workspace_workflow(
+    gcp_project_id: str, workflows_in_progress: Iterable[models.WorkbenchActivity]
+) -> Optional[models.WorkbenchActivity]:
+    return next(
+        filter(
+            lambda workflow: workflow.workspace_id == gcp_project_id
+            and workflow.build_type
+            in [enums.BuildType.WORKSPACE_CREATION, enums.BuildType.WORKSPACE_DELETION],
+            workflows_in_progress,
+        ),
+        None,
     )
 
 
 def list_workbenches(
     gcp_project_id: str,
-) -> Iterable[entities.Workbench]:
+    workflows_in_progress: Iterable[models.WorkbenchActivity],
+) -> Iterable[Union[entities.Workbench, entities.EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
     app_engine_services = _fetch_app_engine_services(gcp_project_id)
 
     gce_instance_workbenches = [
-        entities.Workbench.from_gce_instance(instance) for instance in gce_instances
+        entities.Workbench.from_gce_instance(instance, workflows_in_progress)
+        for instance in gce_instances
     ]
     app_engine_workbenches = [
         entities.Workbench.from_app_engine_service_and_version(service, version)
         for service, version in app_engine_services
     ]
-    return gce_instance_workbenches + app_engine_workbenches
+
+    provisioned_workbenches = gce_instance_workbenches + app_engine_workbenches
+    provisioned_workbench_ids = [
+        workbench.gcp_identifier for workbench in provisioned_workbenches
+    ]
+
+    workbench_scaffoldings = [
+        entities.EntityScaffolding(
+            id=workflow.id,
+            gcp_project_id=workflow.workspace_id,
+            status=entities.WorkbenchStatus.CREATING,
+        )
+        for workflow in workflows_in_progress
+        if workflow.workspace_id == gcp_project_id
+        and workflow.build_type == enums.BuildType.JUPYTER_CREATION
+        and workflow.workbench_id not in provisioned_workbench_ids
+    ]
+    return provisioned_workbenches + workbench_scaffoldings
 
 
 def get_jupyter_workbench(
     gcp_project_id: str,
-    workbench_resource_id: str,
+    workbench_name: str,
+    user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
-    instance_id = int(workbench_resource_id)
     gce_instances = _fetch_gce_instances(gcp_project_id)
     gce_instance = next(
-        filter(lambda instance: instance.id == instance_id, gce_instances)
+        filter(lambda instance: instance.name == workbench_name, gce_instances)
     )
-    return entities.Workbench.from_gce_instance(gce_instance)
+    workflows_in_progress = monitoring_services.list_active_workflows(user_email)
+    return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
 
 def get_rstudio_workbench(
@@ -122,9 +195,15 @@ def get_rstudio_workbench(
 def _fetch_app_engine_services(
     gcp_project_id: str,
 ) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
-    app_engine_services = app.config.google_app_engine_services_client.list_services(
-        {"parent": f"apps/{gcp_project_id}"}
-    )
+    try:
+        app_engine_services = (
+            app.config.google_app_engine_services_client.list_services(
+                {"parent": f"apps/{gcp_project_id}"}
+            )
+        )
+    except api_core.exceptions.NotFound:
+        return []
+
     return [
         (service, version)
         for service in app_engine_services
@@ -136,11 +215,19 @@ def _fetch_app_engine_services(
 
 
 def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
-    gce_instances_per_zone = (
-        app.config.google_compute_engine_instances_client.aggregated_list(
-            project=gcp_project_id
+    try:
+        gce_instances_per_zone = (
+            app.config.google_compute_engine_instances_client.aggregated_list(
+                project=gcp_project_id
+            )
         )
-    )
+    except api_core.exceptions.Forbidden as e:
+        # HACK: Workspaces in the middle of provisioning are visible but do not have the required APIs enabled yet.
+        if "Compute Engine API has not been used in project" in e.message:
+            return []
+        else:
+            raise e
+
     return [
         instance
         for zone, instances_in_region in gce_instances_per_zone
@@ -204,3 +291,7 @@ def schedule_workbench_destroy(
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
     else:
         schedulers.destroy_rstudio_workbench(workbench_destroy_request)
+
+
+def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
+    return f"{dataset_identifier[:15]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"

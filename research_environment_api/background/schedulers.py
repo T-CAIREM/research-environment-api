@@ -13,8 +13,14 @@ def create_jupyter_workbench(
     zones = constants.AVAILABLE_ZONES[workbench_creation_request.region]
     zone, *fallback_zones = random.sample(zones, len(zones))
 
+    dataset_identifier = workbench_creation_request.dataset_identifier
+    instance_name = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    service_account_name = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+
     build = builds.create_jupyter_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
+        instance_name=instance_name,
+        service_account_name=service_account_name,
         region=workbench_creation_request.region,
         zone=zone,
         machine_type=workbench_creation_request.machine_type,
@@ -33,6 +39,8 @@ def create_jupyter_workbench(
                 build_type=enums.BuildType.WORKBENCH_CREATION,
                 invoker_email=workbench_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workbench_creation_request.workspace_project_id,
+                workbench_id=instance_name,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -40,6 +48,9 @@ def create_jupyter_workbench(
             workflows.create_jupyter_workbench(
                 build=build,
                 user_email=workbench_creation_request.user_email,
+                workspace_project_id=workbench_creation_request.workspace_project_id,
+                instance_zone=zone,
+                instance_name=instance_name,
                 fallback_zones=fallback_zones,
                 workbench_activity_id=workbench_activity.id,
             )()
@@ -63,6 +74,7 @@ def create_workspace(
                 build_type=enums.BuildType.WORKSPACE_CREATION,
                 invoker_email=workspace_creation_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workspace_creation_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -93,6 +105,7 @@ def destroy_workspace(
                 build_type=enums.BuildType.WORKSPACE_DELETION,
                 invoker_email=workspace_deletion_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workspace_deletion_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -112,6 +125,7 @@ def stop_jupyter_workbench(
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_stop_request.workbench_resource_id,
         gcp_project_id=workbench_stop_request.workspace_project_id,
+        user_email=workbench_stop_request.user_email,
     )
     with app.database_session() as session:
         with session.begin():
@@ -119,6 +133,8 @@ def stop_jupyter_workbench(
                 build_type=enums.BuildType.WORKBENCH_STOP,
                 invoker_email=workbench_stop_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_stop_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -139,6 +155,7 @@ def start_jupyter_workbench(
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_start_request.workbench_resource_id,
         gcp_project_id=workbench_start_request.workspace_project_id,
+        user_email=workbench_start_request.user_email,
     )
     with app.database_session() as session:
         with session.begin():
@@ -146,6 +163,8 @@ def start_jupyter_workbench(
                 build_type=enums.BuildType.WORKBENCH_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_start_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -166,6 +185,7 @@ def update_jupyter_workbench(
     gce_instance = services.get_jupyter_workbench(
         workbench_resource_id=workbench_update_request.workbench_resource_id,
         gcp_project_id=workbench_update_request.workspace_project_id,
+        user_email=workbench_update_request.user_email,
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -189,6 +209,8 @@ def update_jupyter_workbench(
                 build_type=enums.BuildType.WORKBENCH_UPDATE,
                 invoker_email=workbench_update_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_update_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)
@@ -206,8 +228,9 @@ def destroy_jupyter_workbench(
     workbench_destroy_request: entities.WorkbenchDestroy,
 ) -> uuid.UUID:
     gce_instance = services.get_jupyter_workbench(
-        workbench_resource_id=workbench_destroy_request.workbench_resource_id,
+        workbench_name=workbench_destroy_request.workbench_resource_id,
         gcp_project_id=workbench_destroy_request.workspace_project_id,
+        user_email=workbench_destroy_request.user_email,
     )
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
@@ -230,6 +253,8 @@ def destroy_jupyter_workbench(
                 build_type=enums.BuildType.WORKBENCH_DESTROY,
                 invoker_email=workbench_destroy_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workbench_id=gce_instance.gcp_identifier,
+                workspace_id=workbench_destroy_request.workspace_project_id,
                 id=uuid.uuid4(),
             )
             session.add(workbench_activity)

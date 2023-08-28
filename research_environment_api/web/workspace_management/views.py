@@ -100,6 +100,8 @@ def list_active_workspaces(email: str):
     )
 
     workspaces = services.list_active_workspaces(workspace_list_query_entity)
-    serialized_workspaces = schemas.Workspace(many=True).dump(workspaces)
+    serialized_workspaces = schemas.EntityScaffoldingWorkspaceSchema(many=True).dump(
+        workspaces
+    )
 
     return serialized_workspaces, 200
