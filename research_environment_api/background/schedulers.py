@@ -220,6 +220,9 @@ def update_jupyter_workbench(
 
             workflows.update_jupyter_workbench(
                 build=build,
+                workspace_project_id=workbench_update_request.workspace_project_id,
+                instance_zone=gce_instance.zone,
+                instance_name=workbench_update_request.workbench_resource_id,
                 user_email=workbench_update_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()

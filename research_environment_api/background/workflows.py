@@ -69,13 +69,23 @@ def start_jupyter_workbench(
 
 
 def update_jupyter_workbench(
-    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    workbench_activity_id: str,
+    workspace_project_id: str,
+    instance_zone: str,
+    instance_name: str,
 ):
     return chain(
         tasks.start_cloud_build.s(build=build),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
+        tasks.check_vertex_ai_setup_status.s(
+            workspace_project_id=workspace_project_id,
+            instance_zone=instance_zone,
+            instance_name=instance_name,
         ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
