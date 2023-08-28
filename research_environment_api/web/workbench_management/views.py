@@ -31,10 +31,10 @@ def create_workbench():
 
     # Serves as a form of input validation - is this user the owner of the specified workspace.
     username, domain = workbench_creation_request["user_email"].split("@")
-    workspace = services.get_active_google_project(
-        project_id=workbench_creation_request["workspace_project_id"], username=username
-    )
-    workspace_region = entities.Region(workspace.labels["region"])
+    # workspace = services.get_active_google_project(
+    #     project_id=workbench_creation_request["workspace_project_id"], username=username
+    # )
+    workspace_region = entities.Region("us-central1")
 
     workbench_entity = entities.WorkbenchCreate(
         **workbench_creation_request, region=workspace_region
@@ -98,12 +98,8 @@ def start_workbench():
     """
     body = request.get_json()
     workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
-    jupyter_workbench_stop_entity = entities.WorkbenchToggleState(
-        **workbench_stop_request
-    )
-    workbench_activity_id = services.schedule_workbench_start(
-        jupyter_workbench_stop_entity
-    )
+    workbench_stop_entity = entities.WorkbenchToggleState(**workbench_stop_request)
+    workbench_activity_id = services.schedule_workbench_start(workbench_stop_entity)
     workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )

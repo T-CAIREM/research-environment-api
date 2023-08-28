@@ -207,7 +207,7 @@ def create_rstudio_workbench_build(
     instance_name = "-".join(
         [
             "rstudio",
-            dataset_identifier,
+            dataset_identifier[:15],
             "".join(random.choices(string.ascii_lowercase, k=5)),
         ]
     )

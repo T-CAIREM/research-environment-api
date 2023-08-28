@@ -73,11 +73,11 @@ GCE_STATUS_MAP = {
 }
 
 WORKBENCH_ACTIVITY_TYPE_MAP = {
-    BuildType.JUPYTER_CREATION: WorkbenchStatus.CREATING,
-    BuildType.JUPYTER_DESTROY: WorkbenchStatus.DESTROYING,
-    BuildType.JUPYTER_STOP: WorkbenchStatus.STOPPING,
-    BuildType.JUPYTER_START: WorkbenchStatus.STARTING,
-    BuildType.JUPYTER_UPDATE: WorkbenchStatus.UPDATING,
+    BuildType.WORKBENCH_CREATION: WorkbenchStatus.CREATING,
+    BuildType.WORKBENCH_DESTROY: WorkbenchStatus.DESTROYING,
+    BuildType.WORKBENCH_STOP: WorkbenchStatus.STOPPING,
+    BuildType.WORKBENCH_START: WorkbenchStatus.STARTING,
+    BuildType.WORKBENCH_UPDATE: WorkbenchStatus.UPDATING,
 }
 
 WORKSPACE_ACTIVITY_TYPE_MAP = {
@@ -87,6 +87,7 @@ WORKSPACE_ACTIVITY_TYPE_MAP = {
 
 RSTUDIO_STATUS_MAP = {
     "SERVING": WorkbenchStatus.RUNNING,
+    "STOPPED": WorkbenchStatus.STOPPED,
 }
 
 GOOGLE_REGIONS_SHORTCUTS = {
@@ -186,16 +187,17 @@ class Workbench:
                 .filter_by(instance_id=version.id)
                 .one()
             )
+            service_account = next(iter(version.service_account.split("@")))
 
             return cls(
                 gcp_identifier=version.id,
                 dataset_identifier=app_engine_metadata.dataset_identifier,
-                status=RSTUDIO_STATUS_MAP[version.serving_status],
+                status=RSTUDIO_STATUS_MAP[version.serving_status.name],
                 cpu=version.resources.cpu,
                 memory=version.resources.memory_gb,
                 url=version.version_url,
                 type=WorkbenchType.RSTUDIO,
-                service_account_name=version.service_account,
+                service_account_name=service_account,
                 bucket_name=app_engine_metadata.bucket_name,
                 vm_image=app_engine_metadata.vm_image,
                 region=app_engine_metadata.region,

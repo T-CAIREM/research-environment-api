@@ -330,7 +330,7 @@ def stop_rstudio_workbench(
 def start_rstudio_workbench(
     workbench_start_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
-    build = builds.stop_rstudio_workbench_build(
+    build = builds.start_rstudio_workbench_build(
         workspace_project_id=workbench_start_request.workspace_project_id,
         workbench_resource_id=workbench_start_request.workbench_resource_id,
     )
@@ -338,7 +338,7 @@ def start_rstudio_workbench(
     with app.database_session() as session:
         with session.begin():
             workbench_activity = models.WorkbenchActivity(
-                build_type=enums.BuildType.WORKBENCH_STOP,
+                build_type=enums.BuildType.WORKBENCH_START,
                 invoker_email=workbench_start_request.user_email,
                 build_status=enums.WorkflowStatus.IN_PROGRESS,
                 id=uuid.uuid4(),

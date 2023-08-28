@@ -80,6 +80,9 @@ CREATE_WORKSPACE_STEPS = [
             "${_SERVICE_ACCOUNT}",
             "n1-standard-1",
             "${_REGION}",
+            "",
+            "",
+            "${_PROJECT_ID}",
         ],
         "wait_for": ["-"],
     },
@@ -284,6 +287,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "${_REGION}",
             "${_DISK_SIZE}",
             "${_BUCKET_NAME}",
+            "${_PROJECT_ID}",
         ],
     },
     {
@@ -330,8 +334,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "vmcreation/python3.py",
-            "${_INSTANCE_NAME}",
-
+            "${_SERVICE_ID}",
         ],
     },
     {
@@ -351,6 +354,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT}",
         ],
     },
     {
@@ -363,6 +367,8 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "${_MACHINE_TYPE}",
             "${_REGION}",
             "${_DISK_SIZE}",
+            "",
+            "${_PROJECT_ID}",
         ],
     },
     {

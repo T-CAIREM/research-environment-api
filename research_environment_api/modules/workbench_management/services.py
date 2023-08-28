@@ -155,7 +155,7 @@ def list_workbenches(
         )
         for workflow in workflows_in_progress
         if workflow.workspace_id == gcp_project_id
-        and workflow.build_type == enums.BuildType.JUPYTER_CREATION
+        and workflow.build_type == enums.BuildType.WORKBENCH_CREATION
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
     return provisioned_workbenches + workbench_scaffoldings
@@ -183,7 +183,7 @@ def get_rstudio_workbench(
     app_engine_services = _fetch_app_engine_services(gcp_project_id)
     app_service, app_version = next(
         filter(
-            lambda service, version: version.id == workbench_resource_id,
+            lambda service_version: service_version[1].id == workbench_resource_id,
             app_engine_services,
         )
     )

@@ -199,7 +199,8 @@ def check_operation_status(
 
 
 @shared_task
-def save_app_engine_metadata(passthrough, substitutions: dict):
+def save_app_engine_metadata(passthrough, build):
+    substitutions = build.substitutions
     *_, latest_version = services.get_app_engine_service_versions(
         substitutions["_PROJECT_ID"], substitutions["_INSTANCE_NAME"]
     )
