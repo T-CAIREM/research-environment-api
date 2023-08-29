@@ -96,9 +96,9 @@ def process_cloud_build_result(
             self.kill_chain()
 
 
-@shared_task(bind=True)
+@shared_task
 def create_default_service_stopping_build(
-    self, _operation: operations.Operation, workspace_project_id: str
+    _operation: operations.Operation, workspace_project_id: str
 ) -> CloudBuild:
     versions = services.get_app_engine_service_versions(
         workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
@@ -195,4 +195,38 @@ def check_operation_status(
     if not operation.is_done():
         raise self.retry(countdown=30)
 
+    return passthrough
+
+
+@shared_task
+def save_app_engine_metadata(passthrough, build):
+    substitutions = build.substitutions
+
+    with app.database_session() as session:
+        with session.begin():
+            app_engine_metadata = models.AppEngineMetadata(
+                instance_id=substitutions["_INSTANCE_NAME"],
+                dataset_identifier=substitutions["_DATASET"],
+                bucket_name=substitutions["_BUCKET_NAME"],
+                vm_image=substitutions["_IMAGE_URL"],
+                region=substitutions["_REGION"],
+                disk_size=substitutions["_DISK_SIZE"],
+                machine_type=substitutions["_MACHINE_TYPE"],
+            )
+            session.add(app_engine_metadata)
+    return passthrough
+
+
+@shared_task
+def update_app_engine_metadata(passthrough, build):
+    substitutions = build.substitutions
+
+    with app.database_session() as session:
+        with session.begin():
+            app_engine_metadata = (
+                session.query(models.AppEngineMetadata)
+                .filter_by(instance_id=substitutions["_SERVICE_ID"])
+                .one()
+            )
+            app_engine_metadata.machine_type = substitutions["_MACHINE_TYPE"]
     return passthrough

@@ -11,9 +11,7 @@ from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInsta
 
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management.models import (
-    WorkbenchActivity,
-)
+from research_environment_api.modules.workbench_management import models
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
@@ -75,11 +73,11 @@ GCE_STATUS_MAP = {
 }
 
 WORKBENCH_ACTIVITY_TYPE_MAP = {
-    BuildType.JUPYTER_CREATION: WorkbenchStatus.CREATING,
-    BuildType.JUPYTER_DESTROY: WorkbenchStatus.DESTROYING,
-    BuildType.JUPYTER_STOP: WorkbenchStatus.STOPPING,
-    BuildType.JUPYTER_START: WorkbenchStatus.STARTING,
-    BuildType.JUPYTER_UPDATE: WorkbenchStatus.UPDATING,
+    BuildType.WORKBENCH_CREATION: WorkbenchStatus.CREATING,
+    BuildType.WORKBENCH_DESTROY: WorkbenchStatus.DESTROYING,
+    BuildType.WORKBENCH_STOP: WorkbenchStatus.STOPPING,
+    BuildType.WORKBENCH_START: WorkbenchStatus.STARTING,
+    BuildType.WORKBENCH_UPDATE: WorkbenchStatus.UPDATING,
 }
 
 WORKSPACE_ACTIVITY_TYPE_MAP = {
@@ -89,6 +87,7 @@ WORKSPACE_ACTIVITY_TYPE_MAP = {
 
 RSTUDIO_STATUS_MAP = {
     "SERVING": WorkbenchStatus.RUNNING,
+    "STOPPED": WorkbenchStatus.STOPPED,
 }
 
 GOOGLE_REGIONS_SHORTCUTS = {
@@ -122,7 +121,7 @@ class Workbench:
     def from_gce_instance(
         cls,
         instance: ComputeEngineInstance,
-        workflows_in_progress: Iterable[WorkbenchActivity],
+        workflows_in_progress: Iterable[models.WorkbenchActivity],
     ):
         metadata = {item.key: item.value for item in instance.metadata.items}
 
@@ -182,15 +181,31 @@ class Workbench:
     def from_app_engine_service_and_version(
         cls, service: AppEngineService, version: AppEngineVersion
     ):
-        return cls(
-            gcp_identifier=version.id,
-            dataset_identifier=service.labels["dataset_identifier"],
-            status=RSTUDIO_STATUS_MAP[version.serving_status],
-            cpu=version.resources.cpu,
-            memory=version.resources.memory_gb,
-            url=version.version_url,
-            type=WorkbenchType.RSTUDIO,
-        )
+        with app.database_session() as session:
+            app_engine_metadata = (
+                session.query(models.AppEngineMetadata)
+                .filter_by(instance_id=service.id)
+                .one()
+            )
+            service_account = next(iter(version.service_account.split("@")))
+            url = (version.version_url).replace(f"{version.id}-dot-", "")
+
+            return cls(
+                gcp_identifier=version.id,
+                dataset_identifier=app_engine_metadata.dataset_identifier,
+                status=RSTUDIO_STATUS_MAP[version.serving_status.name],
+                cpu=version.resources.cpu,
+                memory=version.resources.memory_gb,
+                url=url,
+                type=WorkbenchType.RSTUDIO,
+                service_account_name=service_account,
+                bucket_name=app_engine_metadata.bucket_name,
+                vm_image=app_engine_metadata.vm_image,
+                region=Region(app_engine_metadata.region),
+                name=service.id,
+                disk_size=app_engine_metadata.disk_size,
+                machine_type=MachineType(app_engine_metadata.machine_type),
+            )
 
 
 @dataclass

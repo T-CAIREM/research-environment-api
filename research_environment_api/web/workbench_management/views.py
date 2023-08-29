@@ -98,12 +98,8 @@ def start_workbench():
     """
     body = request.get_json()
     workbench_stop_request = schemas.WorkbenchToggleStateRequest().load(body)
-    jupyter_workbench_stop_entity = entities.WorkbenchToggleState(
-        **workbench_stop_request
-    )
-    workbench_activity_id = services.schedule_workbench_start(
-        jupyter_workbench_stop_entity
-    )
+    workbench_stop_entity = entities.WorkbenchToggleState(**workbench_stop_request)
+    workbench_activity_id = services.schedule_workbench_start(workbench_stop_entity)
     workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )

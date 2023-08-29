@@ -4,12 +4,11 @@ from enum import StrEnum
 class BuildType(StrEnum):
     WORKSPACE_CREATION = "workspace_creation"
     WORKSPACE_DELETION = "workspace_deletion"
-    JUPYTER_CREATION = "jupyter_creation"
-    JUPYTER_DESTROY = "jupyter_destroy"
-    RSTUDIO_CREATION = "rstudio_creation"
-    JUPYTER_STOP = "jupyter_stop"
-    JUPYTER_START = "jupyter_start"
-    JUPYTER_UPDATE = "jupyter_update"
+    WORKBENCH_CREATION = "workbench_creation"
+    WORKBENCH_STOP = "workbench_stop"
+    WORKBENCH_START = "workbench_start"
+    WORKBENCH_UPDATE = "workbench_update"
+    WORKBENCH_DESTROY = "workbench_destroy"
 
 
 class WorkflowStatus(StrEnum):

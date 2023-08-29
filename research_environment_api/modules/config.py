@@ -48,6 +48,8 @@ class Config:
         self.cloud_build_service_account_name = environ[
             "CLOUD_BUILD_SERVICE_ACCOUNT_NAME"
         ]
+        self.rstudio_image_url = environ["RSTUDIO_IMAGE_URL"]
+        self.data_project_name = environ["DATA_PROJECT_NAME"]
 
     def _init_database_config(self):
         if self.is_development():

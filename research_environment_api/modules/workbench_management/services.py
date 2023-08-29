@@ -155,7 +155,7 @@ def list_workbenches(
         )
         for workflow in workflows_in_progress
         if workflow.workspace_id == gcp_project_id
-        and workflow.build_type == enums.BuildType.JUPYTER_CREATION
+        and workflow.build_type == enums.BuildType.WORKBENCH_CREATION
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
     return provisioned_workbenches + workbench_scaffoldings
@@ -173,6 +173,23 @@ def get_jupyter_workbench(
     )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
+
+
+def get_rstudio_workbench(
+    gcp_project_id: str,
+    workbench_resource_id: str,
+) -> entities.Workbench:
+    # The API exposes instance IDs as strings for compatibility reasons.
+    app_engine_services = _fetch_app_engine_services(gcp_project_id)
+    app_service, app_version = next(
+        filter(
+            lambda service_version: service_version[1].id == workbench_resource_id,
+            app_engine_services,
+        )
+    )
+    return entities.Workbench.from_app_engine_service_and_version(
+        app_service, app_version
+    )
 
 
 def _fetch_app_engine_services(
@@ -240,24 +257,21 @@ def schedule_workbench_create(
     if workbench_creation.workbench_type == "jupyter":
         return schedulers.create_jupyter_workbench(workbench_creation)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.create_rstudio_workbench(workbench_creation)
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
     if workbench_stop_request.workbench_type == "jupyter":
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.stop_rstudio_workbench(workbench_stop_request)
 
 
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
     if workbench_start_request.workbench_type == "jupyter":
         return schedulers.start_jupyter_workbench(workbench_start_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.start_rstudio_workbench(workbench_start_request)
     pass
 
 
@@ -267,8 +281,7 @@ def schedule_workbench_update(
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.update_rstudio_workbench(workbench_update_request)
 
 
 def schedule_workbench_destroy(
@@ -277,8 +290,7 @@ def schedule_workbench_destroy(
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
     else:
-        # TODO: Integrate RStudio
-        pass
+        return schedulers.destroy_rstudio_workbench(workbench_destroy_request)
 
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:

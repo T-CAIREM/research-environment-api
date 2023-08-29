@@ -189,3 +189,104 @@ def _normalize_gpu_accelerator_type(
     gpu_accelerator_type: Optional[GpuAcceleratorType],
 ) -> str:
     return "" if not gpu_accelerator_type else gpu_accelerator_type.value
+
+
+def create_rstudio_workbench_build(
+    workspace_project_id: str,
+    region: str,
+    machine_type: str,
+    disk_size: int,
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+    instance_name: str,
+    service_account_name: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_INSTANCE_NAME": instance_name,
+        "_MACHINE_TYPE": machine_type,
+        "_PROJECT_ID": workspace_project_id,
+        "_DATASET": dataset_identifier,
+        "_REGION": region,
+        "_EMAIL_ID": user_email,
+        "_SERVICE_ACCOUNT": service_account_name,
+        "_DISK_SIZE": str(disk_size),
+        "_BUCKET_NAME": bucket_name,
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_DATA_PROJECT_NAME": app.config.data_project_name,
+        "_IMAGE_URL": app.config.rstudio_image_url,
+    }
+
+    return cloud_build
+
+
+def start_rstudio_workbench_build(
+    workspace_project_id: str, workbench_resource_id: str
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.START_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_PROJECT_ID": workspace_project_id,
+        "_VERSION_ID": workbench_resource_id,
+    }
+
+    return cloud_build
+
+
+def update_rstudio_workbench_build(
+    instance_name: str,
+    workspace_project_id: str,
+    region: str,
+    machine_type: str,
+    disk_size: int,
+    dataset_identifier: str,
+    user_email: str,
+    service_account_name: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type,
+        "_PROJECT_ID": workspace_project_id,
+        "_REGION": region,
+        "_DATASET": dataset_identifier,
+        "_SERVICE_ID": instance_name,
+        "_EMAIL_ID": user_email,
+        "_SERVICE_ACCOUNT": service_account_name,
+        "_DISK_SIZE": str(disk_size),
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_DATA_PROJECT_NAME": app.config.data_project_name,
+        "_IMAGE_URL": app.config.rstudio_image_url,
+    }
+
+    return cloud_build
+
+
+def destroy_rstudio_workbench_build(
+    instance_name: str,
+    workspace_project_id: str,
+    machine_type: str,
+    disk_size: int,
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+    service_account_name: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type,
+        "_PROJECT_ID": workspace_project_id,
+        "_DATASET": dataset_identifier,
+        "_SERVICE_ID": instance_name,
+        "_EMAIL_ID": user_email,
+        "_SERVICE_ACCOUNT": service_account_name,
+        "_DISK_SIZE": str(disk_size),
+        "_BUCKET_NAME": bucket_name,
+        "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
+        "_DATA_PROJECT_NAME": app.config.data_project_name,
+    }
+
+    return cloud_build
