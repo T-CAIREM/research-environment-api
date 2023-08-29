@@ -201,14 +201,11 @@ def check_operation_status(
 @shared_task
 def save_app_engine_metadata(passthrough, build):
     substitutions = build.substitutions
-    *_, latest_version = services.get_app_engine_service_versions(
-        substitutions["_PROJECT_ID"], substitutions["_INSTANCE_NAME"]
-    )
 
     with app.database_session() as session:
         with session.begin():
             app_engine_metadata = models.AppEngineMetadata(
-                instance_id=latest_version.id,
+                instance_id=substitutions["_INSTANCE_NAME"],
                 dataset_identifier=substitutions["_DATASET"],
                 bucket_name=substitutions["_BUCKET_NAME"],
                 vm_image=substitutions["_IMAGE_URL"],
@@ -217,4 +214,19 @@ def save_app_engine_metadata(passthrough, build):
                 machine_type=substitutions["_MACHINE_TYPE"],
             )
             session.add(app_engine_metadata)
+    return passthrough
+
+
+@shared_task
+def update_app_engine_metadata(passthrough, build):
+    substitutions = build.substitutions
+
+    with app.database_session() as session:
+        with session.begin():
+            app_engine_metadata = (
+                session.query(models.AppEngineMetadata)
+                .filter_by(instance_id=substitutions["_SERVICE_ID"])
+                .one()
+            )
+            app_engine_metadata.machine_type = substitutions["_MACHINE_TYPE"]
     return passthrough

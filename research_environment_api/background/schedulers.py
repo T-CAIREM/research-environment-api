@@ -398,6 +398,7 @@ def update_rstudio_workbench(
                 invoker_email=workbench_update_request.user_email,
                 id=uuid.uuid4(),
             )
+            session.add(workbench_activity)
 
             workflows.update_rstudio_workbench(
                 build=build,
@@ -439,7 +440,7 @@ def destroy_rstudio_workbench(
             )
             session.add(workbench_activity)
 
-            workflows.update_rstudio_workbench(
+            workflows.destroy_rstudio_workbench(
                 build=build,
                 user_email=workbench_destroy_request.user_email,
                 workbench_activity_id=workbench_activity.id,

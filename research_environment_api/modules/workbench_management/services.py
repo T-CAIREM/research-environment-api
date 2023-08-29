@@ -290,7 +290,7 @@ def schedule_workbench_destroy(
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
     else:
-        schedulers.destroy_rstudio_workbench(workbench_destroy_request)
+        return schedulers.destroy_rstudio_workbench(workbench_destroy_request)
 
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:

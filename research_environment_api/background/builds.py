@@ -275,7 +275,7 @@ def destroy_rstudio_workbench_build(
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
-    cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
+    cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_MACHINE_TYPE": machine_type,
         "_PROJECT_ID": workspace_project_id,

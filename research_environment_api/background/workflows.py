@@ -200,6 +200,7 @@ def update_rstudio_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
+        tasks.update_app_engine_metadata.s(build=build),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 

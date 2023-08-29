@@ -31,10 +31,10 @@ def create_workbench():
 
     # Serves as a form of input validation - is this user the owner of the specified workspace.
     username, domain = workbench_creation_request["user_email"].split("@")
-    # workspace = services.get_active_google_project(
-    #     project_id=workbench_creation_request["workspace_project_id"], username=username
-    # )
-    workspace_region = entities.Region("us-central1")
+    workspace = services.get_active_google_project(
+        project_id=workbench_creation_request["workspace_project_id"], username=username
+    )
+    workspace_region = entities.Region(workspace.labels["region"])
 
     workbench_entity = entities.WorkbenchCreate(
         **workbench_creation_request, region=workspace_region

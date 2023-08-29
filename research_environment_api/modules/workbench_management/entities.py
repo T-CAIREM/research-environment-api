@@ -184,7 +184,7 @@ class Workbench:
         with app.database_session() as session:
             app_engine_metadata = (
                 session.query(models.AppEngineMetadata)
-                .filter_by(instance_id=version.id)
+                .filter_by(instance_id=service.id)
                 .one()
             )
             service_account = next(iter(version.service_account.split("@")))
@@ -202,7 +202,7 @@ class Workbench:
                 bucket_name=app_engine_metadata.bucket_name,
                 vm_image=app_engine_metadata.vm_image,
                 region=Region(app_engine_metadata.region),
-                name=version.id,
+                name=service.id,
                 disk_size=app_engine_metadata.disk_size,
                 machine_type=MachineType(app_engine_metadata.machine_type),
             )

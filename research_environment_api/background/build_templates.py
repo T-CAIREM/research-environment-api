@@ -411,6 +411,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_data_project_name=${_DATA_PROJECT_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT}",
         ],
     },
     {
@@ -424,6 +425,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "region",
             "${_DISK_SIZE}",
             "${_BUCKET_NAME}",
+            "${_PROJECT_ID}",
         ],
     },
     {
@@ -432,7 +434,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "app",
             "services",
             "delete",
-            "${_DATASET}",
+            "${_SERVICE_ID}",
             "--project=${_PROJECT_ID}",
         ],
     },
