@@ -382,6 +382,17 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "--stop-previous-version",
         ],
     },
+    {
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "app",
+            "versions",
+            "delete",
+            "${_VERSION_ID}",
+            "--service=${_SERVICE_ID}",
+            "--project=${_PROJECT_ID}"
+        ],
+    },
 ]
 
 DESTROY_RSTUDIO_WORKBENCH_STEPS = [
@@ -390,8 +401,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "vmcreation/python3.py",
-            "${_PROJECT_ID}",
-            "workspace-${_DATASET}-rstudio",
+            "${_SERVICE_ID}",
         ],
     },
     {

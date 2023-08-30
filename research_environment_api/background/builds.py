@@ -244,6 +244,7 @@ def update_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     service_account_name: str,
+    workbench_id: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
@@ -259,6 +260,7 @@ def update_rstudio_workbench_build(
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_DATA_PROJECT_NAME": app.config.data_project_name,
         "_IMAGE_URL": app.config.rstudio_image_url,
+        "_VERSION_ID":workbench_id,
     }
 
     return cloud_build

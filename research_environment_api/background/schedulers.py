@@ -389,6 +389,7 @@ def update_rstudio_workbench(
         user_email=workbench_update_request.user_email,
         instance_name=app_engine_instance.name,
         service_account_name=app_engine_instance.service_account_name,
+        workbench_id=workbench_update_request.workbench_resource_id
     )
 
     with app.database_session() as session:
