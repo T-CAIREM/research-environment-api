@@ -378,6 +378,7 @@ def update_rstudio_workbench(
     app_engine_instance = services.get_rstudio_workbench(
         workbench_update_request.workspace_project_id,
         workbench_update_request.workbench_resource_id,
+        workbench_update_request.user_email
     )
 
     build = builds.update_rstudio_workbench_build(
@@ -418,6 +419,7 @@ def destroy_rstudio_workbench(
     app_engine_instance = services.get_rstudio_workbench(
         workbench_destroy_request.workspace_project_id,
         workbench_destroy_request.workbench_resource_id,
+        workbench_destroy_request.user_email
     )
 
     build = builds.destroy_rstudio_workbench_build(

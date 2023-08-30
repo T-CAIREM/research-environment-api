@@ -179,7 +179,7 @@ class Workbench:
 
     @classmethod
     def from_app_engine_service_and_version(
-        cls, service: AppEngineService, version: AppEngineVersion
+        cls, service: AppEngineService, version: AppEngineVersion, workflows_in_progress: Iterable[models.WorkbenchActivity],
     ):
         with app.database_session() as session:
             app_engine_metadata = (
@@ -189,11 +189,23 @@ class Workbench:
             )
             service_account = next(iter(version.service_account.split("@")))
             url = (version.version_url).replace(f"{version.id}-dot-", "")
+            workflow_in_progress = next(
+                filter(
+                    lambda workflow: workflow.workbench_id == version.id,
+                    workflows_in_progress,
+                ),
+                None,
+            )
+            status = (
+                WORKBENCH_ACTIVITY_TYPE_MAP[workflow_in_progress.build_type]
+                if workflow_in_progress
+                else RSTUDIO_STATUS_MAP[version.serving_status.name]
+            )
 
             return cls(
                 gcp_identifier=version.id,
                 dataset_identifier=app_engine_metadata.dataset_identifier,
-                status=RSTUDIO_STATUS_MAP[version.serving_status.name],
+                status=status,
                 cpu=version.resources.cpu,
                 memory=version.resources.memory_gb,
                 url=url,
