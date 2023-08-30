@@ -260,7 +260,7 @@ def update_rstudio_workbench_build(
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_DATA_PROJECT_NAME": app.config.data_project_name,
         "_IMAGE_URL": app.config.rstudio_image_url,
-        "_VERSION_ID":workbench_id,
+        "_VERSION_ID": workbench_id,
     }
 
     return cloud_build

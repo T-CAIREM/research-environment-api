@@ -179,7 +179,10 @@ class Workbench:
 
     @classmethod
     def from_app_engine_service_and_version(
-        cls, service: AppEngineService, version: AppEngineVersion, workflows_in_progress: Iterable[models.WorkbenchActivity],
+        cls,
+        service: AppEngineService,
+        version: AppEngineVersion,
+        workflows_in_progress: Iterable[models.WorkbenchActivity],
     ):
         with app.database_session() as session:
             app_engine_metadata = (

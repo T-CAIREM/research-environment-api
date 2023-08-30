@@ -138,7 +138,9 @@ def list_workbenches(
         for instance in gce_instances
     ]
     app_engine_workbenches = [
-        entities.Workbench.from_app_engine_service_and_version(service, version, workflows_in_progress)
+        entities.Workbench.from_app_engine_service_and_version(
+            service, version, workflows_in_progress
+        )
         for service, version in app_engine_services
     ]
 

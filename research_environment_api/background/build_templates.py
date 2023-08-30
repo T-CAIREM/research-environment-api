@@ -382,7 +382,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "delete",
             "${_VERSION_ID}",
             "--service=${_SERVICE_ID}",
-            "--project=${_PROJECT_ID}"
+            "--project=${_PROJECT_ID}",
         ],
     },
 ]

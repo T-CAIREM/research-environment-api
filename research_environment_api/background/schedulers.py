@@ -378,7 +378,7 @@ def update_rstudio_workbench(
     app_engine_instance = services.get_rstudio_workbench(
         workbench_update_request.workspace_project_id,
         workbench_update_request.workbench_resource_id,
-        workbench_update_request.user_email
+        workbench_update_request.user_email,
     )
 
     build = builds.update_rstudio_workbench_build(
@@ -390,7 +390,7 @@ def update_rstudio_workbench(
         user_email=workbench_update_request.user_email,
         instance_name=app_engine_instance.name,
         service_account_name=app_engine_instance.service_account_name,
-        workbench_id=workbench_update_request.workbench_resource_id
+        workbench_id=workbench_update_request.workbench_resource_id,
     )
 
     with app.database_session() as session:
@@ -420,7 +420,7 @@ def destroy_rstudio_workbench(
     app_engine_instance = services.get_rstudio_workbench(
         workbench_destroy_request.workspace_project_id,
         workbench_destroy_request.workbench_resource_id,
-        workbench_destroy_request.user_email
+        workbench_destroy_request.user_email,
     )
 
     build = builds.destroy_rstudio_workbench_build(
