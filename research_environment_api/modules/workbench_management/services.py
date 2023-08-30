@@ -138,7 +138,7 @@ def list_workbenches(
         for instance in gce_instances
     ]
     app_engine_workbenches = [
-        entities.Workbench.from_app_engine_service_and_version(service, version)
+        entities.Workbench.from_app_engine_service_and_version(service, version, workflows_in_progress)
         for service, version in app_engine_services
     ]
 
@@ -178,6 +178,7 @@ def get_jupyter_workbench(
 def get_rstudio_workbench(
     gcp_project_id: str,
     workbench_resource_id: str,
+    user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
     app_engine_services = _fetch_app_engine_services(gcp_project_id)
@@ -187,8 +188,9 @@ def get_rstudio_workbench(
             app_engine_services,
         )
     )
+    workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_app_engine_service_and_version(
-        app_service, app_version
+        app_service, app_version, workflows_in_progress
     )
 
 
