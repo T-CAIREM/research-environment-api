@@ -38,15 +38,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
     {
         "name": "hashicorp/terraform",
         "entrypoint": "/bin/sh",
-        "allow_failure": True,
-        "args": [
-            "-c",
-            "terraform -chdir=./notebookcreation apply -auto-approve tfplan.out &> output.txt",
-        ],
-    },
-    {
-        "name": "python",
-        "args": ["python3", "notebookcreation/check_errors.py"],
+        "args": ["notebookcreation/terraform_apply.sh"],
     },
 ]
 
