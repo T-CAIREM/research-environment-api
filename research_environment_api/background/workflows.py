@@ -150,12 +150,12 @@ def create_rstudio_workbench(
         tasks.start_cloud_build.s(
             build=build,
         ),
+        tasks.save_app_engine_metadata.s(build=build),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
         ),
-        tasks.save_app_engine_metadata.s(build=build),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
