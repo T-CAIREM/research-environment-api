@@ -115,6 +115,16 @@ resource "google_cloud_run_service" "api" {
           name  = "JUPYTER_STARTUP_SCRIPT"
           value = var.jupyter_startup_script
         }
+
+        env {
+          name  = "RSTUDIO_IMAGE_URL"
+          value = var.rstudio_image_url
+        }
+
+        env {
+          name  = "DATA_PROJECT_NAME"
+          value = var.data_project_name
+        }
       }
 
       service_account_name = var.service_account_name

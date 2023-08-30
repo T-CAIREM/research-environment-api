@@ -82,3 +82,11 @@ variable "billing_account_creator_group_id" {
 variable "service_account_credentials_secret_name" {
   type = string
 }
+
+variable "rstudio_image_url" {
+  type = string
+}
+
+variable "data_project_name" {
+  type = string
+}
