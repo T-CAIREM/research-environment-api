@@ -100,7 +100,8 @@ GOOGLE_REGIONS_SHORTCUTS = {
 
 @dataclass
 class Workbench:
-    gcp_identifier: str
+    id: str
+    resource_id: str
     status: WorkbenchStatus
     dataset_identifier: str
     cpu: float
@@ -109,7 +110,6 @@ class Workbench:
     type: WorkbenchType
     machine_type: MachineType
     region: Region
-    name: str
     bucket_name: str
     vm_image: str
     service_account_name: str
@@ -141,12 +141,12 @@ class Workbench:
             if instance.guest_accelerators
             else None
         )
-        instance_id = instance.name
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
+        name = instance.name
         workflow_in_progress = next(
             filter(
-                lambda workflow: workflow.workbench_id == instance_id,
+                lambda workflow: workflow.workbench_id == name,
                 workflows_in_progress,
             ),
             None,
@@ -159,9 +159,9 @@ class Workbench:
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
-            gcp_identifier=instance_id,
+            id=name,
+            resource_id=instance.id,
             dataset_identifier=dataset_identifier,
-            name=instance.name,
             bucket_name=bucket_name,
             vm_image=vm_image,
             region=Region(region),
@@ -192,9 +192,10 @@ class Workbench:
             )
             service_account = next(iter(version.service_account.split("@")))
             url = (version.version_url).replace(f"{version.id}-dot-", "")
+            service_id = service.id
             workflow_in_progress = next(
                 filter(
-                    lambda workflow: workflow.workbench_id == version.id,
+                    lambda workflow: workflow.workbench_id == service_id,
                     workflows_in_progress,
                 ),
                 None,
@@ -206,7 +207,8 @@ class Workbench:
             )
 
             return cls(
-                gcp_identifier=version.id,
+                id=service_id,
+                resource_id=version.id,
                 dataset_identifier=app_engine_metadata.dataset_identifier,
                 status=status,
                 cpu=version.resources.cpu,
@@ -217,7 +219,6 @@ class Workbench:
                 bucket_name=app_engine_metadata.bucket_name,
                 vm_image=app_engine_metadata.vm_image,
                 region=Region(app_engine_metadata.region),
-                name=service.id,
                 disk_size=app_engine_metadata.disk_size,
                 machine_type=MachineType(app_engine_metadata.machine_type),
             )

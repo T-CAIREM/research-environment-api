@@ -145,9 +145,7 @@ def list_workbenches(
     ]
 
     provisioned_workbenches = gce_instance_workbenches + app_engine_workbenches
-    provisioned_workbench_ids = [
-        workbench.gcp_identifier for workbench in provisioned_workbenches
-    ]
+    provisioned_workbench_ids = [workbench.id for workbench in provisioned_workbenches]
 
     workbench_scaffoldings = [
         entities.EntityScaffolding(
@@ -165,13 +163,13 @@ def list_workbenches(
 
 def get_jupyter_workbench(
     gcp_project_id: str,
-    workbench_name: str,
+    instance_name: str,
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
     gce_instances = _fetch_gce_instances(gcp_project_id)
     gce_instance = next(
-        filter(lambda instance: instance.name == workbench_name, gce_instances)
+        filter(lambda instance: instance.name == instance_name, gce_instances)
     )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
@@ -179,14 +177,14 @@ def get_jupyter_workbench(
 
 def get_rstudio_workbench(
     gcp_project_id: str,
-    workbench_resource_id: str,
+    service_id: str,
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
     app_engine_services = _fetch_app_engine_services(gcp_project_id)
     app_service, app_version = next(
         filter(
-            lambda service_version: service_version[1].id == workbench_resource_id,
+            lambda service_version: service_version[0].id == service_id,
             app_engine_services,
         )
     )
@@ -215,6 +213,7 @@ def _fetch_app_engine_services(
             {"parent": service.name}
         )
         if service.id != DEFAULT_APP_ENGINE_SERVICE_ID
+        and service.split.allocations[version.id] == 1
     ]
 
 
