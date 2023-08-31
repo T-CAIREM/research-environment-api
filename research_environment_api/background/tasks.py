@@ -147,13 +147,13 @@ def stop_compute_instance(
 @shared_task
 def start_compute_instance(
     workspace_project_id: str,
-    workbench_resource_id: str,
+    instance_name: str,
     instance_zone: str,
 ) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     start_operation = instance_client.start(
         project=workspace_project_id,
-        instance=workbench_resource_id,
+        instance=instance_name,
         zone=instance_zone,
     )
 

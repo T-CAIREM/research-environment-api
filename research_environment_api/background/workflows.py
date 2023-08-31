@@ -36,14 +36,14 @@ def create_jupyter_workbench(
 
 def stop_jupyter_workbench(
     workspace_project_id: str,
-    workbench_resource_id: str,
+    instance_name: str,
     instance_zone: str,
     workbench_activity_id: str,
 ):
     return chain(
         tasks.stop_compute_instance.s(
             workspace_project_id=workspace_project_id,
-            workbench_resource_id=workbench_resource_id,
+            workbench_resource_id=instance_name,
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
@@ -53,15 +53,14 @@ def stop_jupyter_workbench(
 
 def start_jupyter_workbench(
     workspace_project_id: str,
-    workbench_resource_id: str,
-    instance_zone: str,
     instance_name: str,
+    instance_zone: str,
     workbench_activity_id: str,
 ):
     return chain(
         tasks.start_compute_instance.s(
             workspace_project_id=workspace_project_id,
-            workbench_resource_id=workbench_resource_id,
+            instance_name=instance_name,
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),

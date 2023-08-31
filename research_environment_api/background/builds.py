@@ -73,7 +73,7 @@ def update_jupyter_workbench_build(
     bucket_name: str,
     vm_image: str,
     jupyter_startup_script_bucket: str,
-    workbench_name: str,
+    instance_name: str,
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
@@ -81,7 +81,7 @@ def update_jupyter_workbench_build(
     cloud_build.substitutions = {
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
-        "_INSTANCE_NAME": workbench_name,
+        "_INSTANCE_NAME": instance_name,
         "_REGION": region.value,
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,
@@ -109,7 +109,7 @@ def destroy_jupyter_workbench_build(
     bucket_name: str,
     vm_image: str,
     jupyter_startup_script_bucket: str,
-    workbench_name: str,
+    instance_name: str,
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
@@ -124,7 +124,7 @@ def destroy_jupyter_workbench_build(
         "_DISK_SIZE": str(disk_size),
         "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
         "_VM_IMAGE": vm_image,
-        "_INSTANCE_NAME": workbench_name,
+        "_INSTANCE_NAME": instance_name,
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
@@ -173,13 +173,13 @@ def destroy_workspace_build(
 
 
 def stop_rstudio_workbench_build(
-    workspace_project_id: str, workbench_resource_id: str
+    workspace_project_id: str, version_id: str
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.STOP_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_PROJECT_ID": workspace_project_id,
-        "_VERSION_ID": workbench_resource_id,
+        "_VERSION_ID": version_id,
     }
 
     return cloud_build
@@ -199,13 +199,13 @@ def create_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
-    instance_name: str,
+    service_id: str,
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
-        "_INSTANCE_NAME": instance_name,
+        "_INSTANCE_NAME": service_id,
         "_MACHINE_TYPE": machine_type,
         "_PROJECT_ID": workspace_project_id,
         "_DATASET": dataset_identifier,
@@ -223,20 +223,21 @@ def create_rstudio_workbench_build(
 
 
 def start_rstudio_workbench_build(
-    workspace_project_id: str, workbench_resource_id: str
+    workspace_project_id: str, version_id: str
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.START_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_PROJECT_ID": workspace_project_id,
-        "_VERSION_ID": workbench_resource_id,
+        "_VERSION_ID": version_id,
     }
 
     return cloud_build
 
 
 def update_rstudio_workbench_build(
-    instance_name: str,
+    service_id: str,
+    version_id: str,
     workspace_project_id: str,
     region: str,
     machine_type: str,
@@ -244,7 +245,6 @@ def update_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     service_account_name: str,
-    workbench_id: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
@@ -253,21 +253,21 @@ def update_rstudio_workbench_build(
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region,
         "_DATASET": dataset_identifier,
-        "_SERVICE_ID": instance_name,
+        "_SERVICE_ID": service_id,
         "_EMAIL_ID": user_email,
         "_SERVICE_ACCOUNT": service_account_name,
         "_DISK_SIZE": str(disk_size),
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_DATA_PROJECT_NAME": app.config.data_project_name,
         "_IMAGE_URL": app.config.rstudio_image_url,
-        "_VERSION_ID": workbench_id,
+        "_VERSION_ID": version_id,
     }
 
     return cloud_build
 
 
 def destroy_rstudio_workbench_build(
-    instance_name: str,
+    service_id: str,
     workspace_project_id: str,
     machine_type: str,
     disk_size: int,
@@ -282,7 +282,7 @@ def destroy_rstudio_workbench_build(
         "_MACHINE_TYPE": machine_type,
         "_PROJECT_ID": workspace_project_id,
         "_DATASET": dataset_identifier,
-        "_SERVICE_ID": instance_name,
+        "_SERVICE_ID": service_id,
         "_EMAIL_ID": user_email,
         "_SERVICE_ACCOUNT": service_account_name,
         "_DISK_SIZE": str(disk_size),

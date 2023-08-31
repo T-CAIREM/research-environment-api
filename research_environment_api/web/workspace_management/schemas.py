@@ -25,7 +25,7 @@ class ListActiveWorkspacesRequest(Schema):
 
 
 class Workbench(Schema):
-    gcp_identifier = fields.Str(required=True)
+    gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
     dataset_identifier = fields.Str(required=True)
     cpu = fields.Float(required=True)
