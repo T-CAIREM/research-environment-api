@@ -237,7 +237,6 @@ def start_rstudio_workbench_build(
 
 def update_rstudio_workbench_build(
     service_id: str,
-    version_id: str,
     workspace_project_id: str,
     region: str,
     machine_type: str,
@@ -260,7 +259,6 @@ def update_rstudio_workbench_build(
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_DATA_PROJECT_NAME": app.config.data_project_name,
         "_IMAGE_URL": app.config.rstudio_image_url,
-        "_VERSION_ID": version_id,
     }
 
     return cloud_build
