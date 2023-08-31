@@ -276,7 +276,6 @@ def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleSt
         return schedulers.start_jupyter_workbench(workbench_start_request)
     else:
         return schedulers.start_rstudio_workbench(workbench_start_request)
-    pass
 
 
 def schedule_workbench_update(

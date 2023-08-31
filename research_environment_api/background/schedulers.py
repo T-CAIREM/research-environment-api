@@ -176,6 +176,7 @@ def start_jupyter_workbench(
                 workspace_project_id=workbench_start_request.workspace_project_id,
                 workbench_resource_id=workbench_start_request.workbench_resource_id,
                 instance_zone=gce_instance.zone,
+                instance_name=gce_instance.name,
                 workbench_activity_id=workbench_activity.id,
             )()
 
