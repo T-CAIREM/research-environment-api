@@ -107,7 +107,7 @@ def create_default_service_stopping_build(
     default_version = next(iter(versions))
     stop_default_engine_build = builds.stop_rstudio_workbench_build(
         workspace_project_id=workspace_project_id,
-        workbench_resource_id=default_version.id,
+        version_id=default_version.id,
     )
     return stop_default_engine_build
 
