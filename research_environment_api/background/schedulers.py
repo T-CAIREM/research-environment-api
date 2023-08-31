@@ -395,7 +395,6 @@ def update_rstudio_workbench(
 
     build = builds.update_rstudio_workbench_build(
         service_id=workbench.id,
-        version_id=workbench.resource_id,
         workspace_project_id=workbench_update_request.workspace_project_id,
         region=workbench.region,
         machine_type=workbench_update_request.machine_type,
