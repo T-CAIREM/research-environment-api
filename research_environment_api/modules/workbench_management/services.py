@@ -213,7 +213,7 @@ def _fetch_app_engine_services(
             {"parent": service.name}
         )
         if service.id != DEFAULT_APP_ENGINE_SERVICE_ID
-        and version.serving_status == "SERVING"
+        and service.split.allocations[version.id] == 1
     ]
 
 
