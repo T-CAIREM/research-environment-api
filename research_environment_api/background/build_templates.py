@@ -374,17 +374,6 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "--stop-previous-version",
         ],
     },
-    {
-        "name": "gcr.io/cloud-builders/gcloud",
-        "args": [
-            "app",
-            "versions",
-            "delete",
-            "${_VERSION_ID}",
-            "--service=${_SERVICE_ID}",
-            "--project=${_PROJECT_ID}",
-        ],
-    },
 ]
 
 DESTROY_RSTUDIO_WORKBENCH_STEPS = [
