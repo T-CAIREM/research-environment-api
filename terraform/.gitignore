@@ -34,4 +34,4 @@ override.tf.json
 terraform.rc
 
 # Google Cloud Platform credentials
-credentials.json
+credentials*.json
