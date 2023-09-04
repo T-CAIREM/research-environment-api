@@ -35,6 +35,12 @@ resource "google_cloud_run_service" "api" {
           mount_path = "/app/core_service_account_secret"
         }
 
+        resources {
+          limits = {
+            memory = "3Gi"
+          }
+        }
+
         # HACK: Use a different serializer. Pickle requires this to be set in order to work. Bad idea.
         env {
           name  = "C_FORCE_ROOT"
