@@ -1,10 +1,10 @@
-from enum import StrEnum
 from functools import cache
 from typing import Optional
 
 from google import protobuf
 from google.cloud import billing
 from google.oauth2 import service_account
+from strenum import StrEnum
 
 from research_environment_api.library.google.delegation import (
     domain_delegate_credentials,

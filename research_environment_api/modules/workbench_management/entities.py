@@ -2,12 +2,12 @@ import random
 import string
 from collections import namedtuple
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import Iterable, Optional, Union
 
 from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
 from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+from strenum import StrEnum
 
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
