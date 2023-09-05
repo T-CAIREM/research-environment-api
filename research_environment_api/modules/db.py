@@ -1,11 +1,14 @@
-import threading
+from functools import cache
 
 import pg8000
 import sqlalchemy
 from google.auth.credentials import Credentials
 from google.cloud.sql.connector import Connector, IPTypes
 
-lock = threading.Lock()
+
+@cache
+def cloud_sql_connector(credentials: Credentials) -> Connector:
+    return Connector(credentials=credentials, enable_iam_auth=True)
 
 
 def create_cloud_sql_engine(
@@ -14,26 +17,22 @@ def create_cloud_sql_engine(
     database_name: str,
 ) -> sqlalchemy.engine.base.Engine:
     def getconn() -> pg8000.dbapi.Connection:
-        # The connector needs to be inside of `getconn` to work with Celery workers/threads.
-        # Otherwise, the connector is not initialized properly and tasks hang on the connection indefinitely.
-        connector = Connector(
-            credentials=service_account_credentials, enable_iam_auth=True
-        )
         iam_service_account_user = (
             service_account_credentials.service_account_email.removesuffix(
                 ".gserviceaccount.com"
             )
         )
-        # The connector needs to refresh the SA token every now and then.
-        # The refresh is not thread-safe and leads to malformed SSL exchanges.
-        with lock:
-            conn: pg8000.dbapi.Connection = connector.connect(
-                instance_connection_name,
-                "pg8000",
-                user=iam_service_account_user,
-                db=database_name,
-                ip_type=IPTypes.PUBLIC,
-            )
+        # HACK: The connector needs to be instantiated lazily due to issues with it's internal asyncio loop
+        #       hanging indefinitely when it's instantiated in the main thread in Celery.
+        conn: pg8000.dbapi.Connection = cloud_sql_connector(
+            service_account_credentials
+        ).connect(
+            instance_connection_name,
+            "pg8000",
+            user=iam_service_account_user,
+            db=database_name,
+            ip_type=IPTypes.PUBLIC,
+        )
         return conn
 
     engine = sqlalchemy.create_engine(
