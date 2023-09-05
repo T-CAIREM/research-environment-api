@@ -1,3 +1,4 @@
+from enum import StrEnum
 from os import environ
 
 import google.auth
@@ -7,7 +8,6 @@ import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
 from google.oauth2 import service_account
-from strenum import StrEnum
 
 from research_environment_api.library.google.billing import BillingClient
 from research_environment_api.library.google.workspace import WorkspaceClient

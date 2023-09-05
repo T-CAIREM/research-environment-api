@@ -85,7 +85,6 @@ rsa==4.9
 scramp==1.4.4
 six==1.16.0
 SQLAlchemy==2.0.17
-StrEnum==0.4.15
 tornado==6.3.2
 typing_extensions==4.5.0
 tzdata==2023.3
