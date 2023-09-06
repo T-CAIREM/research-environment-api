@@ -1,12 +1,17 @@
-from functools import cache
+import functools
+import threading
 
 import pg8000
 import sqlalchemy
 from google.auth.credentials import Credentials
 from google.cloud.sql.connector import Connector, IPTypes
 
+connector_lock = threading.Lock()
 
-@cache
+
+# HACK: The connector needs to be instantiated lazily due to issues with it's internal asyncio loop
+# hanging indefinitely when it's instantiated in the main thread in Celery.
+@functools.cache
 def cloud_sql_connector(credentials: Credentials) -> Connector:
     return Connector(credentials=credentials, enable_iam_auth=True)
 
@@ -22,17 +27,17 @@ def create_cloud_sql_engine(
                 ".gserviceaccount.com"
             )
         )
-        # HACK: The connector needs to be instantiated lazily due to issues with it's internal asyncio loop
-        #       hanging indefinitely when it's instantiated in the main thread in Celery.
-        conn: pg8000.dbapi.Connection = cloud_sql_connector(
-            service_account_credentials
-        ).connect(
-            instance_connection_name,
-            "pg8000",
-            user=iam_service_account_user,
-            db=database_name,
-            ip_type=IPTypes.PUBLIC,
-        )
+        # HACK: The connector uses an urrlib3 ConnectionPool which is not thread-safe.
+        with connector_lock:
+            conn: pg8000.dbapi.Connection = cloud_sql_connector(
+                service_account_credentials
+            ).connect(
+                instance_connection_name,
+                "pg8000",
+                user=iam_service_account_user,
+                db=database_name,
+                ip_type=IPTypes.PUBLIC,
+            )
         return conn
 
     engine = sqlalchemy.create_engine(
