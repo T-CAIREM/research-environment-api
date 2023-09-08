@@ -70,7 +70,6 @@ def share_billing_account():
     user_email = share_billing_account_request["user_email"]
     billing_account_id = share_billing_account_request["billing_account_id"]
 
-    cache.delete_memoized(list_billing_accounts, user_email)
     services.share_billing_account_to(
         owner_email,
         user_email,
@@ -108,7 +107,6 @@ def revoke_billing_account_access():
     user_email = revoke_billing_account_access_request["user_email"]
     billing_account_id = revoke_billing_account_access_request["billing_account_id"]
 
-    cache.delete_memoized(list_billing_accounts, user_email)
     services.revoke_billing_account_access(
         owner_email,
         user_email,
