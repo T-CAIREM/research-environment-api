@@ -3,12 +3,10 @@ import string
 from typing import Iterable, Optional, Tuple, Union
 
 from google import api_core
-from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
-from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
-from research_environment_api.background import enums, schedulers
+from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import entities, models
 from research_environment_api.modules.workbench_management import (
@@ -131,20 +129,12 @@ def list_workbenches(
     workflows_in_progress: Iterable[models.WorkbenchActivity],
 ) -> Iterable[Union[entities.Workbench, entities.EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
-    app_engine_services = _fetch_app_engine_services(gcp_project_id)
 
-    gce_instance_workbenches = [
+    provisioned_workbenches = [
         entities.Workbench.from_gce_instance(instance, workflows_in_progress)
         for instance in gce_instances
     ]
-    app_engine_workbenches = [
-        entities.Workbench.from_app_engine_service_and_version(
-            service, version, workflows_in_progress
-        )
-        for service, version in app_engine_services
-    ]
 
-    provisioned_workbenches = gce_instance_workbenches + app_engine_workbenches
     provisioned_workbench_ids = [workbench.id for workbench in provisioned_workbenches]
 
     workbench_scaffoldings = [
@@ -161,7 +151,7 @@ def list_workbenches(
     return provisioned_workbenches + workbench_scaffoldings
 
 
-def get_jupyter_workbench(
+def get_compute_engine_workbench(
     gcp_project_id: str,
     instance_name: str,
     user_email: str,
@@ -173,48 +163,6 @@ def get_jupyter_workbench(
     )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
-
-
-def get_rstudio_workbench(
-    gcp_project_id: str,
-    service_id: str,
-    user_email: str,
-) -> entities.Workbench:
-    # The API exposes instance IDs as strings for compatibility reasons.
-    app_engine_services = _fetch_app_engine_services(gcp_project_id)
-    app_service, app_version = next(
-        filter(
-            lambda service_version: service_version[0].id == service_id,
-            app_engine_services,
-        )
-    )
-    workflows_in_progress = monitoring_services.list_active_workflows(user_email)
-    return entities.Workbench.from_app_engine_service_and_version(
-        app_service, app_version, workflows_in_progress
-    )
-
-
-def _fetch_app_engine_services(
-    gcp_project_id: str,
-) -> Iterable[Tuple[AppEngineService, AppEngineVersion]]:
-    try:
-        app_engine_services = (
-            app.config.google_app_engine_services_client.list_services(
-                {"parent": f"apps/{gcp_project_id}"}
-            )
-        )
-    except api_core.exceptions.NotFound:
-        return []
-
-    return [
-        (service, version)
-        for service in app_engine_services
-        for version in app.config.google_app_engine_versions_client.list_versions(
-            {"parent": service.name}
-        )
-        if service.id != DEFAULT_APP_ENGINE_SERVICE_ID
-        and service.split.allocations[version.id] == 1
-    ]
 
 
 def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
@@ -238,22 +186,6 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
-def get_app_engine_service_versions(
-    workspace_project_id: str,
-    service_id: str,
-) -> Iterable[AppEngineVersion]:
-    app_engine_services = app.config.google_app_engine_services_client.list_services(
-        {"parent": f"apps/{workspace_project_id}"}
-    )
-    service = next(
-        service for service in app_engine_services if service.id == service_id
-    )
-    versions = app.config.google_app_engine_versions_client.list_versions(
-        {"parent": service.name}
-    )
-    return versions
-
-
 def schedule_workbench_create(
     workbench_creation: entities.WorkbenchCreate,
 ):
@@ -264,10 +196,7 @@ def schedule_workbench_create(
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
-    if workbench_stop_request.workbench_type == "jupyter":
-        return schedulers.stop_jupyter_workbench(workbench_stop_request)
-    else:
-        return schedulers.stop_rstudio_workbench(workbench_stop_request)
+    return schedulers.stop_compute_engine_workbench(workbench_stop_request)
 
 
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
@@ -297,3 +226,9 @@ def schedule_workbench_destroy(
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
     return f"{dataset_identifier[:15]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
+
+
+def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
+    zones = constants.AVAILABLE_ZONES[region]
+    zone, *fallback_zones = random.sample(zones, len(zones))
+    return zone, *fallback_zones

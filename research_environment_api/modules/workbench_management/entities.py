@@ -5,8 +5,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Iterable, Optional, Union
 
-from google.cloud.appengine_admin_v1.types.service import Service as AppEngineService
-from google.cloud.appengine_admin_v1.types.version import Version as AppEngineVersion
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.background.enums import BuildType
@@ -177,52 +175,6 @@ class Workbench:
             service_account_name=service_account_name,
         )
 
-    @classmethod
-    def from_app_engine_service_and_version(
-        cls,
-        service: AppEngineService,
-        version: AppEngineVersion,
-        workflows_in_progress: Iterable[models.WorkbenchActivity],
-    ):
-        with app.database_session() as session:
-            app_engine_metadata = (
-                session.query(models.AppEngineMetadata)
-                .filter_by(instance_id=service.id)
-                .one()
-            )
-            service_account = next(iter(version.service_account.split("@")))
-            url = (version.version_url).replace(f"{version.id}-dot-", "")
-            service_id = service.id
-            workflow_in_progress = next(
-                filter(
-                    lambda workflow: workflow.workbench_id == service_id,
-                    workflows_in_progress,
-                ),
-                None,
-            )
-            status = (
-                WORKBENCH_ACTIVITY_TYPE_MAP[workflow_in_progress.build_type]
-                if workflow_in_progress
-                else RSTUDIO_STATUS_MAP[version.serving_status.name]
-            )
-
-            return cls(
-                id=service_id,
-                resource_id=version.id,
-                dataset_identifier=app_engine_metadata.dataset_identifier,
-                status=status,
-                cpu=version.resources.cpu,
-                memory=version.resources.memory_gb,
-                url=url,
-                type=WorkbenchType.RSTUDIO,
-                service_account_name=service_account,
-                bucket_name=app_engine_metadata.bucket_name,
-                vm_image=app_engine_metadata.vm_image,
-                region=Region(app_engine_metadata.region),
-                disk_size=app_engine_metadata.disk_size,
-                machine_type=MachineType(app_engine_metadata.machine_type),
-            )
-
 
 @dataclass
 class BaseWorkbenchEntity:
@@ -240,10 +192,14 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     region: Region
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     vm_image: str = field(init=False)
+    rstudio_image_url: str = field(init=False)
     jupyter_startup_script_bucket: str = field(init=False)
+    rstudio_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
+        self.rstudio_image_url = app.config.rstudio_image_url
         self.vm_image = (
             "common-cu110-notebooks"
             if self.gpu_accelerator_type
@@ -255,9 +211,11 @@ class WorkbenchCreate(BaseWorkbenchEntity):
 class WorkbenchDestroy(BaseWorkbenchEntity):
     workbench_resource_id: str
     jupyter_startup_script_bucket: str = field(init=False)
+    rstudio_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
 
 
 @dataclass
@@ -265,9 +223,11 @@ class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
     workbench_resource_id: str
     jupyter_startup_script_bucket: str = field(init=False)
+    rstudio_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
         self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
+        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
 
 
 @dataclass

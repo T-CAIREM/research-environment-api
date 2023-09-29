@@ -83,17 +83,27 @@ def process_cloud_build_result(
             # Retry the workflow in the next fallback region.
             new_zone, *new_fallback_zones = fallback_zones
             build.substitutions["_ZONE"] = new_zone
-            build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
-            workflows.create_jupyter_workbench(
-                build=build,
-                workspace_project_id=build.substitutions["_PROJECT_ID"],
-                instance_zone=new_zone,
-                instance_name=build.substitutions["_INSTANCE_NAME"],
-                fallback_zones=new_fallback_zones,
-                user_email=user_email,
-                workbench_activity_id=workbench_activity_id,
-            )()
-            self.kill_chain()
+            if "jupyter" in build.substitutions["_INSTANCE_NAME"]:
+                build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
+                workflows.create_jupyter_workbench(
+                    build=build,
+                    workspace_project_id=build.substitutions["_PROJECT_ID"],
+                    instance_zone=new_zone,
+                    instance_name=build.substitutions["_INSTANCE_NAME"],
+                    fallback_zones=new_fallback_zones,
+                    user_email=user_email,
+                    workbench_activity_id=workbench_activity_id,
+                )()
+                self.kill_chain()
+            else:
+                build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
+                workflows.create_rstudio_workbench(
+                    build=build,
+                    fallback_zones=new_fallback_zones,
+                    user_email=user_email,
+                    workbench_activity_id=workbench_activity_id,
+                )()
+                self.kill_chain()
 
 
 @shared_task

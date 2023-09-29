@@ -50,6 +50,11 @@ class Config:
         ]
         self.rstudio_image_url = environ["RSTUDIO_IMAGE_URL"]
         self.data_project_name = environ["DATA_PROJECT_NAME"]
+        self.network_name = environ["NETWORK_NAME"]
+        self.rstudio_dns_project = environ["RSTUDIO_DNS_PROJECT"]
+        self.rstudio_domain_name = environ["RSTUDIO_DOMAIN_NAME"]
+        self.rstudio_ssl_private_key = environ["RSTUDIO_SSL_PRIVATE_KEY"]
+        self.rstudio_ssl_certificate = environ["RSTUDIO_SSL_CERTIFICATE"]
 
     def _init_database_config(self):
         if self.is_development():
