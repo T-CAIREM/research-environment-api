@@ -154,6 +154,7 @@ class Workbench:
             if workflow_in_progress
             else GCE_STATUS_MAP[instance.status]
         )
+        workbench_type = WorkbenchType.JUPYTER if "jupyter" in name else WorkbenchType.RSTUDIO
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
@@ -169,7 +170,7 @@ class Workbench:
             machine_type=machine_type,
             url=maybe_proxy_url,
             zone=zone,
-            type=WorkbenchType.JUPYTER,
+            type=workbench_type,
             disk_size=disk_size,
             gpu_accelerator_type=gpu_accelerator_type,
             service_account_name=service_account_name,

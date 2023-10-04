@@ -45,6 +45,7 @@ class Config:
         self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
         self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
         self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
+        self.rstudio_startup_script = environ["RSTUDIO_STARTUP_SCRIPT"]
         self.cloud_build_service_account_name = environ[
             "CLOUD_BUILD_SERVICE_ACCOUNT_NAME"
         ]
@@ -52,6 +53,7 @@ class Config:
         self.data_project_name = environ["DATA_PROJECT_NAME"]
         self.network_name = environ["NETWORK_NAME"]
         self.rstudio_dns_project = environ["RSTUDIO_DNS_PROJECT"]
+        self.rstudio_dns_zone = environ["RSTUDIO_DNS_ZONE"]
         self.rstudio_domain_name = environ["RSTUDIO_DOMAIN_NAME"]
         self.rstudio_ssl_private_key = environ["RSTUDIO_SSL_PRIVATE_KEY"]
         self.rstudio_ssl_certificate = environ["RSTUDIO_SSL_CERTIFICATE"]

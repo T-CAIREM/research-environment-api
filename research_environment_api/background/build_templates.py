@@ -3,21 +3,21 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
         "name": "python",
         "args": [
             "python3",
-            "notebookcreation/python3.py",
+            "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
     },
     {
         "name": "python",
-        "args": ["python3", "notebookcreation/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}"],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "init", "-reconfigure"],
+        "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "plan", "-out=tfplan.out"],
+        "args": ["-chdir=./workbench/jupyter", "plan", "-out=tfplan.out"],
         "env": [
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
@@ -30,7 +30,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
             "TF_VAR_vm_image=${_VM_IMAGE}",
             "TF_VAR_zone=${_ZONE}",
-            "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
@@ -38,7 +38,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
     {
         "name": "hashicorp/terraform",
         "entrypoint": "/bin/sh",
-        "args": ["notebookcreation/terraform_apply.sh"],
+        "args": ["workbench/jupyter/terraform_apply.sh"],
     },
 ]
 
@@ -146,21 +146,21 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
         "name": "python",
         "args": [
             "python3",
-            "notebookcreation/python3.py",
+            "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
     },
     {
         "name": "python",
-        "args": ["python3", "notebookcreation/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}"],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "init", "-reconfigure"],
+        "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "apply", "-auto-approve"],
+        "args": ["-chdir=./workbench/jupyter", "apply", "-auto-approve"],
         "env": [
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
@@ -172,7 +172,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_persistent_disk=${_DISK_SIZE}",
             "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
             "TF_VAR_zone=${_ZONE}",
-            "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
@@ -184,17 +184,17 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
         "name": "python",
         "args": [
             "python3",
-            "notebookcreation/python3.py",
+            "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "init", "-reconfigure"],
+        "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./notebookcreation", "destroy", "-auto-approve"],
+        "args": ["-chdir=./workbench/jupyter", "destroy", "-auto-approve"],
         "env": [
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
@@ -206,7 +206,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
             "TF_VAR_persistent_disk=${_DISK_SIZE}",
             "TF_VAR_zone=${_ZONE}",
-            "TF_VAR_jupyter_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
@@ -230,7 +230,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
         "name": "python",
         "args": [
             "python3",
-            "/workbench/rstudio/python3.py",
+            "workbench/rstudio/python3.py",
             "${_INSTANCE_NAME}",
         ],
     },
@@ -260,12 +260,13 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
     {
         "name": "hashicorp/terraform",
         "entrypoint": "/bin/sh",
-        "args": ["compute-engine-rstudio/terraform_apply.sh"],
+        "args": ["workbench/rstudio/terraform_apply.sh"],
     },
 ]
 
@@ -305,6 +306,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
 ]
@@ -315,7 +317,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
         "args": [
             "python3",
             "workbench/rstudio/python3.py",
-            "${_SERVICE_ID}",
+            "${_INSTANCE_NAME}",
         ],
     },
     {
@@ -344,6 +346,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
         ],
     },
 ]

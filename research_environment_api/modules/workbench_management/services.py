@@ -225,7 +225,7 @@ def schedule_workbench_destroy(
 
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
-    return f"{dataset_identifier[:15]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
+    return f"{dataset_identifier[:10]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
 
 
 def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
