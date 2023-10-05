@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple, TypeVar
+import requests
 
 from celery import Task, shared_task
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
@@ -99,27 +100,14 @@ def process_cloud_build_result(
                 build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
                 workflows.create_rstudio_workbench(
                     build=build,
+                    workspace_project_id=build.substitutions["_PROJECT_ID"],
+                    instance_zone=new_zone,
+                    instance_name=build.substitutions["_INSTANCE_NAME"],
                     fallback_zones=new_fallback_zones,
                     user_email=user_email,
                     workbench_activity_id=workbench_activity_id,
                 )()
                 self.kill_chain()
-
-
-@shared_task
-def create_default_service_stopping_build(
-    _operation: operations.Operation, workspace_project_id: str
-) -> CloudBuild:
-    versions = services.get_app_engine_service_versions(
-        workspace_project_id, services.DEFAULT_APP_ENGINE_SERVICE_ID
-    )
-    # The default service will only ever have one version.
-    default_version = next(iter(versions))
-    stop_default_engine_build = builds.stop_rstudio_workbench_build(
-        workspace_project_id=workspace_project_id,
-        version_id=default_version.id,
-    )
-    return stop_default_engine_build
 
 
 @shared_task
@@ -208,35 +196,25 @@ def check_operation_status(
     return passthrough
 
 
-@shared_task
-def save_app_engine_metadata(passthrough, build):
-    substitutions = build.substitutions
+@shared_task(bind=True, max_retries=None, countdown=30)
+def check_rstudio_page_status(
+    self,
+    passthrough: T,
+    workspace_project_id: str,
+    instance_zone: str,
+    instance_name: str,
+):
+    instance_client = app.config.google_compute_engine_instances_client
+    instance = instance_client.get(
+        project=workspace_project_id,
+        zone=instance_zone,
+        instance=instance_name,
+    )
 
-    with app.database_session() as session:
-        with session.begin():
-            app_engine_metadata = models.AppEngineMetadata(
-                instance_id=substitutions["_INSTANCE_NAME"],
-                dataset_identifier=substitutions["_DATASET"],
-                bucket_name=substitutions["_BUCKET_NAME"],
-                vm_image=substitutions["_IMAGE_URL"],
-                region=substitutions["_REGION"],
-                disk_size=substitutions["_DISK_SIZE"],
-                machine_type=substitutions["_MACHINE_TYPE"],
-            )
-            session.add(app_engine_metadata)
-    return passthrough
+    metadata = {item.key: item.value for item in instance.metadata.items}
+    try:
+        requests.get(f"https://{metadata['proxy-url']}")
+    except requests.exceptions.SSLError:
+        self.retry(countdown=30)
 
-
-@shared_task
-def update_app_engine_metadata(passthrough, build):
-    substitutions = build.substitutions
-
-    with app.database_session() as session:
-        with session.begin():
-            app_engine_metadata = (
-                session.query(models.AppEngineMetadata)
-                .filter_by(instance_id=substitutions["_SERVICE_ID"])
-                .one()
-            )
-            app_engine_metadata.machine_type = substitutions["_MACHINE_TYPE"]
     return passthrough

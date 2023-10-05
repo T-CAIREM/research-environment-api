@@ -315,6 +315,9 @@ def create_rstudio_workbench(
             workflows.create_rstudio_workbench(
                 build=build,
                 workbench_activity_id=workbench_activity.id,
+                workspace_project_id=workbench_creation_request.workspace_project_id,
+                instance_zone=zone,
+                instance_name=workbench_id,
                 user_email=workbench_creation_request.user_email,
                 fallback_zones=fallback_zones,
             )()
