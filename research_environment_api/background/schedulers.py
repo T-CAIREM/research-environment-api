@@ -287,6 +287,7 @@ def create_rstudio_workbench(
 
     build = builds.create_rstudio_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
+        workspace_numeric_id=workbench_creation_request.workspace_numeric_id,
         region=workbench_creation_request.region,
         zone=zone,
         machine_type=workbench_creation_request.machine_type,
@@ -376,6 +377,7 @@ def update_rstudio_workbench(
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
         vm_image=workbench.vm_image,
+        brand_name=workbench.brand_name,
         rstudio_startup_script_bucket=workbench_update_request.rstudio_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )
@@ -422,6 +424,7 @@ def destroy_rstudio_workbench(
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
         vm_image=workbench.vm_image,
+        brand_name=workbench.brand_name,
         rstudio_startup_script_bucket=workbench_destroy_request.rstudio_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )

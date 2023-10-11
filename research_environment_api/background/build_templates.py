@@ -261,6 +261,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_brand_name=${_BRAND_NAME}",
         ],
     },
     {
@@ -307,6 +308,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_brand_name=${_BRAND_NAME}",
         ],
     },
 ]
@@ -347,6 +349,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_brand_name=${_BRAND_NAME}",
         ],
     },
 ]

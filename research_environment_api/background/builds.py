@@ -180,6 +180,7 @@ def _normalize_gpu_accelerator_type(
 
 def create_rstudio_workbench_build(
     workspace_project_id: str,
+    workspace_numeric_id: str,
     region: Region,
     zone: str,
     machine_type: MachineType,
@@ -205,6 +206,7 @@ def create_rstudio_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": app.config.rstudio_image_url,
+        "_BRAND_NAME": f"projects/{workspace_numeric_id}/brands/{workspace_numeric_id}",
         "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
@@ -233,6 +235,7 @@ def update_rstudio_workbench_build(
     bucket_name: str,
     rstudio_startup_script_bucket: str,
     vm_image: str,
+    brand_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
@@ -247,6 +250,7 @@ def update_rstudio_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
+        "_BRAND_NAME": brand_name,
         "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
@@ -275,6 +279,7 @@ def destroy_rstudio_workbench_build(
     bucket_name: str,
     rstudio_startup_script_bucket: str,
     vm_image: str,
+    brand_name: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
@@ -289,6 +294,7 @@ def destroy_rstudio_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
+        "_BRAND_NAME": brand_name,
         "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,

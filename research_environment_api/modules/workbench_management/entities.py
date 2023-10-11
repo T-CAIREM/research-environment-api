@@ -111,6 +111,7 @@ class Workbench:
     bucket_name: str
     vm_image: str
     service_account_name: str
+    brand_name: Optional[str] = None
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
@@ -142,6 +143,7 @@ class Workbench:
         zone = instance.zone.split("/")[-1]
         region = zone.rsplit("-", 1)[0]
         name = instance.name
+        brand_name = metadata.get("brand_name")
         workflow_in_progress = next(
             filter(
                 lambda workflow: workflow.workbench_id == name,
@@ -174,6 +176,7 @@ class Workbench:
             zone=zone,
             type=workbench_type,
             disk_size=disk_size,
+            brand_name=brand_name,
             gpu_accelerator_type=gpu_accelerator_type,
             service_account_name=service_account_name,
         )
@@ -188,6 +191,7 @@ class BaseWorkbenchEntity:
 
 @dataclass
 class WorkbenchCreate(BaseWorkbenchEntity):
+    workspace_numeric_id: str
     machine_type: MachineType
     disk_size: int
     dataset_identifier: str
