@@ -34,7 +34,6 @@ def create_jupyter_workbench(
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
         vm_image=workbench_creation_request.vm_image,
-        jupyter_startup_script_bucket=workbench_creation_request.jupyter_startup_script_bucket,
     )
 
     with app.database_session() as session:
@@ -203,7 +202,6 @@ def update_jupyter_workbench(
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
         vm_image=workbench.vm_image,
-        jupyter_startup_script_bucket=workbench_update_request.jupyter_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )
 
@@ -251,7 +249,6 @@ def destroy_jupyter_workbench(
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
         vm_image=workbench.vm_image,
-        jupyter_startup_script_bucket=workbench_destroy_request.jupyter_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )
     with app.database_session() as session:
@@ -298,7 +295,6 @@ def create_rstudio_workbench(
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
-        rstudio_startup_script_bucket=workbench_creation_request.rstudio_startup_script_bucket,
     )
 
     with app.database_session() as session:
@@ -378,7 +374,6 @@ def update_rstudio_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
-        rstudio_startup_script_bucket=workbench_update_request.rstudio_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )
 
@@ -425,7 +420,6 @@ def destroy_rstudio_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
-        rstudio_startup_script_bucket=workbench_destroy_request.rstudio_startup_script_bucket,
         service_account_name=workbench.service_account_name,
     )
 

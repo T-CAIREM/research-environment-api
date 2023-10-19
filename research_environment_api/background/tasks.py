@@ -12,7 +12,8 @@ from research_environment_api.background import (
     workflows,
 )
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models, services
+from research_environment_api.modules.workbench_management import models
+from research_environment_api.modules.workbench_management.entities import WorkbenchType
 
 T = TypeVar("T")
 
@@ -84,7 +85,7 @@ def process_cloud_build_result(
             # Retry the workflow in the next fallback region.
             new_zone, *new_fallback_zones = fallback_zones
             build.substitutions["_ZONE"] = new_zone
-            if "jupyter" in build.substitutions["_INSTANCE_NAME"]:
+            if build.substitutions["_WORKBENCH_TYPE"] == WorkbenchType.JUPYTER:
                 build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
                 workflows.create_jupyter_workbench(
                     build=build,
@@ -213,7 +214,7 @@ def check_rstudio_page_status(
 
     metadata = {item.key: item.value for item in instance.metadata.items}
     try:
-        requests.get(f"https://{metadata['proxy-url']}")
+        requests.get(f"https://{metadata['proxy-url']}", timeout=5)
     except requests.exceptions.SSLError:
         self.retry(countdown=30)
 

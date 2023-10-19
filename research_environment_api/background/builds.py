@@ -8,6 +8,7 @@ from research_environment_api.modules.workbench_management.entities import (
     GpuAcceleratorType,
     MachineType,
     Region,
+    WorkbenchType,
 )
 
 
@@ -38,7 +39,6 @@ def create_jupyter_workbench_build(
     user_email: str,
     bucket_name: str,
     vm_image: str,
-    jupyter_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -53,9 +53,10 @@ def create_jupyter_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
-        "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
+        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
     }
 
     return cloud_build
@@ -72,7 +73,6 @@ def update_jupyter_workbench_build(
     user_email: str,
     bucket_name: str,
     vm_image: str,
-    jupyter_startup_script_bucket: str,
     instance_name: str,
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
@@ -90,8 +90,9 @@ def update_jupyter_workbench_build(
         "_DISK_SIZE": str(disk_size),
         "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
         "_ZONE": zone,
-        "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
+        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
     }
 
     return cloud_build
@@ -108,7 +109,6 @@ def destroy_jupyter_workbench_build(
     user_email: str,
     bucket_name: str,
     vm_image: str,
-    jupyter_startup_script_bucket: str,
     instance_name: str,
     service_account_name: str,
 ) -> cloudbuild_v1.Build:
@@ -126,8 +126,9 @@ def destroy_jupyter_workbench_build(
         "_VM_IMAGE": vm_image,
         "_INSTANCE_NAME": instance_name,
         "_ZONE": zone,
-        "_JUPYTER_STARTUP_SCRIPT_BUCKET": jupyter_startup_script_bucket,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
+        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
     }
 
     return cloud_build
@@ -191,7 +192,6 @@ def create_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
-    rstudio_startup_script_bucket: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
@@ -207,7 +207,7 @@ def create_rstudio_workbench_build(
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": app.config.rstudio_image_url,
         "_BRAND_NAME": f"projects/{workspace_numeric_id}/brands/{workspace_numeric_id}",
-        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
+        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": app.config.rstudio_startup_script,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_NETWORK_NAME": app.config.network_name,
@@ -216,6 +216,7 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
     }
 
     return cloud_build
@@ -233,7 +234,6 @@ def update_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
-    rstudio_startup_script_bucket: str,
     vm_image: str,
     brand_name: str,
 ) -> cloudbuild_v1.Build:
@@ -251,7 +251,7 @@ def update_rstudio_workbench_build(
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
         "_BRAND_NAME": brand_name,
-        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
+        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": app.config.rstudio_startup_script,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_NETWORK_NAME": app.config.network_name,
@@ -260,6 +260,7 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
     }
 
     return cloud_build
@@ -277,7 +278,6 @@ def destroy_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
-    rstudio_startup_script_bucket: str,
     vm_image: str,
     brand_name: str,
 ) -> cloudbuild_v1.Build:
@@ -295,7 +295,7 @@ def destroy_rstudio_workbench_build(
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
         "_BRAND_NAME": brand_name,
-        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": rstudio_startup_script_bucket,
+        "_RSTUDIO_STARTUP_SCRIPT_BUCKET": app.config.rstudio_startup_script,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_NETWORK_NAME": app.config.network_name,
@@ -304,6 +304,7 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
     }
 
     return cloud_build

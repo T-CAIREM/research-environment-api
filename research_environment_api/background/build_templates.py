@@ -33,6 +33,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
     {
@@ -175,6 +176,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
 ]
@@ -209,6 +211,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
     {
@@ -262,6 +265,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
     {
@@ -309,6 +313,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
 ]
@@ -350,6 +355,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
         ],
     },
 ]

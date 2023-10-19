@@ -156,9 +156,7 @@ class Workbench:
             if workflow_in_progress
             else GCE_STATUS_MAP[instance.status]
         )
-        workbench_type = (
-            WorkbenchType.JUPYTER if "jupyter" in name else WorkbenchType.RSTUDIO
-        )
+        workbench_type = WorkbenchType(metadata.get("type"))
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
         return cls(
@@ -200,12 +198,8 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
-    jupyter_startup_script_bucket: str = field(init=False)
-    rstudio_startup_script_bucket: str = field(init=False)
 
     def __post_init__(self):
-        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
-        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
         self.rstudio_image_url = app.config.rstudio_image_url
         self.vm_image = (
             "common-cu110-notebooks"
@@ -217,24 +211,12 @@ class WorkbenchCreate(BaseWorkbenchEntity):
 @dataclass
 class WorkbenchDestroy(BaseWorkbenchEntity):
     workbench_resource_id: str
-    jupyter_startup_script_bucket: str = field(init=False)
-    rstudio_startup_script_bucket: str = field(init=False)
-
-    def __post_init__(self):
-        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
-        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
 
 
 @dataclass
 class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
     workbench_resource_id: str
-    jupyter_startup_script_bucket: str = field(init=False)
-    rstudio_startup_script_bucket: str = field(init=False)
-
-    def __post_init__(self):
-        self.jupyter_startup_script_bucket = app.config.jupyter_startup_script
-        self.rstudio_startup_script_bucket = app.config.rstudio_startup_script
 
 
 @dataclass
