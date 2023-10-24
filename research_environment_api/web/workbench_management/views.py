@@ -35,9 +35,12 @@ def create_workbench():
         project_id=workbench_creation_request["workspace_project_id"], username=username
     )
     workspace_region = entities.Region(workspace.labels["region"])
+    workspace_numeric_id = workspace.name.split("/")[-1]
 
     workbench_entity = entities.WorkbenchCreate(
-        **workbench_creation_request, region=workspace_region
+        **workbench_creation_request,
+        region=workspace_region,
+        workspace_numeric_id=workspace_numeric_id
     )
     workbench_activity_id = services.schedule_workbench_create(workbench_entity)
     workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(

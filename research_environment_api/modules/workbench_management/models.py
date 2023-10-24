@@ -10,18 +10,6 @@ class Base(ScopedModel):
     __table_prefix__ = "workbench_"
 
 
-class AppEngineMetadata(Base):
-    __local_tablename__ = "app_engine_metadata"
-
-    instance_id: Mapped[str] = mapped_column(String(), nullable=False)
-    dataset_identifier: Mapped[str] = mapped_column(String(), nullable=False)
-    bucket_name: Mapped[str] = mapped_column(String(), nullable=False)
-    vm_image: Mapped[str] = mapped_column(String(), nullable=False)
-    region: Mapped[str] = mapped_column(String(), nullable=False)
-    disk_size: Mapped[str] = mapped_column(String(), nullable=False)
-    machine_type: Mapped[str] = mapped_column(String(), nullable=False)
-
-
 class WorkbenchActivity(Base):
     __local_tablename__ = "workbench_activities"
 
