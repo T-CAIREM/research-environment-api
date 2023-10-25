@@ -90,3 +90,31 @@ variable "rstudio_image_url" {
 variable "data_project_name" {
   type = string
 }
+
+variable "rstudio_startup_script" {
+  type = string
+}
+
+variable "rstudio_dns_project" {
+  type = string
+}
+
+variable "rstudio_dns_zone" {
+  type = string
+}
+
+variable "rstudio_domain_name" {
+  type = string
+}
+
+variable "network_name" {
+  type = string
+}
+
+variable "rstudio_ssl_private_key" {
+  type = string
+}
+
+variable "rstudio_ssl_certificate" {
+  type = string
+}

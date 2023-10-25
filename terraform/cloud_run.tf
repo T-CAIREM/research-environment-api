@@ -131,6 +131,42 @@ resource "google_cloud_run_service" "api" {
           name  = "DATA_PROJECT_NAME"
           value = var.data_project_name
         }
+
+        env {
+          name  = "RSTUDIO_STARTUP_SCRIPT"
+          value = var.rstudio_startup_script
+        }
+
+        env {
+          name  = "NETWORK_NAME"
+          value = var.network_name
+        }
+
+        env {
+          name  = "RSTUDIO_DNS_PROJECT"
+          value = var.rstudio_dns_project
+        }
+
+        env {
+          name  = "RSTUDIO_DNS_ZONE"
+          value = var.rstudio_dns_zone
+        }
+
+        env {
+          name  = "RSTUDIO_DOMAIN_NAME"
+          value = var.rstudio_domain_name
+        }
+
+        env {
+          name  = "RSTUDIO_SSL_PRIVATE_KEY"
+          value = var.rstudio_ssl_private_key
+        }
+
+        env {
+          name  = "RSTUDIO_SSL_CERTIFICATE"
+          value = var.rstudio_ssl_certificate
+
+        }
       }
 
       service_account_name = var.service_account_name
