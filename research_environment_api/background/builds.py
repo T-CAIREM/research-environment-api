@@ -146,9 +146,7 @@ def create_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
-        "_REGION": region.value,
         "_APPENGINE_REGION": region.value,
-        "_SERVICE_ACCOUNT": app.config.cloud_build_service_account_name,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
