@@ -83,6 +83,32 @@ CREATE_WORKSPACE_STEPS = [
     },
 ]
 
+CREATE_SHARED_WORKSPACE_STEPS = [
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "sharing/create-sharing-project/python3.py",
+            "${_PROJECT_ID}",
+        ],
+        "wait_for": ["-"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./sharing/create-sharing-project", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./sharing/create-sharing-project", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
+        ],
+    },
+]
+
 DESTROY_WORKSPACE_STEPS = [
     {
         "name": "python",
@@ -118,6 +144,31 @@ DESTROY_WORKSPACE_STEPS = [
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_app_eng_location=${_APPENGINE_REGION}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+        ],
+    },
+]
+
+DESTROY_SHARED_WORKSPACE_STEPS = [
+    {
+        "name": "python",
+        "args": [
+            "python3",
+            "sharing/create-sharing-project/python3.py",
+            "${_PROJECT_ID}",
+        ],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./sharing/create-sharing-project", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./sharing/create-sharing-project", "destroy", "-auto-approve"],
+        "env": [
+            "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
     },
 ]

@@ -6,8 +6,12 @@ from research_environment_api.modules.workbench_management.entities import (
     Region,
     WorkbenchStatus,
     WorkbenchType,
+)
+
+from research_environment_api.modules.workspace_management.entities import (
     WorkspaceStatus,
 )
+from research_environment_api.web.sharing_management.schemas import SharedBucket
 
 
 class WorkspaceCreationRequest(Schema):
@@ -62,8 +66,32 @@ class Workspace(Schema):
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
 
 
+class SharedWorkspaceCreationRequest(Schema):
+    user_email = fields.Str(required=True, validate=validate.Email())
+    billing_account_id = fields.Str(required=True)
+
+
+class SharedWorkspaceDeletionRequest(SharedWorkspaceCreationRequest):
+    workspace_project_id = fields.Str(required=True)
+
+
+class ListActiveSharedWorkspacesRequest(Schema):
+    email = fields.Str(required=True, validate=validate.Email())
+
+
+class SharedWorkspace(Schema):
+    gcp_project_id = fields.Str(required=True)
+    billing_info = fields.Nested(BillingInfo, required=True)
+    buckets = fields.Nested(SharedBucket, many=True)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+
+
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):
-    type_schemas = {"Workspace": Workspace, "EntityScaffolding": EntityScaffolding}
+    type_schemas = {
+        "Workspace": Workspace,
+        "EntityScaffolding": EntityScaffolding,
+        "SharedWorkspace": SharedWorkspace,
+    }
 
 
 class WorkspaceWorkflowIdentifier(Schema):

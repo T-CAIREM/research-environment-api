@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 
 from alembic import context
 from research_environment_api.modules.app import app
+from research_environment_api.modules.model import ScopedModel
+from research_environment_api.modules.sharing_management.models import *
+from research_environment_api.modules.monitoring_management.models import *
+
 
 # Load environment variables
 load_dotenv()
@@ -19,9 +23,6 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-import research_environment_api.modules.workbench_management.models
-from research_environment_api.modules.model import ScopedModel
 
 target_metadata = ScopedModel.metadata
 
