@@ -174,3 +174,42 @@ def delete_shared_workspace():
     )
 
     return workflow_identifier, 200
+
+
+@workspace_management_bp.get("/shared/<email>")
+def list_active_shared_workspaces(email: str):
+    """Lists active shared workspaces for a specified user.
+    ---
+    get:
+      tags:
+        - workspace_management
+      description: Lists the active shared workspaces for a specified user.
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+      responses:
+        200:
+          description: Returns a list of shared workspaces.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: SharedWorkspace
+    """
+    list_active_shared_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
+        {"email": email}
+    )
+    shared_workspace_list_query_entity = entities.SharedWorkspaceListQuery(
+        **list_active_shared_workspaces_request
+    )
+
+    shared_workspaces = services.list_active_shared_workspaces(
+        shared_workspace_list_query_entity
+    )
+    serialized_shared_workspaces = schemas.EntityScaffoldingWorkspaceSchema(
+        many=True
+    ).dump(shared_workspaces)
+
+    return serialized_shared_workspaces, 200

@@ -65,3 +65,63 @@ def delete_shared_bucket():
     services.delete_shared_bucket(shared_bucket_deletion_entity)
 
     return {}, 200
+
+
+@sharing_management_bp.post("/bucket/share")
+def share_bucket():
+    """Shares bucket.
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Shares a bucket.
+      requestBody:
+        content:
+          application/json:
+            schema: ShareBucketRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    share_bucket_request = schemas.ShareBucketRequest().load(body)
+    share_bucket_entity = entities.ShareBucket(**share_bucket_request)
+
+    services.share_bucket_to(share_bucket_entity)
+
+    return {}, 200
+
+
+@sharing_management_bp.post("/bucket/revoke_access")
+def revoke_access_to_shared_bucket():
+    """Revokes a user's access to shared bucket.
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Revokes a user's access to shared bucket.
+      requestBody:
+        content:
+          application/json:
+            schema: RevokeSharedBucketAccessRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    revoke_shared_bucket_access_request = (
+        schemas.RevokeSharedBucketAccessRequest().load(body)
+    )
+    revoke_shared_bucket_access_entity = entities.RevokeSharedBucketAccess(
+        **revoke_shared_bucket_access_request
+    )
+
+    services.revoke_access_to_shared_bucket(revoke_shared_bucket_access_entity)
+
+    return {}, 200

@@ -1,7 +1,24 @@
 from research_environment_api.modules.app import app
 from research_environment_api.modules.sharing_management import entities, enums, models
 
+from typing import Iterable
+
+
 from google.cloud.storage import Bucket as GCPBucket
+
+
+def list_accessible_buckets_in_project(
+    gcp_project_id: str, username: str, caller_email: str
+) -> Iterable[entities.SharedBucket]:
+    storage_client = app.config.google_cloud_storage_client
+    buckets = storage_client.list_buckets(project=gcp_project_id)
+    return [
+        entities.SharedBucket.from_storage_instance(bucket, username)
+        for bucket in buckets
+        if _user_has_access_to_bucket(
+            bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+        )
+    ]
 
 
 def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
@@ -37,6 +54,58 @@ def delete_shared_bucket(shared_bucket_deletion: entities.SharedBucketDeletion):
             sharing_metadata.state = enums.SharingState.REVOKED
 
 
+def share_bucket_to(share_bucket: entities.ShareBucket):
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.bucket(share_bucket.bucket_name)
+    with app.database_session() as session:
+        with session.begin():
+            sharing_metadata = (
+                session.query(models.SharingData)
+                .filter_by(
+                    bucket_name=share_bucket.bucket_name,
+                    accessor_email=share_bucket.accessor_email,
+                )
+                .first()
+            )
+            if sharing_metadata:
+                sharing_metadata.state = enums.SharingState.SHARED
+            else:
+                sharing_metadata = models.SharingData(
+                    sharer_email=share_bucket.sharer_email,
+                    accessor_email=share_bucket.accessor_email,
+                    bucket_name=share_bucket.bucket_name,
+                    project_id=share_bucket.project_id,
+                    state=enums.SharingState.SHARED,
+                )
+
+                session.add(sharing_metadata)
+
+            _add_iam_permissions(
+                bucket, share_bucket.accessor_email, enums.IamSharingRole.USER
+            )
+
+
+def revoke_access_to_shared_bucket(
+    revoke_shared_bucket_access: entities.RevokeSharedBucketAccess,
+):
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.bucket(revoke_shared_bucket_access.bucket_name)
+    with app.database_session() as session:
+        with session.begin():
+            sharing_metadata = (
+                session.query(models.SharingData)
+                .filter_by(bucket_name=revoke_shared_bucket_access.bucket_name)
+                .one()
+            )
+
+            _remove_iam_permissions(
+                bucket,
+                revoke_shared_bucket_access.accessor_email,
+                enums.IamSharingRole.USER,
+            )
+            sharing_metadata.state = enums.SharingState.REVOKED
+
+
 def _add_iam_permissions(
     bucket: GCPBucket, user_email: str, role: enums.IamSharingRole
 ):
@@ -48,6 +117,22 @@ def _add_iam_permissions(
     bucket.set_iam_policy(policy)
 
 
+def _remove_iam_permissions(
+    bucket: GCPBucket, user_email: str, role: enums.IamSharingRole
+):
+    policy = bucket.get_iam_policy(requested_policy_version=3)
+
+    user_binding = _get_storage_user_binding_role(policy, role)
+    if not user_binding:
+        return
+
+    user_member = f"user:{user_email}"
+    if user_member not in user_binding["members"]:
+        return
+    user_binding["members"].discard(user_member)
+    bucket.set_iam_policy(policy)
+
+
 def _get_storage_user_binding_role(policy, role: str):
     return next(
         filter(
@@ -56,3 +141,7 @@ def _get_storage_user_binding_role(policy, role: str):
         ),
         None,
     )
+
+
+def _user_has_access_to_bucket(bindings, email):
+    return any(f"user:{email}" in binding["members"] for binding in bindings)

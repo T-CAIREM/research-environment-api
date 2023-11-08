@@ -9,3 +9,8 @@ class IamSharingRole(StrEnum):
 class SharedBucketRole(StrEnum):
     OWNER = "owner"
     SHARED_USER = "shared_user"
+
+
+class SharingState(StrEnum):
+    SHARED = "shared"
+    REVOKED = "revoked"

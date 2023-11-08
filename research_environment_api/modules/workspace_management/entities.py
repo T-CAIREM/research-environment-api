@@ -9,6 +9,7 @@ from research_environment_api.modules.workbench_management.entities import (
     WorkbenchStatus,
     Region,
 )
+from research_environment_api.modules.sharing_management.entities import SharedBucket
 from research_environment_api.background.enums import BuildType
 
 
@@ -119,6 +120,14 @@ class Workspace:
     billing_info: BillingInfo
     region: str
     workbenches: Iterable[Workbench]
+    status: WorkspaceStatus
+
+
+@dataclass
+class SharedWorkspace:
+    gcp_project_id: str
+    billing_info: BillingInfo
+    buckets: Iterable[SharedBucket]
     status: WorkspaceStatus
 
 
