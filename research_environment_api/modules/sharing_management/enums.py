@@ -1,0 +1,11 @@
+from enum import StrEnum
+
+
+class IamSharingRole(StrEnum):
+    ADMIN = "roles/storage.admin"
+    USER = "roles/storage.objectViewer"
+
+
+class SharedBucketRole(StrEnum):
+    OWNER = "owner"
+    SHARED_USER = "shared_user"
