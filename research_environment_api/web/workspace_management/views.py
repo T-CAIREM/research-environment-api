@@ -1,7 +1,6 @@
 from flask import request
 
-from research_environment_api.modules.workbench_management import entities, services
-from research_environment_api.web.cache import cache
+from research_environment_api.modules.workspace_management import entities, services
 from research_environment_api.web.workspace_management import (
     schemas,
     workspace_management_bp,
@@ -105,3 +104,73 @@ def list_active_workspaces(email: str):
     )
 
     return serialized_workspaces, 200
+
+
+@workspace_management_bp.post("/shared/create")
+def create_shared_workspace():
+    """Creates a shared workspace where buckets will reside
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Creates a workspace according to the specification.
+      requestBody:
+        content:
+          application/json:
+            schema: SharedWorkspaceCreationSchema
+      responses:
+        200:
+          description: Returns the ID of the workflow.
+          content:
+            application/json:
+              schema: WorkspaceWorkflowIdentifier
+    """
+    body = request.get_json()
+    shared_workspace_creation_request = schemas.SharedWorkspaceCreationRequest().load(
+        body
+    )
+    shared_workspace_creation_entity = entities.SharedWorkspaceCreation(
+        **shared_workspace_creation_request
+    )
+
+    workbench_activity_id = services.create_shared_workspace(
+        shared_workspace_creation_entity
+    )
+    workflow_identifier = schemas.WorkspaceWorkflowIdentifier().dump(
+        dict(workflow_id=workbench_activity_id)
+    )
+
+    return workflow_identifier, 200
+
+
+@workspace_management_bp.delete("/shared/delete")
+def delete_shared_workspace():
+    """Deletes the specified shared workspace.
+    ---
+    delete:
+      tags:
+        - sharing_management
+      description: Deletes the specified shared workspace.
+      requestBody:
+        content:
+          application/json:
+            schema: SharedWorkspaceDeletionRequest
+      responses:
+        200:
+          description: Returns the ID of the workflow.
+          content:
+            application/json:
+              schema: WorkspaceWorkflowIdentifier
+    """
+    body = request.get_json()
+    workspace_deletion_request = schemas.SharedWorkspaceDeletionRequest().load(body)
+    workspace_deletion_entity = entities.SharedWorkspaceDeletion(
+        **workspace_deletion_request
+    )
+
+    workbench_activity_id = services.delete_shared_workspace(workspace_deletion_entity)
+    workflow_identifier = schemas.WorkspaceWorkflowIdentifier().dump(
+        dict(workflow_id=workbench_activity_id)
+    )
+
+    return workflow_identifier, 200

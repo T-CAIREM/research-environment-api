@@ -2,10 +2,11 @@ from marshmallow import Schema, fields, validate
 from marshmallow_oneofschema import OneOfSchema
 
 from research_environment_api.modules.workbench_management.entities import (
-    MachineType,
     Region,
-    WorkbenchStatus,
-    WorkbenchType,
+    Workbench,
+)
+
+from research_environment_api.modules.workspace_management.entities import (
     WorkspaceStatus,
 )
 
@@ -22,21 +23,6 @@ class WorkspaceDeletionRequest(WorkspaceCreationRequest):
 
 class ListActiveWorkspacesRequest(Schema):
     email = fields.Str(required=True, validate=validate.Email())
-
-
-class Workbench(Schema):
-    gcp_identifier = fields.Str(required=True, attribute="id")
-    status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
-    dataset_identifier = fields.Str(required=True)
-    cpu = fields.Float(required=True)
-    memory = fields.Float(required=True)
-    disk_size = fields.Int(required=True)
-    machine_type = fields.Enum(MachineType, by_value=True, required=True)
-    url = fields.URL(required=True)
-    workbench_type = fields.Enum(
-        WorkbenchType, by_value=True, required=True, attribute="type"
-    )
-    zone = fields.Str()
 
 
 class EntityScaffolding(Schema):
@@ -62,8 +48,31 @@ class Workspace(Schema):
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
 
 
+class SharedWorkspaceCreationRequest(Schema):
+    user_email = fields.Str(required=True, validate=validate.Email())
+    billing_account_id = fields.Str(required=True)
+
+
+class SharedWorkspaceDeletionRequest(SharedWorkspaceCreationRequest):
+    workspace_project_id = fields.Str(required=True)
+
+
+class ListActiveSharedWorkspacesRequest(Schema):
+    email = fields.Str(required=True, validate=validate.Email())
+
+
+class SharedWorkspace(Schema):
+    gcp_project_id = fields.Str(required=True)
+    billing_info = fields.Nested(BillingInfo, required=True)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+
+
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):
-    type_schemas = {"Workspace": Workspace, "EntityScaffolding": EntityScaffolding}
+    type_schemas = {
+        "Workspace": Workspace,
+        "EntityScaffolding": EntityScaffolding,
+        "SharedWorkspace": SharedWorkspace,
+    }
 
 
 class WorkspaceWorkflowIdentifier(Schema):

@@ -1,4 +1,4 @@
-from research_environment_api.modules.workbench_management import monitoring
+from research_environment_api.modules.monitoring_management import monitoring
 from research_environment_api.web.workflow import schemas, workflow_bp
 
 

@@ -5,6 +5,9 @@ from research_environment_api.web.workbench_management import (
     schemas,
     workbench_management_bp,
 )
+from research_environment_api.modules.workspace_management import (
+    services as workspace_services,
+)
 
 
 @workbench_management_bp.post("/create")
@@ -31,7 +34,7 @@ def create_workbench():
 
     # Serves as a form of input validation - is this user the owner of the specified workspace.
     username, domain = workbench_creation_request["user_email"].split("@")
-    workspace = services.get_active_google_project(
+    workspace = workspace_services.get_active_google_project(
         project_id=workbench_creation_request["workspace_project_id"], username=username
     )
     workspace_region = entities.Region(workspace.labels["region"])

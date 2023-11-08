@@ -6,6 +6,10 @@ from research_environment_api.modules.workbench_management.entities import (
     WorkbenchType,
 )
 
+from research_environment_api.modules.workbench_management.entities import (
+    WorkbenchStatus
+)
+
 
 class WorkbenchBase(Schema):
     workbench_type = fields.Enum(WorkbenchType, by_value=True, required=True)
@@ -36,6 +40,21 @@ class WorkbenchUpdateRequest(WorkbenchBase):
 
 class WorkbenchDestroyRequest(WorkbenchBase):
     workbench_resource_id = fields.Str(required=True)
+
+
+class Workbench(Schema):
+    gcp_identifier = fields.Str(required=True, attribute="id")
+    status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
+    dataset_identifier = fields.Str(required=True)
+    cpu = fields.Float(required=True)
+    memory = fields.Float(required=True)
+    disk_size = fields.Int(required=True)
+    machine_type = fields.Enum(MachineType, by_value=True, required=True)
+    url = fields.URL(required=True)
+    workbench_type = fields.Enum(
+        WorkbenchType, by_value=True, required=True, attribute="type"
+    )
+    zone = fields.Str()
 
 
 class WorkbenchWorkflowIdentifier(Schema):

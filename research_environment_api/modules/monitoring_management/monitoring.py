@@ -2,7 +2,7 @@ from typing import Iterable
 
 from research_environment_api.background import enums
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models
+from research_environment_api.modules.monitoring_management import models
 
 
 def list_active_workflows(user_email: str) -> Iterable[models.WorkbenchActivity]:

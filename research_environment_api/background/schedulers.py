@@ -5,8 +5,11 @@ from research_environment_api.background import builds, enums, workflows
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management import (
     entities,
-    models,
     services,
+)
+from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.workspace_management import (
+    entities as workspace_entities,
 )
 
 
@@ -62,7 +65,7 @@ def create_jupyter_workbench(
 
 
 def create_workspace(
-    workspace_creation_request: entities.WorkspaceCreation,
+    workspace_creation_request: workspace_entities.WorkspaceCreation,
 ) -> uuid.UUID:
     build = builds.create_workspace_build(
         billing_account_id=workspace_creation_request.billing_account_id,
@@ -91,8 +94,37 @@ def create_workspace(
             return workbench_activity.id
 
 
+def create_shared_workspace(
+    shared_workspace_creation_request: workspace_entities.SharedWorkspaceCreation,
+) -> uuid.UUID:
+    build = builds.create_shared_workspace_build(
+        billing_account_id=shared_workspace_creation_request.billing_account_id,
+        workspace_project_id=shared_workspace_creation_request.workspace_project_id,
+        user_email=shared_workspace_creation_request.user_email,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workspace_id=shared_workspace_creation_request.workspace_project_id,
+                invoker_email=shared_workspace_creation_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+                build_type=enums.BuildType.SHARED_WORKSPACE_CREATION,
+            )
+            session.add(workbench_activity)
+
+            workflows.create_workspace(
+                build=build,
+                user_email=shared_workspace_creation_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            return workbench_activity.id
+
+
 def destroy_workspace(
-    workspace_deletion_request: entities.WorkspaceDeletion,
+    workspace_deletion_request: workspace_entities.WorkspaceDeletion,
 ) -> uuid.UUID:
     build = builds.destroy_workspace_build(
         billing_account_id=workspace_deletion_request.billing_account_id,
@@ -115,6 +147,35 @@ def destroy_workspace(
             workflows.destroy_workspace(
                 build=build,
                 user_email=workspace_deletion_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            return workbench_activity.id
+
+
+def destroy_shared_workspace(
+    shared_workspace_deletion_request: workspace_entities.SharedWorkspaceDeletion,
+) -> uuid.UUID:
+    build = builds.destroy_shared_workspace_build(
+        billing_account_id=shared_workspace_deletion_request.billing_account_id,
+        workspace_project_id=shared_workspace_deletion_request.workspace_project_id,
+        user_email=shared_workspace_deletion_request.user_email,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                invoker_email=shared_workspace_deletion_request.user_email,
+                workspace_id=shared_workspace_deletion_request.workspace_project_id,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+                build_type=enums.BuildType.SHARED_WORKSPACE_DELETION,
+            )
+            session.add(workbench_activity)
+
+            workflows.destroy_workspace(
+                build=build,
+                user_email=shared_workspace_deletion_request.user_email,
                 workbench_activity_id=workbench_activity.id,
             )()
 
