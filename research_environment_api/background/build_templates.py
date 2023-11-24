@@ -219,6 +219,10 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
         ],
     },
     {
+        "name": "python",
+        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}"],
+    },
+    {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/rstudio", "init", "-reconfigure"],
     },
@@ -265,6 +269,10 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python3.py",
             "${_INSTANCE_NAME}",
         ],
+    },
+    {
+        "name": "python",
+        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}"],
     },
     {
         "name": "hashicorp/terraform",
