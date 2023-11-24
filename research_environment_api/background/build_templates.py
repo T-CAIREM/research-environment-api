@@ -9,7 +9,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
     },
     {
         "name": "hashicorp/terraform",
@@ -34,6 +34,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
     {
@@ -107,6 +108,18 @@ CREATE_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
     },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+        ],
+    },
 ]
 
 DESTROY_WORKSPACE_STEPS = [
@@ -171,6 +184,18 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
     },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+        ],
+    },
 ]
 
 
@@ -185,7 +210,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
     },
     {
         "name": "hashicorp/terraform",
@@ -209,6 +234,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
 ]
@@ -244,6 +270,7 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_name=${_INSTANCE_NAME}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
     {
@@ -271,7 +298,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
     },
     {
         "name": "hashicorp/terraform",
@@ -302,6 +329,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
     {
@@ -323,7 +351,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}"],
+        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
     },
     {
         "name": "hashicorp/terraform",
@@ -354,6 +382,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
 ]
@@ -396,6 +425,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
 ]

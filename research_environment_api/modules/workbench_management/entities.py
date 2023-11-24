@@ -1,7 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Iterable, Optional
+from typing import Iterable, Optional, List
 
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
@@ -96,6 +96,7 @@ class Workbench:
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
+    sharing_bucket_identifiers: Optional[List[str]] = None
 
     @classmethod
     def from_gce_instance(
@@ -140,6 +141,12 @@ class Workbench:
         workbench_type = WorkbenchType(metadata.get("type"))
         # Assume a single disk atteched to the instance.
         disk_size = instance.disks[0].disk_size_gb
+        sharing_bucket_identifiers_metadata = metadata.get("sharing_bucket_identifiers")
+        sharing_bucket_identifiers = (
+            sharing_bucket_identifiers_metadata.split(",")
+            if sharing_bucket_identifiers_metadata
+            else None
+        )
         return cls(
             id=name,
             resource_id=instance.id,
@@ -158,6 +165,7 @@ class Workbench:
             brand_name=brand_name,
             gpu_accelerator_type=gpu_accelerator_type,
             service_account_name=service_account_name,
+            sharing_bucket_identifiers=sharing_bucket_identifiers,
         )
 
 
@@ -177,6 +185,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     bucket_name: str
     region: Region
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
+    sharing_bucket_identifiers: Optional[List[str]] = None
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
 

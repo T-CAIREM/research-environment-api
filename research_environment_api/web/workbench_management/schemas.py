@@ -7,7 +7,7 @@ from research_environment_api.modules.workbench_management.entities import (
 )
 
 from research_environment_api.modules.workbench_management.entities import (
-    WorkbenchStatus
+    WorkbenchStatus,
 )
 
 
@@ -27,6 +27,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
         by_value=True,
         allow_none=True,
     )
+    sharing_bucket_identifiers = fields.List(fields.Str())
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):
@@ -55,6 +56,7 @@ class Workbench(Schema):
         WorkbenchType, by_value=True, required=True, attribute="type"
     )
     zone = fields.Str()
+    sharing_bucket_identifiers = fields.List(fields.Str())
 
 
 class WorkbenchWorkflowIdentifier(Schema):
