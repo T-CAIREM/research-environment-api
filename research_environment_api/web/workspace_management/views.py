@@ -198,7 +198,7 @@ def list_active_shared_workspaces(email: str):
                 type: array
                 items: SharedWorkspace
     """
-    list_active_shared_workspaces_request = schemas.ListActiveWorkspacesRequest().load(
+    list_active_shared_workspaces_request = schemas.ListActiveSharedWorkspacesRequest().load(
         {"email": email}
     )
     shared_workspace_list_query_entity = entities.SharedWorkspaceListQuery(
