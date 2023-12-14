@@ -79,7 +79,6 @@ def share_bucket_to(share_bucket: entities.ShareBucket):
                 )
 
                 session.add(sharing_metadata)
-
             _add_iam_permissions(
                 bucket, share_bucket.accessor_email, enums.IamSharingRole.USER
             )
@@ -94,8 +93,8 @@ def revoke_access_to_shared_bucket(
         with session.begin():
             sharing_metadata = (
                 session.query(models.SharingData)
-                .filter_by(bucket_name=revoke_shared_bucket_access.bucket_name)
-                .one()
+                .filter_by(bucket_name=revoke_shared_bucket_access.bucket_name, accessor_email=revoke_shared_bucket_access.accessor_email, state=enums.SharingState.SHARED)
+                .first()
             )
 
             _remove_iam_permissions(
@@ -111,10 +110,16 @@ def _add_iam_permissions(
 ):
     policy = bucket.get_iam_policy(requested_policy_version=3)
     user_binding = _get_storage_user_binding_role(policy, role)
-    if user_binding:
+    if not user_binding:
+        policy.bindings.append({"role": role.value, "members": {f"user:{user_email}"}})
+        bucket.set_iam_policy(policy)
         return
-    policy.bindings.append({"role": role.value, "members": {f"user:{user_email}"}})
-    bucket.set_iam_policy(policy)
+
+    user_member = f"user:{user_email}"
+    if user_member not in user_binding["members"]:
+        user_binding["members"].add(user_member)
+        bucket.set_iam_policy(policy)
+        return
 
 
 def _remove_iam_permissions(
