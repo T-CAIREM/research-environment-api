@@ -7,7 +7,7 @@ from research_environment_api.modules.workbench_management import (
     entities,
     services,
 )
-from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.monitoring_management import models as monitoring_models
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
@@ -41,7 +41,7 @@ def create_jupyter_workbench(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 build_type=enums.BuildType.WORKBENCH_CREATION,
                 invoker_email=workbench_creation_request.user_email,
@@ -76,7 +76,7 @@ def create_workspace(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workspace_id=workspace_creation_request.workspace_project_id,
                 invoker_email=workspace_creation_request.user_email,
@@ -105,7 +105,7 @@ def create_shared_workspace(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workspace_id=shared_workspace_creation_request.workspace_project_id,
                 invoker_email=shared_workspace_creation_request.user_email,
@@ -135,7 +135,7 @@ def destroy_workspace(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 invoker_email=workspace_deletion_request.user_email,
                 workspace_id=workspace_deletion_request.workspace_project_id,
@@ -164,7 +164,7 @@ def destroy_shared_workspace(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 invoker_email=shared_workspace_deletion_request.user_email,
                 workspace_id=shared_workspace_deletion_request.workspace_project_id,
@@ -192,7 +192,7 @@ def stop_compute_engine_workbench(
     )
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_stop_request.workspace_project_id,
@@ -222,7 +222,7 @@ def start_jupyter_workbench(
     )
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_start_request.workspace_project_id,
@@ -267,7 +267,7 @@ def update_jupyter_workbench(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_update_request.workspace_project_id,
@@ -313,7 +313,7 @@ def destroy_jupyter_workbench(
     )
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_destroy_request.workspace_project_id,
@@ -359,7 +359,7 @@ def create_rstudio_workbench(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench_id,
                 workspace_id=workbench_creation_request.workspace_project_id,
@@ -392,7 +392,7 @@ def start_rstudio_workbench(
     )
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_start_request.workspace_project_id,
@@ -439,7 +439,7 @@ def update_rstudio_workbench(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_update_request.workspace_project_id,
@@ -485,7 +485,7 @@ def destroy_rstudio_workbench(
 
     with app.database_session() as session:
         with session.begin():
-            workbench_activity = models.WorkbenchActivity(
+            workbench_activity = monitoring_models.WorkbenchActivity(
                 id=uuid.uuid4(),
                 workbench_id=workbench.id,
                 workspace_id=workbench_destroy_request.workspace_project_id,
