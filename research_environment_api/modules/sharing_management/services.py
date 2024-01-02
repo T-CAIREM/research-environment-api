@@ -8,9 +8,8 @@ def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
     storage_client = app.config.google_cloud_storage_client
     bucket = storage_client.bucket(shared_bucket_creation.bucket_name)
     bucket.storage_class = shared_bucket_creation.storage_class
-    labels = bucket.labels
-    labels["cloud_identity_username"] = shared_bucket_creation.username
-    bucket.labels = labels
+
+    bucket.labels["cloud_identity_username"] = shared_bucket_creation.username
 
     storage_client.create_bucket(
         bucket,
