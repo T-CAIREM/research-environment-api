@@ -185,7 +185,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     bucket_name: str
     region: Region
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
-    sharing_bucket_identifiers: List[Optional[str]] = field(default_factory=list)
+    sharing_bucket_identifiers: List[str] = field(default_factory=list)
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
 
