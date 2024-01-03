@@ -125,3 +125,35 @@ def revoke_access_to_shared_bucket():
     services.revoke_access_to_shared_bucket(revoke_shared_bucket_access_entity)
 
     return {}, 200
+
+
+@sharing_management_bp.post("/bucket/generate_signed_url")
+def generate_signed_url():
+    """Generate signed url for a shared bucket to upload files.
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Generates signed url for a shared bucket to upload files.
+      requestBody:
+        content:
+          application/json:
+            schema: SignedUrlGenerationRequest
+      responses:
+        200:
+          description: Returns a signed url.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    signed_url_generation_request = (
+        schemas.SignedUrlGenerationRequest().load(body)
+    )
+    signed_url_generation_entity = entities.GenerateSignedUrl(
+        **signed_url_generation_request
+    )
+
+    signed_url = services.generate_signed_url(signed_url_generation_entity)
+
+    return {"signed_url": signed_url}, 200

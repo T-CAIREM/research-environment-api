@@ -31,3 +31,9 @@ class RevokeSharedBucketAccessRequest(Schema):
 class SharedBucket(Schema):
     bucket_name = fields.Str(required=True)
     is_owner = fields.Bool(required=True)
+
+
+class SignedUrlGenerationRequest(Schema):
+    filename = fields.Str(required=True)
+    size = fields.Int(required=True, validate=validate.Range(min=0, min_inclusive=False))
+    bucket_name = fields.Str(required=True)

@@ -65,3 +65,10 @@ class RevokeSharedBucketAccess:
     sharer_email: str
     accessor_email: str
     bucket_name: str
+
+
+@dataclass
+class GenerateSignedUrl:
+    filename: str
+    size: int
+    bucket_name: str
