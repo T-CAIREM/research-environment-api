@@ -312,6 +312,7 @@ def destroy_jupyter_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
     )
     with app.database_session() as session:
         with session.begin():

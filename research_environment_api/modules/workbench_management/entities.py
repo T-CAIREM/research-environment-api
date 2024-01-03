@@ -96,7 +96,7 @@ class Workbench:
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
-    sharing_bucket_identifiers: Optional[List[str]] = None
+    sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
     def from_gce_instance(
@@ -145,7 +145,7 @@ class Workbench:
         sharing_bucket_identifiers = (
             sharing_bucket_identifiers_metadata.split(",")
             if sharing_bucket_identifiers_metadata
-            else None
+            else []
         )
         return cls(
             id=name,
