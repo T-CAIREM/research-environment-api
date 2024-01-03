@@ -105,6 +105,21 @@ def revoke_access_to_shared_bucket(
             sharing_metadata.state = enums.SharingState.REVOKED
 
 
+def generate_signed_url(generate_signed_url_entity: entities.GenerateSignedUrl):
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.bucket(generate_signed_url_entity.bucket_name)
+    blob = bucket.blob(generate_signed_url_entity.filename.strip("/"))
+
+    signed_url = blob.generate_signed_url(
+        api_access_endpoint='https://storage.googleapis.com',
+        expiration=app.config.gcp_signed_url_expiration_time,
+        method='PUT',
+        headers={'X-Upload-Content-Length': str(generate_signed_url_entity.size)},
+        version="v4"
+    )
+
+    return signed_url
+
 def _add_iam_permissions(
     bucket: GCPBucket, user_email: str, role: enums.IamSharingRole
 ):
