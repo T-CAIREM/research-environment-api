@@ -1,6 +1,7 @@
 import random
 import string
 from dataclasses import dataclass, field
+from typing import Self
 
 from research_environment_api.modules.workbench_management.entities import (
     Region,
@@ -52,8 +53,8 @@ class SharedBucket:
         cls,
         instance: GCPBucket,
         username: str,
-    ):
-        is_owner = bool(instance.labels["cloud_identity_username"] == username)
+    ) -> Self:
+        is_owner = instance.labels["cloud_identity_username"] == username
         return cls(
             bucket_name=instance.name,
             is_owner=is_owner,

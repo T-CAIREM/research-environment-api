@@ -143,5 +143,5 @@ def _get_storage_user_binding_role(policy, role: str):
     )
 
 
-def _user_has_access_to_bucket(bindings, email):
+def _user_has_access_to_bucket(bindings: list, email: str) -> bool:
     return any(f"user:{email}" in binding["members"] for binding in bindings)
