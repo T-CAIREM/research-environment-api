@@ -35,5 +35,33 @@ class SharedBucket(Schema):
 
 class SignedUrlGenerationRequest(Schema):
     filename = fields.Str(required=True)
-    size = fields.Int(required=True, validate=validate.Range(min=0, min_inclusive=False))
+    size = fields.Int(
+        required=True, validate=validate.Range(min=0, min_inclusive=False)
+    )
     bucket_name = fields.Str(required=True)
+
+
+class GetSharedBucketContentRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    subdir = fields.Str(required=True)
+
+
+class CreateSharedBucketDirectoryRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    parent_path = fields.Str(
+        required=True, validate=validate.Regexp(regex=".*/$|^$", error="Not a folder")
+    )
+    directory_name = fields.Str(required=True)
+
+
+class DeleteSharedBucketContentRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    full_path = fields.Str(required=True)
+
+
+class SharedBucketObject(Schema):
+    type = fields.Str(required=True)
+    name = fields.Str(required=True)
+    full_path = fields.Str(required=True)
+    size = fields.Str()
+    modification_time = fields.Str()

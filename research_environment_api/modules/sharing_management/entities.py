@@ -1,13 +1,20 @@
 import random
 import string
+import datetime
 from dataclasses import dataclass, field
 from typing import Self
+from enum import StrEnum
 
 from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
 
 from google.cloud.storage import Bucket as GCPBucket
+
+
+class BucketObjectType(StrEnum):
+    DIRECTORY = "directory"
+    FILE = "file"
 
 
 @dataclass
@@ -73,3 +80,35 @@ class GenerateSignedUrl:
     filename: str
     size: int
     bucket_name: str
+
+
+@dataclass
+class GetSharedBucketContent:
+    bucket_name: str
+    subdir: str
+
+
+@dataclass
+class DeleteSharedBucketContent:
+    bucket_name: str
+    full_path: str
+
+
+@dataclass
+class CreateSharedBucketDirectory:
+    bucket_name: str
+    parent_path: str
+    directory_name: str
+    directory_path: str = field(init=False)
+
+    def __post_init__(self):
+        self.directory_path = self.parent_path + self.directory_name + "/"
+
+
+@dataclass
+class SharedBucketObject:
+    type: BucketObjectType
+    name: str
+    full_path: str
+    size: str = None
+    modification_time: str = None
