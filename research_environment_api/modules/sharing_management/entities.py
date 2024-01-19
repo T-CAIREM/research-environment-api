@@ -80,29 +80,47 @@ class GenerateSignedUrl:
     filename: str
     size: int
     bucket_name: str
+    user_email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
 
 
 @dataclass
 class GetSharedBucketContent:
     bucket_name: str
     subdir: str
+    user_email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
 
 
 @dataclass
 class DeleteSharedBucketContent:
     bucket_name: str
     full_path: str
+    user_email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")
 
 
 @dataclass
 class CreateSharedBucketDirectory:
     bucket_name: str
     parent_path: str
+    user_email: str
     directory_name: str
     directory_path: str = field(init=False)
+    username: str = field(init=False)
 
     def __post_init__(self):
         self.directory_path = self.parent_path + self.directory_name + "/"
+        self.username, domain = self.user_email.split("@")
 
 
 @dataclass

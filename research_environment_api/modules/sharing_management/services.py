@@ -7,6 +7,10 @@ from typing import Iterable
 from google.cloud.storage import Bucket as GCPBucket
 
 
+class InsufficientPermissionsError(Exception):
+    pass
+
+
 def list_accessible_buckets_in_project(
     gcp_project_id: str, username: str, caller_email: str
 ) -> Iterable[entities.SharedBucket]:
@@ -111,7 +115,9 @@ def revoke_access_to_shared_bucket(
 
 def generate_signed_url(generate_signed_url_entity: entities.GenerateSignedUrl):
     storage_client = app.config.google_cloud_storage_client
-    bucket = storage_client.bucket(generate_signed_url_entity.bucket_name)
+    bucket = storage_client.get_bucket(generate_signed_url_entity.bucket_name)
+    if not _user_is_bucket_owner(bucket.labels, generate_signed_url_entity.username):
+        raise InsufficientPermissionsError
     blob = bucket.blob(generate_signed_url_entity.filename.strip("/"))
     signed_url = blob.generate_signed_url(
         api_access_endpoint="https://storage.googleapis.com",
@@ -128,6 +134,12 @@ def get_shared_bucket_content(
     get_shared_bucket_content_entity: entities.GetSharedBucketContent,
 ) -> Iterable[entities.SharedBucketObject]:
     storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.get_bucket(get_shared_bucket_content_entity.bucket_name)
+    if not _user_is_bucket_owner(
+        bucket.labels, get_shared_bucket_content_entity.username
+    ):
+        raise InsufficientPermissionsError
+
     bucket_blobs = storage_client.list_blobs(
         get_shared_bucket_content_entity.bucket_name,
         prefix=get_shared_bucket_content_entity.subdir,
@@ -161,9 +173,15 @@ def create_shared_bucket_directory(
     create_shared_bucket_directory_entity: entities.CreateSharedBucketDirectory,
 ):
     storage_client = app.config.google_cloud_storage_client
-    blob = storage_client.bucket(
+    bucket = storage_client.get_bucket(
         create_shared_bucket_directory_entity.bucket_name
-    ).blob(create_shared_bucket_directory_entity.directory_path)
+    )
+
+    if not _user_is_bucket_owner(
+        bucket.labels, create_shared_bucket_directory_entity.username
+    ):
+        raise InsufficientPermissionsError
+    blob = bucket.blob(create_shared_bucket_directory_entity.directory_path)
     blob.upload_from_string("")
 
 
@@ -171,18 +189,19 @@ def delete_shared_bucket_content(
     delete_shared_bucket_content_entity: entities.DeleteSharedBucketContent,
 ):
     storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.get_bucket(delete_shared_bucket_content_entity.bucket_name)
+    if not _user_is_bucket_owner(
+        bucket.labels, delete_shared_bucket_content_entity.username
+    ):
+        raise InsufficientPermissionsError
     if delete_shared_bucket_content_entity.full_path.endswith("/"):
         blobs = storage_client.list_blobs(
             delete_shared_bucket_content_entity.bucket_name,
             prefix=delete_shared_bucket_content_entity.full_path,
         )
-        storage_client.bucket(
-            delete_shared_bucket_content_entity.bucket_name
-        ).delete_blobs(list(blobs))
+        bucket.delete_blobs(list(blobs))
     else:
-        storage_client.bucket(
-            delete_shared_bucket_content_entity.bucket_name
-        ).delete_blob(delete_shared_bucket_content_entity.full_path)
+        bucket.delete_blob(delete_shared_bucket_content_entity.full_path)
 
 
 def _readable_size(num, suffix="B"):
@@ -242,5 +261,9 @@ def _get_storage_user_binding_role(policy, role: str):
     )
 
 
-def _user_has_access_to_bucket(bindings: list, email: str) -> bool:
+def _user_is_bucket_owner(labels: dict, username: str) -> bool:
+    return labels["cloud_identity_username"] == username
+
+
+def _user_has_access_to_bucket(bindings: list, email: str):
     return any(f"user:{email}" in binding["members"] for binding in bindings)

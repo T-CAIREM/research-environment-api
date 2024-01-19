@@ -39,11 +39,13 @@ class SignedUrlGenerationRequest(Schema):
         required=True, validate=validate.Range(min=0, min_inclusive=False)
     )
     bucket_name = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
 
 
 class GetSharedBucketContentRequest(Schema):
     bucket_name = fields.Str(required=True)
     subdir = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
 
 
 class CreateSharedBucketDirectoryRequest(Schema):
@@ -52,11 +54,13 @@ class CreateSharedBucketDirectoryRequest(Schema):
         required=True, validate=validate.Regexp(regex=".*/$|^$", error="Not a folder")
     )
     directory_name = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
 
 
 class DeleteSharedBucketContentRequest(Schema):
     bucket_name = fields.Str(required=True)
     full_path = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
 
 
 class SharedBucketObject(Schema):

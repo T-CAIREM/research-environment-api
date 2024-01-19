@@ -177,8 +177,9 @@ def get_shared_bucket_content(bucket_name: str):
               schema: SharedBucketObject
     """
     subdir = request.args.get("subdir") or ""
+    user_email = request.args.get("user_email")
     get_shared_bucket_content_request = schemas.GetSharedBucketContentRequest().load(
-        {"bucket_name": bucket_name, "subdir": subdir}
+        {"bucket_name": bucket_name, "subdir": subdir, "user_email": user_email}
     )
     get_shared_bucket_content_entity = entities.GetSharedBucketContent(
         **get_shared_bucket_content_request
@@ -226,7 +227,7 @@ def create_shared_bucket_directory():
     return {}, 200
 
 
-@sharing_management_bp.post("/bucket/content/delete")
+@sharing_management_bp.delete("/bucket/content/delete")
 def delete_shared_bucket_content():
     """Delete shared bucket content.
     ---
