@@ -1,10 +1,13 @@
 import random
 import string
 from dataclasses import dataclass, field
+from typing import Self
 
 from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
+
+from google.cloud.storage import Bucket as GCPBucket
 
 
 @dataclass
@@ -29,4 +32,37 @@ class SharedBucketCreation:
 
 @dataclass
 class SharedBucketDeletion:
+    bucket_name: str
+
+
+@dataclass
+class ShareBucket:
+    sharer_email: str
+    accessor_email: str
+    bucket_name: str
+    project_id: str
+
+
+@dataclass
+class SharedBucket:
+    bucket_name: str
+    is_owner: bool
+
+    @classmethod
+    def from_storage_instance(
+        cls,
+        instance: GCPBucket,
+        username: str,
+    ) -> Self:
+        is_owner = instance.labels["cloud_identity_username"] == username
+        return cls(
+            bucket_name=instance.name,
+            is_owner=is_owner,
+        )
+
+
+@dataclass
+class RevokeSharedBucketAccess:
+    sharer_email: str
+    accessor_email: str
     bucket_name: str

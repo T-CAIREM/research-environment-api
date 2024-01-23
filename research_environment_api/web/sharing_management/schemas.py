@@ -13,3 +13,21 @@ class SharedBucketCreationRequest(Schema):
 
 class SharedBucketDeletionRequest(Schema):
     bucket_name = fields.Str(required=True)
+
+
+class ShareBucketRequest(Schema):
+    sharer_email = fields.Str(required=True)
+    project_id = fields.Str(required=True)
+    accessor_email = fields.Str(required=True)
+    bucket_name = fields.Str(required=True)
+
+
+class RevokeSharedBucketAccessRequest(Schema):
+    sharer_email = fields.Str(required=True)
+    accessor_email = fields.Str(required=True)
+    bucket_name = fields.Str(required=True)
+
+
+class SharedBucket(Schema):
+    bucket_name = fields.Str(required=True)
+    is_owner = fields.Bool(required=True)
