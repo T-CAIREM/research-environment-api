@@ -37,6 +37,7 @@ def create_jupyter_workbench(
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
         vm_image=workbench_creation_request.vm_image,
+        sharing_bucket_identifiers=workbench_creation_request.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:
@@ -263,6 +264,7 @@ def update_jupyter_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:
@@ -355,6 +357,7 @@ def create_rstudio_workbench(
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
+        sharing_bucket_identifiers=workbench_creation_request.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:
@@ -435,6 +438,7 @@ def update_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
     )
 
     with app.database_session() as session:
@@ -481,6 +485,7 @@ def destroy_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
     )
 
     with app.database_session() as session:

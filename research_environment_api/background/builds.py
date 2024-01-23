@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from google.cloud.devtools import cloudbuild_v1
 
@@ -39,6 +39,7 @@ def create_jupyter_workbench_build(
     user_email: str,
     bucket_name: str,
     vm_image: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -57,6 +58,7 @@ def create_jupyter_workbench_build(
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
@@ -75,6 +77,7 @@ def update_jupyter_workbench_build(
     vm_image: str,
     instance_name: str,
     service_account_name: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
@@ -93,6 +96,7 @@ def update_jupyter_workbench_build(
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
@@ -111,6 +115,7 @@ def destroy_jupyter_workbench_build(
     vm_image: str,
     instance_name: str,
     service_account_name: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
@@ -129,6 +134,7 @@ def destroy_jupyter_workbench_build(
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
@@ -166,6 +172,7 @@ def create_shared_workspace_build(
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
 
     return cloud_build
@@ -200,6 +207,7 @@ def destroy_shared_workspace_build(
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
+        "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
 
     return cloud_build
@@ -224,6 +232,7 @@ def create_rstudio_workbench_build(
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
@@ -249,6 +258,7 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
@@ -268,6 +278,7 @@ def update_rstudio_workbench_build(
     bucket_name: str,
     vm_image: str,
     brand_name: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
@@ -293,6 +304,7 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
@@ -312,6 +324,7 @@ def destroy_rstudio_workbench_build(
     bucket_name: str,
     vm_image: str,
     brand_name: str,
+    sharing_bucket_identifiers: List[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
@@ -337,6 +350,7 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
     }
 
     return cloud_build
