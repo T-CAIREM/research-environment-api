@@ -118,3 +118,15 @@ variable "rstudio_ssl_private_key" {
 variable "rstudio_ssl_certificate" {
   type = string
 }
+
+variable "sharing_folder_id" {
+  type = string
+}
+
+variable "workbenches_parent_project_id" {
+  type = string
+}
+
+variable "gcp_signed_url_expiration_time" {
+  type = string
+}
