@@ -31,3 +31,42 @@ class RevokeSharedBucketAccessRequest(Schema):
 class SharedBucket(Schema):
     bucket_name = fields.Str(required=True)
     is_owner = fields.Bool(required=True)
+
+
+class SignedUrlGenerationRequest(Schema):
+    filename = fields.Str(required=True)
+    size = fields.Int(
+        required=True, validate=validate.Range(min=0, min_inclusive=False)
+    )
+    bucket_name = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
+
+
+class GetSharedBucketContentRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    subdir = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
+
+
+class CreateSharedBucketDirectoryRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    parent_path = fields.Str(
+        required=True,
+        validate=validate.Regexp(regex=".*/$|^$", error="Not a directory"),
+    )
+    directory_name = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
+
+
+class DeleteSharedBucketContentRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    full_path = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
+
+
+class SharedBucketObject(Schema):
+    type = fields.Str(required=True)
+    name = fields.Str(required=True)
+    full_path = fields.Str(required=True)
+    size = fields.Str()
+    modification_time = fields.Str()

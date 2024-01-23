@@ -7,7 +7,9 @@ from research_environment_api.modules.workbench_management import (
     entities,
     services,
 )
-from research_environment_api.modules.monitoring_management import models as monitoring_models
+from research_environment_api.modules.monitoring_management import (
+    models as monitoring_models,
+)
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
@@ -312,7 +314,7 @@ def destroy_jupyter_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
     with app.database_session() as session:
         with session.begin():
@@ -439,7 +441,7 @@ def update_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:
@@ -486,7 +488,7 @@ def destroy_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:

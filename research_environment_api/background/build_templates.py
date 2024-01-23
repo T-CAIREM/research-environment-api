@@ -9,7 +9,12 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
+        "args": [
+            "python3",
+            "workbench/jupyter/python4.py",
+            "${_BUCKET_NAME}",
+            "${_SHARING_BUCKET_IDENTIFIERS}",
+        ],
     },
     {
         "name": "hashicorp/terraform",
@@ -210,7 +215,12 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/jupyter/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
+        "args": [
+            "python3",
+            "workbench/jupyter/python4.py",
+            "${_BUCKET_NAME}",
+            "${_SHARING_BUCKET_IDENTIFIERS}",
+        ],
     },
     {
         "name": "hashicorp/terraform",
@@ -298,7 +308,12 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
+        "args": [
+            "python3",
+            "workbench/rstudio/python4.py",
+            "${_BUCKET_NAME}",
+            "${_SHARING_BUCKET_IDENTIFIERS}",
+        ],
     },
     {
         "name": "hashicorp/terraform",
@@ -351,7 +366,12 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
     },
     {
         "name": "python",
-        "args": ["python3", "workbench/rstudio/python4.py", "${_BUCKET_NAME}", "${_SHARING_BUCKET_IDENTIFIERS}"],
+        "args": [
+            "python3",
+            "workbench/rstudio/python4.py",
+            "${_BUCKET_NAME}",
+            "${_SHARING_BUCKET_IDENTIFIERS}",
+        ],
     },
     {
         "name": "hashicorp/terraform",
