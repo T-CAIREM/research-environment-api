@@ -4,130 +4,25 @@ from typing import Iterable, Optional, Tuple, Union
 
 from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
-from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
 from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities, models
-from research_environment_api.modules.workbench_management import (
+from research_environment_api.modules.workbench_management import entities
+from research_environment_api.modules.monitoring_management import (
+    models,
     monitoring as monitoring_services,
+)
+from research_environment_api.modules.workspace_management.entities import (
+    EntityScaffolding,
 )
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
 
-def create_workspace(workspace_creation: entities.WorkspaceCreation):
-    return schedulers.create_workspace(workspace_creation)
-
-
-def delete_workspace(workspace_deletion: entities.WorkspaceDeletion):
-    return schedulers.destroy_workspace(workspace_deletion)
-
-
-def list_active_workspaces(
-    workspace_list_query: entities.WorkspaceListQuery,
-) -> Iterable[Union[entities.Workspace, entities.EntityScaffolding]]:
-    gcp_projects = _list_active_google_projects(workspace_list_query.username)
-    workflows_in_progress = monitoring_services.list_active_workflows(
-        workspace_list_query.email
-    )
-    provisioned_workspaces = [
-        _build_workspace_entity(project, workflows_in_progress)
-        for project in gcp_projects
-    ]
-    provisioned_workspace_ids = [
-        workspace.gcp_project_id for workspace in provisioned_workspaces
-    ]
-    workspace_scaffoldings = [
-        entities.EntityScaffolding(
-            id=workflow.id,
-            gcp_project_id=workflow.workspace_id,
-            status=entities.WorkspaceStatus.CREATING,
-        )
-        for workflow in workflows_in_progress
-        if workflow.build_type == enums.BuildType.WORKSPACE_CREATION
-        and workflow.workspace_id not in provisioned_workspace_ids
-    ]
-    return provisioned_workspaces + workspace_scaffoldings
-
-
-def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
-    return app.config.google_cloud_resource_client.search_projects(
-        query=filtering_query
-    ).projects
-
-
-def _list_active_google_projects(
-    username: str,
-) -> Iterable[GoogleProject]:
-    filtering_query = f"labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
-    return _filter_google_projects(filtering_query)
-
-
-def get_active_google_project(
-    project_id: str,
-    username: str,
-) -> GoogleProject:
-    filtering_query = f"id:{project_id} labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
-    return _filter_google_projects(filtering_query)[0]
-
-
-def _build_workspace_entity(
-    gcp_project: GoogleProject,
-    workflows_in_progress: Iterable[models.WorkbenchActivity],
-) -> entities.Workspace:
-    gcp_project_id = gcp_project.project_id
-    region = gcp_project.labels["region"]
-    billing_info = app.config.google_cloud_billing_client.get_project_billing_info(
-        name=gcp_project.name
-    )
-    raw_billing_account_name = billing_info.billing_account_name
-    # Format: billingAccounts/<billing_account_id>
-    if raw_billing_account_name:
-        _, raw_billing_account_name = billing_info.billing_account_name.split("/")
-
-    billing_info_entity = entities.BillingInfo(
-        billing_account_id=raw_billing_account_name,
-        billing_enabled=billing_info.billing_enabled,
-    )
-    workbenches = list_workbenches(
-        gcp_project_id=gcp_project_id, workflows_in_progress=workflows_in_progress
-    )
-    workspace_workflow_in_progress = _match_workspace_workflow(
-        gcp_project_id, workflows_in_progress
-    )
-    status = (
-        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
-        if workspace_workflow_in_progress
-        else entities.WorkspaceStatus.CREATED
-    )
-    return entities.Workspace(
-        gcp_project_id=gcp_project_id,
-        billing_info=billing_info_entity,
-        workbenches=workbenches,
-        region=entities.Region(region),
-        status=status,
-    )
-
-
-def _match_workspace_workflow(
-    gcp_project_id: str, workflows_in_progress: Iterable[models.WorkbenchActivity]
-) -> Optional[models.WorkbenchActivity]:
-    return next(
-        filter(
-            lambda workflow: workflow.workspace_id == gcp_project_id
-            and workflow.build_type
-            in [enums.BuildType.WORKSPACE_CREATION, enums.BuildType.WORKSPACE_DELETION],
-            workflows_in_progress,
-        ),
-        None,
-    )
-
-
 def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
-) -> Iterable[Union[entities.Workbench, entities.EntityScaffolding]]:
+) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
 
     provisioned_workbenches = [
@@ -138,7 +33,7 @@ def list_workbenches(
     provisioned_workbench_ids = [workbench.id for workbench in provisioned_workbenches]
 
     workbench_scaffoldings = [
-        entities.EntityScaffolding(
+        EntityScaffolding(
             id=workflow.id,
             gcp_project_id=workflow.workspace_id,
             status=entities.WorkbenchStatus.CREATING,

@@ -12,8 +12,8 @@ from research_environment_api.background import (
     workflows,
 )
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import models
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
+from research_environment_api.modules.monitoring_management import models
 
 T = TypeVar("T")
 

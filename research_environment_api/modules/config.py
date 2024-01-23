@@ -7,6 +7,7 @@ import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
+import google.cloud.storage
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -57,6 +58,7 @@ class Config:
         self.rstudio_domain_name = environ["RSTUDIO_DOMAIN_NAME"]
         self.rstudio_ssl_private_key = environ["RSTUDIO_SSL_PRIVATE_KEY"]
         self.rstudio_ssl_certificate = environ["RSTUDIO_SSL_CERTIFICATE"]
+        self.sharing_folder_id = environ["SHARING_FOLDER_ID"]
 
     def _init_database_config(self):
         if self.is_development():
@@ -114,6 +116,9 @@ class Config:
             google.cloud.appengine_admin.VersionsClient(
                 credentials=self.service_account_credentials,
             )
+        )
+        self.google_cloud_storage_client = google.cloud.storage.Client(
+            credentials=self.service_account_credentials
         )
 
 
