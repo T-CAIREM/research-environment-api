@@ -9,6 +9,7 @@ from research_environment_api.modules.workbench_management.entities import (
 from research_environment_api.modules.workspace_management.entities import (
     WorkspaceStatus,
 )
+from research_environment_api.web.sharing_management.schemas import SharedBucket
 
 
 class WorkspaceCreationRequest(Schema):
@@ -64,6 +65,7 @@ class ListActiveSharedWorkspacesRequest(Schema):
 class SharedWorkspace(Schema):
     gcp_project_id = fields.Str(required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
+    buckets = fields.Nested(SharedBucket, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
 
 

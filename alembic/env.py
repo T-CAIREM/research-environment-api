@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from alembic import context
 from research_environment_api.modules.app import app
 from research_environment_api.modules.model import ScopedModel
+import research_environment_api.modules.sharing_management.models
 import research_environment_api.modules.monitoring_management.models
 
 
