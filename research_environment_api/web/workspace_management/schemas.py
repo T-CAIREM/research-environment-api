@@ -9,6 +9,7 @@ from research_environment_api.modules.workbench_management.entities import (
 from research_environment_api.modules.workspace_management.entities import (
     WorkspaceStatus,
 )
+from research_environment_api.web.workbench_management.schemas import Workbench as WorkbenchSchema
 from research_environment_api.web.sharing_management.schemas import SharedBucket
 
 
@@ -33,7 +34,7 @@ class EntityScaffolding(Schema):
 
 
 class EntityScaffoldingWorkbenchSchema(OneOfSchema):
-    type_schemas = {"Workbench": Workbench, "EntityScaffolding": EntityScaffolding}
+    type_schemas = {"Workbench": WorkbenchSchema, "EntityScaffolding": EntityScaffolding}
 
 
 class BillingInfo(Schema):

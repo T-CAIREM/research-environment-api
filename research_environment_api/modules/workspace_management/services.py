@@ -130,7 +130,7 @@ def _filter_google_projects(filtering_query: str) -> Iterable[GoogleProject]:
 def _list_active_google_projects(
     username: str,
 ) -> Iterable[GoogleProject]:
-    filtering_query = f"labels.cloud_identity_username:{username} lifecycleState:ACTIVE"
+    filtering_query = f"labels.cloud_identity_username:{username} lifecycleState:ACTIVE parent.id:{app.config.workbenches_parent_project_id}"
     return _filter_google_projects(filtering_query)
 
 

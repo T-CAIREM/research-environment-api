@@ -30,6 +30,8 @@ class WorkspaceStatus(StrEnum):
 WORKSPACE_ACTIVITY_TYPE_MAP = {
     BuildType.WORKSPACE_CREATION: WorkspaceStatus.CREATING,
     BuildType.WORKSPACE_DELETION: WorkspaceStatus.DESTROYING,
+    BuildType.SHARED_WORKSPACE_CREATION: WorkspaceStatus.CREATING,
+    BuildType.SHARED_WORKSPACE_DELETION: WorkspaceStatus.DESTROYING
 }
 
 

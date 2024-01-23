@@ -172,6 +172,18 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
     },
     {
         "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+    },
+    {
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+        "env": [
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
+        ],
+    },
+    {
+        "name": "hashicorp/terraform",
         "args": ["-chdir=./sharing/create-sharing-project", "init", "-reconfigure"],
     },
     {
@@ -182,18 +194,6 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
-        ],
-    },
-    {
-        "name": "hashicorp/terraform",
-        "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
-    },
-    {
-        "name": "hashicorp/terraform",
-        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
-        "env": [
-            "TF_VAR_project_id=${_PROJECT_ID}",
-            "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
         ],
     },
 ]

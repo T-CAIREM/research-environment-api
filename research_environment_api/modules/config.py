@@ -59,6 +59,7 @@ class Config:
         self.rstudio_ssl_private_key = environ["RSTUDIO_SSL_PRIVATE_KEY"]
         self.rstudio_ssl_certificate = environ["RSTUDIO_SSL_CERTIFICATE"]
         self.sharing_folder_id = environ["SHARING_FOLDER_ID"]
+        self.workbenches_parent_project_id = environ["WORKBENCHES_PARENT_PROJECT_ID"]
 
     def _init_database_config(self):
         if self.is_development():
