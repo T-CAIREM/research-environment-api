@@ -51,7 +51,8 @@ class GetSharedBucketContentRequest(Schema):
 class CreateSharedBucketDirectoryRequest(Schema):
     bucket_name = fields.Str(required=True)
     parent_path = fields.Str(
-        required=True, validate=validate.Regexp(regex=".*/$|^$", error="Not a folder")
+        required=True,
+        validate=validate.Regexp(regex=".*/$|^$", error="Not a directory"),
     )
     directory_name = fields.Str(required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
