@@ -32,6 +32,10 @@ def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
 
     bucket.labels["cloud_identity_username"] = shared_bucket_creation.username
 
+    labels = bucket.labels.copy()
+    labels["cloud_identity_username"] = shared_bucket_creation.username
+    bucket.labels = labels
+
     storage_client.create_bucket(
         bucket,
         location=shared_bucket_creation.region.value.upper(),
