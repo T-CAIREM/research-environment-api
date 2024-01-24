@@ -165,7 +165,21 @@ resource "google_cloud_run_service" "api" {
         env {
           name  = "RSTUDIO_SSL_CERTIFICATE"
           value = var.rstudio_ssl_certificate
+        }
 
+        env {
+          name  = "SHARING_FOLDER_ID"
+          value = var.sharing_folder_id
+        }
+
+        env {
+          name  = "WORKBENCHES_PARENT_PROJECT_ID"
+          value = var.workbenches_parent_project_id
+        }
+
+        env {
+          name  = "GCP_SIGNED_URL_EXPIRATION_TIME"
+          value = var.gcp_signed_url_expiration_time
         }
       }
 

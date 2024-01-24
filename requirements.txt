@@ -29,7 +29,7 @@ flower==2.0.0
 frozenlist==1.4.0
 google-api-core==2.11.0
 google-api-python-client==2.82.0
-google-auth==2.16.3
+google-auth==2.23.3
 google-auth-httplib2==0.1.0
 google-cloud==0.34.0
 google-cloud-access-context-manager==0.1.16
@@ -45,6 +45,7 @@ google-cloud-org-policy==1.8.1
 google-cloud-os-config==1.15.1
 google-cloud-resource-manager==1.10.2
 google-cloud-secret-manager==2.16.0
+google-cloud-storage==2.12.0
 googleapis-common-protos==1.59.0
 greenlet==2.0.2
 grpc-google-iam-v1==0.12.6
