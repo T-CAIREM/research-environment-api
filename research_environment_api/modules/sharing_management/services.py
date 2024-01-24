@@ -54,12 +54,12 @@ def delete_shared_bucket(shared_bucket_deletion: entities.SharedBucketDeletion):
             sharing_metadata = (
                 session.query(models.SharingData)
                 .filter_by(bucket_name=shared_bucket_deletion.bucket_name)
-                .one()
+                .all()
             )
 
             bucket.delete()
-
-            sharing_metadata.state = enums.SharingState.REVOKED
+            for bucket_metadata in sharing_metadata:
+                bucket_metadata.state = enums.SharingState.REVOKED
 
 
 def share_bucket_to(share_bucket: entities.ShareBucket):
