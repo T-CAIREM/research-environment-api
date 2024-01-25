@@ -130,3 +130,7 @@ variable "workbenches_parent_project_id" {
 variable "gcp_signed_url_expiration_time" {
   type = string
 }
+
+variable "gcp_cors_allowed_origins" {
+  type = string
+}

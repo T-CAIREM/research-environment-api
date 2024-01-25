@@ -181,6 +181,11 @@ resource "google_cloud_run_service" "api" {
           name  = "GCP_SIGNED_URL_EXPIRATION_TIME"
           value = var.gcp_signed_url_expiration_time
         }
+
+        env {
+          name  = "GCP_CORS_ALLOWED_ORIGINS"
+          value = var.gcp_cors_allowed_origins
+        }
       }
 
       service_account_name = var.service_account_name

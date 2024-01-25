@@ -29,6 +29,19 @@ def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
     storage_client = app.config.google_cloud_storage_client
     bucket = storage_client.bucket(shared_bucket_creation.bucket_name)
     bucket.storage_class = shared_bucket_creation.storage_class
+    bucket.cors = [
+        {
+            "maxAgeSeconds": 3600,
+            "method": ["PUT", "OPTIONS"],
+            "origin": [app.config.gcp_cors_allowed_origins],
+            "responseHeader": [
+                "Content-Type",
+                "Access-Control-Allow-Origin",
+                "X-Upload-Content-Length",
+                "x-goog-resumable",
+            ],
+        }
+    ]
 
     bucket.labels["cloud_identity_username"] = shared_bucket_creation.username
 
