@@ -197,7 +197,7 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
         "env": [
             "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
             "TF_VAR_project_id=${_PROJECT_ID}",
-            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_email=${_EMAIL_ID}",
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
     },
