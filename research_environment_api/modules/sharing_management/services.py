@@ -29,8 +29,25 @@ def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
     storage_client = app.config.google_cloud_storage_client
     bucket = storage_client.bucket(shared_bucket_creation.bucket_name)
     bucket.storage_class = shared_bucket_creation.storage_class
+    bucket.cors = [
+        {
+            "maxAgeSeconds": 3600,
+            "method": ["PUT", "OPTIONS"],
+            "origin": [app.config.gcp_cors_allowed_origins],
+            "responseHeader": [
+                "Content-Type",
+                "Access-Control-Allow-Origin",
+                "X-Upload-Content-Length",
+                "x-goog-resumable",
+            ],
+        }
+    ]
 
     bucket.labels["cloud_identity_username"] = shared_bucket_creation.username
+
+    labels = bucket.labels.copy()
+    labels["cloud_identity_username"] = shared_bucket_creation.username
+    bucket.labels = labels
 
     storage_client.create_bucket(
         bucket,
@@ -50,12 +67,12 @@ def delete_shared_bucket(shared_bucket_deletion: entities.SharedBucketDeletion):
             sharing_metadata = (
                 session.query(models.SharingData)
                 .filter_by(bucket_name=shared_bucket_deletion.bucket_name)
-                .one()
+                .all()
             )
 
             bucket.delete()
-
-            sharing_metadata.state = enums.SharingState.REVOKED
+            for bucket_metadata in sharing_metadata:
+                bucket_metadata.state = enums.SharingState.REVOKED
 
 
 def share_bucket_to(share_bucket: entities.ShareBucket):

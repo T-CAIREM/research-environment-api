@@ -9,7 +9,7 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.services import (
     list_workbenches,
 )
-from research_environment_api.modules.sharing_management.models import SharingData
+from research_environment_api.modules.sharing_management.models import SharingData, SharingState
 from research_environment_api.modules.sharing_management.services import (
     list_accessible_buckets_in_project,
 )
@@ -76,6 +76,7 @@ def list_active_shared_workspaces(
     workflows_in_progress = monitoring_services.list_active_workflows(
         shared_workspace_list_query.email
     )
+    gcp_projects_ids = [gcp_project.project_id for gcp_project in gcp_projects]
 
     with app.database_session() as session:
         with session.begin():
@@ -83,6 +84,7 @@ def list_active_shared_workspaces(
                 session.query(SharingData)
                 .filter_by(
                     accessor_email=shared_workspace_list_query.email,
+                    state=SharingState.SHARED
                 )
                 .distinct(SharingData.project_id)
                 .all()
@@ -91,7 +93,7 @@ def list_active_shared_workspaces(
 
     shared_projects = [
         get_active_shared_google_project(project_id=bucket.project_id)
-        for bucket in shared_buckets
+        for bucket in shared_buckets if bucket.project_id not in gcp_projects_ids
     ]
 
     accessible_workspaces = list(gcp_projects) + shared_projects
