@@ -70,7 +70,7 @@ def delete_shared_bucket(shared_bucket_deletion: entities.SharedBucketDeletion):
                 .all()
             )
 
-            bucket.delete()
+            bucket.delete(force=True)
             for bucket_metadata in sharing_metadata:
                 bucket_metadata.state = enums.SharingState.REVOKED
 
