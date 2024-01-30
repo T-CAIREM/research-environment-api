@@ -114,6 +114,11 @@ CREATE_SHARED_WORKSPACE_STEPS = [
         ],
     },
     {
+        "name": "python",
+        "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
+        "wait_for": ["-"],
+    },
+    {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
     },
