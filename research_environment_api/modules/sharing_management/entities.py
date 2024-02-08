@@ -32,9 +32,8 @@ class SharedBucketCreation:
         self.bucket_name = self._bucket_name()
 
     def _bucket_name(self):
-        bucket_name = f"{self.user_defined_bucket_name}-{self.region}-" + "".join(
-            random.choices(string.ascii_lowercase, k=5)
-        )
+        random_suffix = "".join(random.choices(string.ascii_lowercase, k=5))
+        bucket_name = f"{self.user_defined_bucket_name}-{self.region}-{random_suffix}"
         return bucket_name
 
 
