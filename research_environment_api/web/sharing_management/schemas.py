@@ -1,3 +1,5 @@
+import string
+
 from marshmallow import Schema, fields, validate
 
 from research_environment_api.modules.workbench_management.entities import (
@@ -9,6 +11,13 @@ class SharedBucketCreationRequest(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
     workspace_project_id = fields.Str(required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
+    user_defined_bucket_name = fields.Str(
+        required=True,
+        validate=[
+            validate.ContainsOnly(string.ascii_lowercase + string.digits + "-_"),
+            validate.Length(min=1, max=32),
+        ],
+    )
 
 
 class SharedBucketDeletionRequest(Schema):

@@ -22,6 +22,7 @@ class SharedBucketCreation:
     region: Region
     workspace_project_id: str
     user_email: str
+    user_defined_bucket_name: str
     storage_class: str = "STANDARD"
     username: str = field(init=False)
     bucket_name: str = field(init=False)
@@ -31,7 +32,7 @@ class SharedBucketCreation:
         self.bucket_name = self._bucket_name()
 
     def _bucket_name(self):
-        bucket_name = f"{self.username[:15]}-{self.region}-shared-bucket-" + "".join(
+        bucket_name = f"{self.user_defined_bucket_name}-{self.region}-" + "".join(
             random.choices(string.ascii_lowercase, k=5)
         )
         return bucket_name
