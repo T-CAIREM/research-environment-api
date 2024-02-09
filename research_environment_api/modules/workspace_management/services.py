@@ -210,11 +210,13 @@ def _build_shared_workspace_entity(
         if workspace_workflow_in_progress
         else entities.WorkspaceStatus.CREATED
     )
+    is_owner = gcp_project.labels["cloud_identity_username"] == caller_username
     return entities.SharedWorkspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         buckets=buckets,
         status=status,
+        is_owner=is_owner
     )
 
 

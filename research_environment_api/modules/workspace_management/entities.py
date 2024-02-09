@@ -128,6 +128,7 @@ class Workspace:
 @dataclass
 class SharedWorkspace:
     gcp_project_id: str
+    is_owner: bool
     billing_info: BillingInfo
     buckets: Iterable[SharedBucket]
     status: WorkspaceStatus
