@@ -73,6 +73,7 @@ class SharedWorkspace(Schema):
     billing_info = fields.Nested(BillingInfo, required=True)
     buckets = fields.Nested(SharedBucket, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+    is_owner = fields.Boolean(required=True)
 
 
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):
