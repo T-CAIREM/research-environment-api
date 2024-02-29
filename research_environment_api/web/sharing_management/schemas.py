@@ -29,6 +29,7 @@ class ShareBucketRequest(Schema):
     project_id = fields.Str(required=True)
     accessor_email = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
+    permissions = fields.Str(required=True)
 
 
 class RevokeSharedBucketAccessRequest(Schema):
@@ -40,6 +41,7 @@ class RevokeSharedBucketAccessRequest(Schema):
 class SharedBucket(Schema):
     bucket_name = fields.Str(required=True)
     is_owner = fields.Bool(required=True)
+    is_admin = fields.Bool(required=True)
 
 
 class SignedUrlGenerationRequest(Schema):

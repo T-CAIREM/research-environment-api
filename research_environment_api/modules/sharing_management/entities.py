@@ -1,6 +1,5 @@
 import random
 import string
-import datetime
 from dataclasses import dataclass, field
 from typing import Self
 from enum import StrEnum
@@ -15,6 +14,11 @@ from google.cloud.storage import Bucket as GCPBucket
 class BucketObjectType(StrEnum):
     DIRECTORY = "directory"
     FILE = "file"
+
+
+class BucketPermissions(StrEnum):
+    READ_WRITE = "read_write"
+    READ = "read"
 
 
 @dataclass
@@ -48,23 +52,27 @@ class ShareBucket:
     accessor_email: str
     bucket_name: str
     project_id: str
+    permissions: BucketPermissions
 
 
 @dataclass
 class SharedBucket:
     bucket_name: str
     is_owner: bool
+    is_admin: bool
 
     @classmethod
     def from_storage_instance(
         cls,
         instance: GCPBucket,
         username: str,
+        is_admin: bool
     ) -> Self:
         is_owner = instance.labels["cloud_identity_username"] == username
         return cls(
             bucket_name=instance.name,
             is_owner=is_owner,
+            is_admin=is_admin
         )
 
 

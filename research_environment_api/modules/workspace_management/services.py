@@ -216,7 +216,7 @@ def _build_shared_workspace_entity(
         billing_info=billing_info_entity,
         buckets=buckets,
         status=status,
-        is_owner=is_owner
+        is_owner=is_owner,
     )
 
 

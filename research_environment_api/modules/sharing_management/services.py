@@ -11,13 +11,25 @@ class InsufficientPermissionsError(Exception):
     pass
 
 
+GCP_ROLE_ACCESS_MAPPING = {
+    entities.BucketPermissions.READ_WRITE: enums.IamSharingRole.ADMIN,
+    entities.BucketPermissions.READ: enums.IamSharingRole.USER,
+}
+
+
 def list_accessible_buckets_in_project(
     gcp_project_id: str, username: str, caller_email: str
 ) -> Iterable[entities.SharedBucket]:
     storage_client = app.config.google_cloud_storage_client
     buckets = storage_client.list_buckets(project=gcp_project_id)
     return [
-        entities.SharedBucket.from_storage_instance(bucket, username)
+        entities.SharedBucket.from_storage_instance(
+            bucket,
+            username,
+            _user_is_bucket_admin(
+                bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+            ),
+        )
         for bucket in buckets
         if _user_has_access_to_bucket(
             bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
@@ -99,7 +111,9 @@ def share_bucket_to(share_bucket: entities.ShareBucket):
 
                 session.add(sharing_metadata)
             _add_iam_permissions(
-                bucket, share_bucket.accessor_email, enums.IamSharingRole.USER
+                bucket,
+                share_bucket.accessor_email,
+                GCP_ROLE_ACCESS_MAPPING[share_bucket.permissions],
             )
 
 
@@ -278,6 +292,14 @@ def _get_storage_user_binding_role(policy, role: str):
 
 def _user_is_bucket_owner(labels: dict, username: str) -> bool:
     return labels["cloud_identity_username"] == username
+
+
+def _user_is_bucket_admin(bindings: list, email: str) -> bool:
+    return any(
+        f"user:{email}" in binding["members"]
+        for binding in bindings
+        if binding["role"] == "roles/storage.admin"
+    )
 
 
 def _user_has_access_to_bucket(bindings: list, email: str):
