@@ -192,9 +192,9 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
         self.vm_image = (
-            "common-cu110-notebooks"
+            "common-cu113-notebooks"
             if self.gpu_accelerator_type
-            else "r-4-2-cpu-experimental-notebooks"
+            else "r-4-3-cpu-experimental-notebooks"
         )
 
 
