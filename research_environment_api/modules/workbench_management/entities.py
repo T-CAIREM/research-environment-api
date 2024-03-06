@@ -52,7 +52,7 @@ class MachineType(StrEnum):
 
 
 class GpuAcceleratorType(StrEnum):
-    TESLA_T4 = "NVIDIA_TESLA_T4"
+    TESLA_T4 = "nvidia-tesla-t4"
 
 
 GCE_STATUS_MAP = {
@@ -118,7 +118,7 @@ class Workbench:
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
-            instance.guest_accelerators[0].accelerator_type
+            GpuAcceleratorType(instance.guest_accelerators[0].accelerator_type.split("/")[-1])
             if instance.guest_accelerators
             else None
         )
