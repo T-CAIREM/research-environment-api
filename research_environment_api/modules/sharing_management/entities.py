@@ -7,6 +7,7 @@ from enum import StrEnum
 from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
+from research_environment_api.modules.sharing_management.enums import BucketPermissions
 
 from google.cloud.storage import Bucket as GCPBucket
 
@@ -14,11 +15,6 @@ from google.cloud.storage import Bucket as GCPBucket
 class BucketObjectType(StrEnum):
     DIRECTORY = "directory"
     FILE = "file"
-
-
-class BucketPermissions(StrEnum):
-    READ_WRITE = "read_write"
-    READ = "read"
 
 
 @dataclass
@@ -63,17 +59,10 @@ class SharedBucket:
 
     @classmethod
     def from_storage_instance(
-        cls,
-        instance: GCPBucket,
-        username: str,
-        is_admin: bool
+        cls, instance: GCPBucket, username: str, is_admin: bool
     ) -> Self:
         is_owner = instance.labels["cloud_identity_username"] == username
-        return cls(
-            bucket_name=instance.name,
-            is_owner=is_owner,
-            is_admin=is_admin
-        )
+        return cls(bucket_name=instance.name, is_owner=is_owner, is_admin=is_admin)
 
 
 @dataclass

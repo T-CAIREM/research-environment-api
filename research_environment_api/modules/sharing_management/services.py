@@ -1,7 +1,7 @@
 from research_environment_api.modules.app import app
 from research_environment_api.modules.sharing_management import entities, enums, models
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 
 from google.cloud.storage import Bucket as GCPBucket
@@ -231,6 +231,29 @@ def delete_shared_bucket_content(
         bucket.delete_blobs(list(blobs))
     else:
         bucket.delete_blob(delete_shared_bucket_content_entity.full_path)
+
+
+def specify_buckets_fusing_permissions(bucket_list: list[str], caller_email: str):
+    return {
+        bucket: permissions
+        for bucket in bucket_list
+        if (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
+    }
+
+
+def _specify_bucket_fusing_permissions(
+    bucket_name: str, caller_email: str
+) -> Optional[enums.BucketPermissions]:
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.get_bucket(bucket_name)
+    if _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+    ):
+        return enums.BucketPermissions.READ_WRITE
+    if _user_has_access_to_bucket(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+    ):
+        return enums.BucketPermissions.READ
 
 
 def _readable_size(num, suffix="B"):
