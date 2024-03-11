@@ -314,11 +314,6 @@ def destroy_jupyter_workbench(
         user_email=workbench_destroy_request.user_email,
     )
 
-    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
-        workbench.sharing_bucket_identifiers,
-        workbench_destroy_request.user_email,
-    )
-
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench.id,
@@ -332,7 +327,7 @@ def destroy_jupyter_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
     with app.database_session() as session:
         with session.begin():
@@ -501,11 +496,6 @@ def destroy_rstudio_workbench(
         workbench_destroy_request.user_email,
     )
 
-    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
-        workbench.sharing_bucket_identifiers,
-        workbench_destroy_request.user_email,
-    )
-
     build = builds.destroy_rstudio_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench.id,
@@ -520,7 +510,7 @@ def destroy_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
     )
 
     with app.database_session() as session:
