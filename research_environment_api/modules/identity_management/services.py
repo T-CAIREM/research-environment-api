@@ -28,7 +28,10 @@ def _allow_to_create_billing_accounts(
     cloud_identity_creation: entities.CloudIdentityCreation,
 ):
     try:
-        _allow_to_create_billing_accounts(cloud_identity_creation)
+        _add_membership_to_group(
+            cloud_identity_creation,
+            app.config.billing_account_creator_group_id,
+        )
     except exceptions.BillingCreatorGroupMembershipAlreadyExistsError:
         logger.warning(
             f"{cloud_identity_creation.primary_email} already a member of the billing account creator group"
@@ -56,15 +59,16 @@ def _create_cloud_identity_in_google_workspace(
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
 
 
-def _allow_to_create_billing_accounts(
+def _add_membership_to_group(
     cloud_identity_creation: entities.CloudIdentityCreation,
+    group_id: str,
 ):
     google_workspace_client = _build_google_workspace_client()
 
     try:
         google_workspace_client.add_user_to_group(
             cloud_identity_creation.primary_email,
-            app.config.billing_account_creator_group_id,
+            group_id,
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
         raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError

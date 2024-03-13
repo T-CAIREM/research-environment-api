@@ -35,6 +35,7 @@ class WorkspaceClient:
         body = {"preferredMemberKey": {"id": user_email}, "roles": {"name": "MEMBER"}}
         group_id = f"groups/{group_id}"
         try:
+            # https://googleapis.github.io/google-api-python-client/docs/dyn/cloudidentity_v1.groups.memberships.html#create
             created_policy = (
                 self.cloud_identity_client.groups()
                 .memberships()
