@@ -14,3 +14,8 @@ class SharedBucketRole(StrEnum):
 class SharingState(StrEnum):
     SHARED = "shared"
     REVOKED = "revoked"
+
+
+class BucketPermissions(StrEnum):
+    READ_WRITE = "read_write"
+    READ = "read"

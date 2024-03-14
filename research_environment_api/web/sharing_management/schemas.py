@@ -6,6 +6,8 @@ from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
 
+from research_environment_api.modules.sharing_management.enums import BucketPermissions
+
 
 class SharedBucketCreationRequest(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
@@ -29,6 +31,7 @@ class ShareBucketRequest(Schema):
     project_id = fields.Str(required=True)
     accessor_email = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
+    permissions = fields.Enum(BucketPermissions, required=True, by_value=True)
 
 
 class RevokeSharedBucketAccessRequest(Schema):
@@ -40,6 +43,7 @@ class RevokeSharedBucketAccessRequest(Schema):
 class SharedBucket(Schema):
     bucket_name = fields.Str(required=True)
     is_owner = fields.Bool(required=True)
+    is_admin = fields.Bool(required=True)
 
 
 class SignedUrlGenerationRequest(Schema):

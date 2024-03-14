@@ -14,6 +14,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "workbench/jupyter/python4.py",
             "${_BUCKET_NAME}",
             "${_SHARING_BUCKET_IDENTIFIERS}",
+            "${_SHARING_BUCKET_PERMISSIONS}",
         ],
     },
     {
@@ -225,6 +226,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "workbench/jupyter/python4.py",
             "${_BUCKET_NAME}",
             "${_SHARING_BUCKET_IDENTIFIERS}",
+            "${_SHARING_BUCKET_PERMISSIONS}",
         ],
     },
     {
@@ -318,6 +320,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python4.py",
             "${_BUCKET_NAME}",
             "${_SHARING_BUCKET_IDENTIFIERS}",
+            "${_SHARING_BUCKET_PERMISSIONS}",
         ],
     },
     {
@@ -376,6 +379,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python4.py",
             "${_BUCKET_NAME}",
             "${_SHARING_BUCKET_IDENTIFIERS}",
+            "${_SHARING_BUCKET_PERMISSIONS}",
         ],
     },
     {

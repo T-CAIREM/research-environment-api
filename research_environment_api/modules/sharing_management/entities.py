@@ -1,6 +1,5 @@
 import random
 import string
-import datetime
 from dataclasses import dataclass, field
 from typing import Self
 from enum import StrEnum
@@ -8,6 +7,7 @@ from enum import StrEnum
 from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
+from research_environment_api.modules.sharing_management.enums import BucketPermissions
 
 from google.cloud.storage import Bucket as GCPBucket
 
@@ -48,24 +48,21 @@ class ShareBucket:
     accessor_email: str
     bucket_name: str
     project_id: str
+    permissions: BucketPermissions
 
 
 @dataclass
 class SharedBucket:
     bucket_name: str
     is_owner: bool
+    is_admin: bool
 
     @classmethod
     def from_storage_instance(
-        cls,
-        instance: GCPBucket,
-        username: str,
+        cls, instance: GCPBucket, username: str, is_admin: bool
     ) -> Self:
         is_owner = instance.labels["cloud_identity_username"] == username
-        return cls(
-            bucket_name=instance.name,
-            is_owner=is_owner,
-        )
+        return cls(bucket_name=instance.name, is_owner=is_owner, is_admin=is_admin)
 
 
 @dataclass

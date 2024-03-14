@@ -1,7 +1,7 @@
 from research_environment_api.modules.app import app
 from research_environment_api.modules.sharing_management import entities, enums, models
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 
 from google.cloud.storage import Bucket as GCPBucket
@@ -11,13 +11,25 @@ class InsufficientPermissionsError(Exception):
     pass
 
 
+GCP_ROLE_ACCESS_MAPPING = {
+    entities.BucketPermissions.READ_WRITE: enums.IamSharingRole.ADMIN,
+    entities.BucketPermissions.READ: enums.IamSharingRole.USER,
+}
+
+
 def list_accessible_buckets_in_project(
     gcp_project_id: str, username: str, caller_email: str
 ) -> Iterable[entities.SharedBucket]:
     storage_client = app.config.google_cloud_storage_client
     buckets = storage_client.list_buckets(project=gcp_project_id)
     return [
-        entities.SharedBucket.from_storage_instance(bucket, username)
+        entities.SharedBucket.from_storage_instance(
+            bucket,
+            username,
+            _user_is_bucket_admin(
+                bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+            ),
+        )
         for bucket in buckets
         if _user_has_access_to_bucket(
             bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
@@ -99,7 +111,9 @@ def share_bucket_to(share_bucket: entities.ShareBucket):
 
                 session.add(sharing_metadata)
             _add_iam_permissions(
-                bucket, share_bucket.accessor_email, enums.IamSharingRole.USER
+                bucket,
+                share_bucket.accessor_email,
+                GCP_ROLE_ACCESS_MAPPING[share_bucket.permissions],
             )
 
 
@@ -131,7 +145,9 @@ def revoke_access_to_shared_bucket(
 def generate_signed_url(generate_signed_url_entity: entities.GenerateSignedUrl):
     storage_client = app.config.google_cloud_storage_client
     bucket = storage_client.get_bucket(generate_signed_url_entity.bucket_name)
-    if not _user_is_bucket_owner(bucket.labels, generate_signed_url_entity.username):
+    if not _user_is_bucket_owner(bucket.labels, generate_signed_url_entity.username) and not _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, generate_signed_url_entity.user_email
+    ):
         raise InsufficientPermissionsError
     blob = bucket.blob(generate_signed_url_entity.filename.strip("/"))
     signed_url = blob.generate_signed_url(
@@ -152,6 +168,8 @@ def get_shared_bucket_content(
     bucket = storage_client.get_bucket(get_shared_bucket_content_entity.bucket_name)
     if not _user_is_bucket_owner(
         bucket.labels, get_shared_bucket_content_entity.username
+    ) and not _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, get_shared_bucket_content_entity.user_email
     ):
         raise InsufficientPermissionsError
 
@@ -194,6 +212,8 @@ def create_shared_bucket_directory(
 
     if not _user_is_bucket_owner(
         bucket.labels, create_shared_bucket_directory_entity.username
+    ) and not _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, create_shared_bucket_directory_entity.user_email
     ):
         raise InsufficientPermissionsError
     blob = bucket.blob(create_shared_bucket_directory_entity.directory_path)
@@ -207,6 +227,8 @@ def delete_shared_bucket_content(
     bucket = storage_client.get_bucket(delete_shared_bucket_content_entity.bucket_name)
     if not _user_is_bucket_owner(
         bucket.labels, delete_shared_bucket_content_entity.username
+    ) and not _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, delete_shared_bucket_content_entity.user_email
     ):
         raise InsufficientPermissionsError
     if delete_shared_bucket_content_entity.full_path.endswith("/"):
@@ -217,6 +239,29 @@ def delete_shared_bucket_content(
         bucket.delete_blobs(list(blobs))
     else:
         bucket.delete_blob(delete_shared_bucket_content_entity.full_path)
+
+
+def specify_buckets_fusing_permissions(bucket_list: list[str], caller_email: str):
+    return {
+        bucket: permissions
+        for bucket in bucket_list
+        if (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
+    }
+
+
+def _specify_bucket_fusing_permissions(
+    bucket_name: str, caller_email: str
+) -> Optional[enums.BucketPermissions]:
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.get_bucket(bucket_name)
+    if _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+    ):
+        return enums.BucketPermissions.READ_WRITE
+    if _user_has_access_to_bucket(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, caller_email
+    ):
+        return enums.BucketPermissions.READ
 
 
 def _readable_size(num, suffix="B"):
@@ -278,6 +323,14 @@ def _get_storage_user_binding_role(policy, role: str):
 
 def _user_is_bucket_owner(labels: dict, username: str) -> bool:
     return labels["cloud_identity_username"] == username
+
+
+def _user_is_bucket_admin(bindings: list, email: str) -> bool:
+    return any(
+        f"user:{email}" in binding["members"]
+        for binding in bindings
+        if binding["role"] == "roles/storage.admin"
+    )
 
 
 def _user_has_access_to_bucket(bindings: list, email: str):

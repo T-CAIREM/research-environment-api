@@ -13,6 +13,9 @@ from research_environment_api.modules.monitoring_management import (
 from research_environment_api.modules.workspace_management import (
     entities as workspace_entities,
 )
+from research_environment_api.modules.sharing_management.services import (
+    specify_buckets_fusing_permissions,
+)
 
 
 def create_jupyter_workbench(
@@ -21,7 +24,10 @@ def create_jupyter_workbench(
     zone, *fallback_zones = services.get_available_zones(
         workbench_creation_request.region
     )
-
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench_creation_request.sharing_bucket_identifiers,
+        workbench_creation_request.user_email,
+    )
     dataset_identifier = workbench_creation_request.dataset_identifier
     workbench_id = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
     service_account_name = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
@@ -39,7 +45,7 @@ def create_jupyter_workbench(
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
         vm_image=workbench_creation_request.vm_image,
-        sharing_bucket_identifiers=workbench_creation_request.sharing_bucket_identifiers,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
     )
 
     with app.database_session() as session:
@@ -253,6 +259,12 @@ def update_jupyter_workbench(
         instance_name=workbench_update_request.workbench_resource_id,
         user_email=workbench_update_request.user_email,
     )
+
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench.sharing_bucket_identifiers,
+        workbench_update_request.user_email,
+    )
+
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
@@ -266,7 +278,7 @@ def update_jupyter_workbench(
         zone=workbench.zone,
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
     )
 
     with app.database_session() as session:
@@ -301,6 +313,7 @@ def destroy_jupyter_workbench(
         instance_name=workbench_destroy_request.workbench_resource_id,
         user_email=workbench_destroy_request.user_email,
     )
+
     build = builds.destroy_jupyter_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench.id,
@@ -343,6 +356,10 @@ def create_rstudio_workbench(
     zone, *fallback_zones = services.get_available_zones(
         workbench_creation_request.region
     )
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench_creation_request.sharing_bucket_identifiers,
+        workbench_creation_request.user_email,
+    )
     dataset_identifier = workbench_creation_request.dataset_identifier
     workbench_id = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
     service_account_name = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
@@ -360,7 +377,7 @@ def create_rstudio_workbench(
         dataset_identifier=workbench_creation_request.dataset_identifier,
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
-        sharing_bucket_identifiers=workbench_creation_request.sharing_bucket_identifiers,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
     )
 
     with app.database_session() as session:
@@ -427,6 +444,11 @@ def update_rstudio_workbench(
         workbench_update_request.user_email,
     )
 
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench.sharing_bucket_identifiers,
+        workbench_update_request.user_email,
+    )
+
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
@@ -441,7 +463,7 @@ def update_rstudio_workbench(
         vm_image=workbench.vm_image,
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
-        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
     )
 
     with app.database_session() as session:
