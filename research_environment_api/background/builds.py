@@ -12,6 +12,12 @@ from research_environment_api.modules.workbench_management.entities import (
 )
 
 
+GPU_ACCELERATOR_TYPE_TO_NAME_MAP = {
+    GpuAcceleratorType.TESLA_T4: "NVIDIA_TESLA_T4",
+    None: ""
+}
+
+
 def _base_build() -> cloudbuild_v1.Build:
     cloud_build = cloudbuild_v1.Build()
     cloud_build.service_account = app.config.cloud_build_service_account_name
@@ -49,7 +55,7 @@ def create_jupyter_workbench_build(
         "_ZONE": zone,
         "_MACHINE_TYPE": machine_type.value,
         "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
+        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
@@ -91,7 +97,7 @@ def update_jupyter_workbench_build(
         "_BUCKET_NAME": bucket_name,
         "_VM_IMAGE": vm_image,
         "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
+        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
         "_ZONE": zone,
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
@@ -127,7 +133,7 @@ def destroy_jupyter_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": _normalize_gpu_accelerator_type(gpu_accelerator_type),
+        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
         "_VM_IMAGE": vm_image,
         "_INSTANCE_NAME": instance_name,
         "_ZONE": zone,
