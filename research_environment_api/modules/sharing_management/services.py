@@ -245,7 +245,7 @@ def specify_buckets_fusing_permissions(bucket_list: list[str], caller_email: str
     return {
         bucket: permissions
         for bucket in bucket_list
-        if (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
+        if bucket and (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
     }
 
 
