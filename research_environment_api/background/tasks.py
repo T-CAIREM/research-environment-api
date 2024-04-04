@@ -12,6 +12,7 @@ from research_environment_api.background import (
     workflows,
 )
 from research_environment_api.modules.app import app
+from research_environment_api.web.websocket import socketio
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
 from research_environment_api.modules.monitoring_management import models
 
@@ -121,6 +122,13 @@ def set_workflow_status(operation: operations.Operation, workbench_activity_id: 
                 .one()
             )
             workbench_activity.build_status = operation.status()
+    workbench_activity_str = str(workbench_activity_id)
+    socketio.emit(
+        "workflow_update",
+        {"workbench_activity_id": workbench_activity_str},
+        room=workbench_activity_str,
+    )
+    return operation
 
 
 @shared_task
