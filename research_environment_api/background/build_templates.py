@@ -290,17 +290,6 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
     },
-    {
-        "name": "gcr.io/cloud-builders/gcloud",
-        "args": [
-            "compute",
-            "disks",
-            "delete",
-            "${_INSTANCE_NAME}-data",
-            "--project=${_PROJECT_ID}",
-            "--zone=${_ZONE}",
-        ],
-    },
 ]
 
 
