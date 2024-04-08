@@ -118,7 +118,9 @@ class Workbench:
         machine_type = MachineType(instance.machine_type.split("/")[-1])
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
         gpu_accelerator_type = (
-            GpuAcceleratorType(instance.guest_accelerators[0].accelerator_type.split("/")[-1])
+            GpuAcceleratorType(
+                instance.guest_accelerators[0].accelerator_type.split("/")[-1]
+            )
             if instance.guest_accelerators
             else None
         )
@@ -191,9 +193,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
-        self.vm_image = (
-            "workbench-instances-v20240214"
-        )
+        self.vm_image = "workbench-instances-v20240214"
 
 
 @dataclass

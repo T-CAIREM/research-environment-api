@@ -91,7 +91,10 @@ def schedule_workbench_create(
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
-    return schedulers.stop_compute_engine_workbench(workbench_stop_request)
+    if workbench_stop_request.workbench_type == "jupyter":
+        return schedulers.stop_jupyter_workbench(workbench_stop_request)
+    else:
+        return schedulers.stop_compute_engine_workbench(workbench_stop_request)
 
 
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):

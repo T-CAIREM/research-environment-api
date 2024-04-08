@@ -51,6 +51,23 @@ def stop_compute_engine_workbench(
     )
 
 
+def stop_jupyter_workbench(
+    workspace_project_id: str,
+    instance_name: str,
+    instance_zone: str,
+    workbench_activity_id: str,
+):
+    return chain(
+        tasks.stop_vertex_ai_instance.s(
+            workspace_project_id=workspace_project_id,
+            workbench_resource_id=instance_name,
+            instance_zone=instance_zone,
+        ),
+        tasks.check_operation_status.s(),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
 def start_jupyter_workbench(
     workspace_project_id: str,
     instance_name: str,
@@ -58,7 +75,7 @@ def start_jupyter_workbench(
     workbench_activity_id: str,
 ):
     return chain(
-        tasks.start_compute_instance.s(
+        tasks.start_vertex_ai_instance.s(
             workspace_project_id=workspace_project_id,
             instance_name=instance_name,
             instance_zone=instance_zone,

@@ -7,6 +7,7 @@ import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
 import google.cloud.storage
+import google.cloud.notebooks_v2
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -111,6 +112,14 @@ class Config:
         )
         self.google_cloud_storage_client = google.cloud.storage.Client(
             credentials=self.service_account_credentials
+        )
+        self.google_cloud_notebooks_client = (
+            google.cloud.notebooks_v2.NotebookServiceClient(
+                credentials=self.service_account_credentials
+            )
+        )
+        self.google_cloud_notebooks_operation_client = (
+            self.google_cloud_notebooks_client._transport.operations_client
         )
 
 

@@ -14,7 +14,7 @@ from research_environment_api.modules.workbench_management.entities import (
 
 GPU_ACCELERATOR_TYPE_TO_NAME_MAP = {
     GpuAcceleratorType.TESLA_T4: "NVIDIA_TESLA_T4",
-    None: ""
+    None: "",
 }
 
 

@@ -145,8 +145,11 @@ def revoke_access_to_shared_bucket(
 def generate_signed_url(generate_signed_url_entity: entities.GenerateSignedUrl):
     storage_client = app.config.google_cloud_storage_client
     bucket = storage_client.get_bucket(generate_signed_url_entity.bucket_name)
-    if not _user_is_bucket_owner(bucket.labels, generate_signed_url_entity.username) and not _user_is_bucket_admin(
-        bucket.get_iam_policy(requested_policy_version=3).bindings, generate_signed_url_entity.user_email
+    if not _user_is_bucket_owner(
+        bucket.labels, generate_signed_url_entity.username
+    ) and not _user_is_bucket_admin(
+        bucket.get_iam_policy(requested_policy_version=3).bindings,
+        generate_signed_url_entity.user_email,
     ):
         raise InsufficientPermissionsError
     blob = bucket.blob(generate_signed_url_entity.filename.strip("/"))
@@ -169,7 +172,8 @@ def get_shared_bucket_content(
     if not _user_is_bucket_owner(
         bucket.labels, get_shared_bucket_content_entity.username
     ) and not _user_is_bucket_admin(
-        bucket.get_iam_policy(requested_policy_version=3).bindings, get_shared_bucket_content_entity.user_email
+        bucket.get_iam_policy(requested_policy_version=3).bindings,
+        get_shared_bucket_content_entity.user_email,
     ):
         raise InsufficientPermissionsError
 
@@ -213,7 +217,8 @@ def create_shared_bucket_directory(
     if not _user_is_bucket_owner(
         bucket.labels, create_shared_bucket_directory_entity.username
     ) and not _user_is_bucket_admin(
-        bucket.get_iam_policy(requested_policy_version=3).bindings, create_shared_bucket_directory_entity.user_email
+        bucket.get_iam_policy(requested_policy_version=3).bindings,
+        create_shared_bucket_directory_entity.user_email,
     ):
         raise InsufficientPermissionsError
     blob = bucket.blob(create_shared_bucket_directory_entity.directory_path)
@@ -228,7 +233,8 @@ def delete_shared_bucket_content(
     if not _user_is_bucket_owner(
         bucket.labels, delete_shared_bucket_content_entity.username
     ) and not _user_is_bucket_admin(
-        bucket.get_iam_policy(requested_policy_version=3).bindings, delete_shared_bucket_content_entity.user_email
+        bucket.get_iam_policy(requested_policy_version=3).bindings,
+        delete_shared_bucket_content_entity.user_email,
     ):
         raise InsufficientPermissionsError
     if delete_shared_bucket_content_entity.full_path.endswith("/"):
@@ -245,7 +251,8 @@ def specify_buckets_fusing_permissions(bucket_list: list[str], caller_email: str
     return {
         bucket: permissions
         for bucket in bucket_list
-        if bucket and (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
+        if bucket
+        and (permissions := _specify_bucket_fusing_permissions(bucket, caller_email))
     }
 
 

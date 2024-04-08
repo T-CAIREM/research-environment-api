@@ -152,6 +152,22 @@ def stop_compute_instance(
 
 
 @shared_task
+def stop_vertex_ai_instance(
+    workspace_project_id: str,
+    workbench_resource_id: str,
+    instance_zone: str,
+) -> Tuple[operations.VertexAIOperation, operations.VertexAIOperation]:
+    notebooks_client = app.config.google_cloud_notebooks_client
+    notebook_instance_path_string = f"projects/{workspace_project_id}/locations/{instance_zone}/instances/{workbench_resource_id}"
+    stop_operation = notebooks_client.stop_instance(
+        {"name": notebook_instance_path_string},
+    )
+    operation = operations.VertexAIOperation(name=stop_operation.operation.name)
+
+    return operation, operation
+
+
+@shared_task
 def start_compute_instance(
     workspace_project_id: str,
     instance_name: str,
@@ -167,6 +183,22 @@ def start_compute_instance(
     operation = operations.InstanceOperation(
         project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
     )
+
+    return operation, operation
+
+
+@shared_task
+def start_vertex_ai_instance(
+    workspace_project_id: str,
+    instance_name: str,
+    instance_zone: str,
+) -> Tuple[operations.VertexAIOperation, operations.VertexAIOperation]:
+    notebooks_client = app.config.google_cloud_notebooks_client
+    notebook_instance_path_string = f"projects/{workspace_project_id}/locations/{instance_zone}/instances/{instance_name}"
+    start_operation = notebooks_client.start_instance(
+        {"name": notebook_instance_path_string},
+    )
+    operation = operations.VertexAIOperation(name=start_operation.operation.name)
 
     return operation, operation
 
