@@ -19,6 +19,10 @@ MACHINE_TYPE_TO_RESOURCE_MAP = {
     "n1-standard-4": ComputeEngineMachineResources(4.0, 15.0),
     "n1-standard-8": ComputeEngineMachineResources(8.0, 30.0),
     "n1-standard-16": ComputeEngineMachineResources(16.0, 60.0),
+    "n2-standard-2": ComputeEngineMachineResources(2.0, 8.0),
+    "n2-standard-4": ComputeEngineMachineResources(4.0, 16.0),
+    "n2-standard-8": ComputeEngineMachineResources(8.0, 32.0),
+    "n2-standard-16": ComputeEngineMachineResources(16.0, 64.0),
 }
 
 
@@ -45,10 +49,14 @@ class WorkbenchStatus(StrEnum):
 
 
 class MachineType(StrEnum):
-    SMALL = "n1-standard-2"
-    MEDIUM = "n1-standard-4"
-    LARGE = "n1-standard-8"
-    XLARGE = "n1-standard-16"
+    N1_SMALL = "n1-standard-2"
+    N1_MEDIUM = "n1-standard-4"
+    N1_LARGE = "n1-standard-8"
+    N1_XLARGE = "n1-standard-16"
+    N2_SMALL = "n2-standard-2"
+    N2_MEDIUM = "n2-standard-4"
+    N2_LARGE = "n2-standard-8"
+    N2_XLARGE = "n2-standard-16"
 
 
 class GpuAcceleratorType(StrEnum):
