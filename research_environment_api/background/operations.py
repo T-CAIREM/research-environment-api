@@ -62,3 +62,24 @@ class BuildOperation(Operation):
     def _operation(self) -> operation.Operation:
         client = app.config.google_operations_client
         return client.get_operation(name=self.name)
+
+
+class VertexAIOperation(Operation):
+    def __init__(self, name: str):
+        self.name = name
+
+    def status(self) -> OperationStatus:
+        operation = self._operation()
+        if not operation.done:
+            return OperationStatus.IN_PROGRESS
+
+        return (
+            OperationStatus.FAILURE if operation.error.code else OperationStatus.SUCCESS
+        )
+
+    def is_done(self) -> bool:
+        return self._operation().done
+
+    def _operation(self) -> operation.Operation:
+        client = app.config.google_cloud_notebooks_operation_client
+        return client.get_operation(name=self.name)

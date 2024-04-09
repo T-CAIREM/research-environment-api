@@ -221,6 +221,36 @@ def stop_compute_engine_workbench(
             return workbench_activity.id
 
 
+def stop_jupyter_workbench(
+    workbench_stop_request: entities.WorkbenchToggleState,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_stop_request.workspace_project_id,
+        instance_name=workbench_stop_request.workbench_resource_id,
+        user_email=workbench_stop_request.user_email,
+    )
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_stop_request.workspace_project_id,
+                invoker_email=workbench_stop_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_STOP,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.stop_jupyter_workbench(
+                workspace_project_id=workbench_stop_request.workspace_project_id,
+                instance_name=workbench.id,
+                instance_zone=workbench.zone,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            return workbench_activity.id
+
+
 def start_jupyter_workbench(
     workbench_start_request: entities.WorkbenchToggleState,
 ) -> uuid.UUID:
