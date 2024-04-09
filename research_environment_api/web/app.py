@@ -1,12 +1,14 @@
 import json
+from os import environ
 
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
-from flask import Flask, url_for
+from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 
 from research_environment_api.web.cache import cache
+from research_environment_api.web.websocket import socketio
 from research_environment_api.web.config import build_config
 
 SWAGGER_SPEC_FILE_NAME = "swagger.json"
@@ -61,5 +63,6 @@ def create_app():
         f"{app.static_url_path}/{SWAGGER_SPEC_FILE_NAME}",
     )
     app.register_blueprint(swagger_bp)
+    socketio.init_app(app, message_queue=environ.get("CELERY_BROKER_URL"))
 
     return app
