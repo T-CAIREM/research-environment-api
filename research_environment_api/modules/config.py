@@ -2,7 +2,6 @@ from enum import StrEnum
 from os import environ
 
 import google.auth
-import google.cloud.appengine_admin
 import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
@@ -109,16 +108,6 @@ class Config:
         )
         self.google_operations_client = (
             self.google_cloud_build_client._transport.operations_client
-        )
-        self.google_app_engine_services_client = (
-            google.cloud.appengine_admin.ServicesClient(
-                credentials=self.service_account_credentials,
-            )
-        )
-        self.google_app_engine_versions_client = (
-            google.cloud.appengine_admin.VersionsClient(
-                credentials=self.service_account_credentials,
-            )
         )
         self.google_cloud_storage_client = google.cloud.storage.Client(
             credentials=self.service_account_credentials
