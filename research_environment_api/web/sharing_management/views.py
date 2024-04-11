@@ -5,9 +5,11 @@ from research_environment_api.web.sharing_management import (
     sharing_management_bp,
     schemas,
 )
+from research_environment_api.web.decorators import validate_token
 
 
 @sharing_management_bp.post("/bucket/create")
+@validate_token
 def create_shared_bucket():
     """Creates shared bucket.
     ---
@@ -38,6 +40,7 @@ def create_shared_bucket():
 
 
 @sharing_management_bp.delete("/bucket/delete")
+@validate_token
 def delete_shared_bucket():
     """Deletes shared bucket.
     ---
@@ -68,6 +71,7 @@ def delete_shared_bucket():
 
 
 @sharing_management_bp.post("/bucket/share")
+@validate_token
 def share_bucket():
     """Shares bucket.
     ---
@@ -96,6 +100,7 @@ def share_bucket():
 
 
 @sharing_management_bp.post("/bucket/revoke_access")
+@validate_token
 def revoke_access_to_shared_bucket():
     """Revokes a user's access to shared bucket.
     ---
@@ -128,6 +133,7 @@ def revoke_access_to_shared_bucket():
 
 
 @sharing_management_bp.post("/bucket/generate_signed_url")
+@validate_token
 def generate_signed_url():
     """Generate signed url for a shared bucket to upload files.
     ---
@@ -158,6 +164,7 @@ def generate_signed_url():
 
 
 @sharing_management_bp.get("/<bucket_name>")
+@validate_token
 def get_shared_bucket_content(bucket_name: str):
     """Get content of a directory inside GCP bucket.
     ---
@@ -195,6 +202,7 @@ def get_shared_bucket_content(bucket_name: str):
 
 
 @sharing_management_bp.post("/bucket/content/create")
+@validate_token
 def create_shared_bucket_directory():
     """Create a directory in a GCP bucket.
     ---
@@ -228,6 +236,7 @@ def create_shared_bucket_directory():
 
 
 @sharing_management_bp.delete("/bucket/content/delete")
+@validate_token
 def delete_shared_bucket_content():
     """Delete shared bucket content.
     ---

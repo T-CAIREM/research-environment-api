@@ -1,6 +1,7 @@
 from flask import request
 
 from research_environment_api.modules.workbench_management import entities, services
+from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.workbench_management import (
     schemas,
     workbench_management_bp,
@@ -11,6 +12,7 @@ from research_environment_api.modules.workspace_management import (
 
 
 @workbench_management_bp.post("/create")
+@validate_token
 def create_workbench():
     """Creates a workbench according to the specification.
     ---
@@ -54,6 +56,7 @@ def create_workbench():
 
 
 @workbench_management_bp.put("/stop")
+@validate_token
 def stop_workbench():
     """Stops the specified workbench.
     ---
@@ -84,6 +87,7 @@ def stop_workbench():
 
 
 @workbench_management_bp.put("/start")
+@validate_token
 def start_workbench():
     """Starts the specified workbench.
     ---
@@ -114,6 +118,7 @@ def start_workbench():
 
 
 @workbench_management_bp.put("/update")
+@validate_token
 def update_workbench():
     """Updates the specified workbench.
     ---
@@ -144,6 +149,7 @@ def update_workbench():
 
 
 @workbench_management_bp.delete("/destroy")
+@validate_token
 def destroy_workbench():
     """Destroys the specified workbench.
     ---
