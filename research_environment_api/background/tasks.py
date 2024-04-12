@@ -1,7 +1,10 @@
+from os import environ
+
 from typing import List, Optional, Tuple, TypeVar
 import requests
 
 from celery import Task, shared_task
+from flask_socketio import SocketIO
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
 from research_environment_api.background import (
@@ -12,7 +15,6 @@ from research_environment_api.background import (
     workflows,
 )
 from research_environment_api.modules.app import app
-from research_environment_api.web.websocket import socketio
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
 from research_environment_api.modules.monitoring_management import models
 
@@ -123,10 +125,10 @@ def set_workflow_status(operation: operations.Operation, workbench_activity_id: 
             )
             workbench_activity.build_status = operation.status()
     workbench_activity_str = str(workbench_activity_id)
-    socketio.emit(
+    _emit_websocket_event(
         "workflow_update",
         {"workbench_activity_id": workbench_activity_str},
-        room=workbench_activity_str,
+        workbench_activity_str,
     )
     return operation
 
@@ -259,3 +261,14 @@ def check_rstudio_page_status(
         self.retry(countdown=30)
 
     return passthrough
+
+
+def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
+    # we need local socketio instance for celery to avoid
+    # `NoneType` is not callable error
+    socketio = SocketIO(message_queue=environ.get("CELERY_BROKER_URL"), logger=True)
+    socketio.emit(
+        event_name,
+        data,
+        room=room,
+    )
