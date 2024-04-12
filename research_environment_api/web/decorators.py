@@ -1,11 +1,11 @@
+from os import environ
+
 from flask import jsonify, request
 from functools import wraps
 from google.auth.transport import requests
 from google.oauth2 import id_token
 
-# this will be moved to env
-AUDIENCE = "https://research-environment-api-dev-core-onbon2ktya-uc.a.run.app"
-# AUDIENCE = "http://host.docker.internal:5000"
+AUDIENCE = environ.get("CLOUD_RESEARCH_ENVIRONMENTS_API_URL", "http://host.docker.internal:5000")
 
 
 def validate_token(func):
