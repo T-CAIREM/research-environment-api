@@ -5,7 +5,7 @@ from functools import wraps
 from google.auth.transport import requests
 from google.oauth2 import id_token
 
-AUDIENCE = environ.get("CLOUD_RESEARCH_ENVIRONMENTS_API_URL", "http://host.docker.internal:5000")
+AUDIENCE = environ.get("CLOUD_RESEARCH_ENVIRONMENTS_API_URL")
 
 
 def validate_token(func):
