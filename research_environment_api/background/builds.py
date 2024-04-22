@@ -164,6 +164,7 @@ def create_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
+        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
@@ -198,6 +199,7 @@ def destroy_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
+        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
     }
