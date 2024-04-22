@@ -66,6 +66,7 @@ CREATE_WORKSPACE_STEPS = [
         "env": [
             "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
             "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_folder_id=${_FOLDER_ID}",
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
         ],
@@ -164,6 +165,7 @@ DESTROY_WORKSPACE_STEPS = [
         "env": [
             "TF_VAR_billing_account=${_BILLING_ACCOUNT}",
             "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_folder_id=${_FOLDER_ID}",
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
         ],

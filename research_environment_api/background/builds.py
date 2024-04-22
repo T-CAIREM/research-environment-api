@@ -163,6 +163,7 @@ def create_workspace_build(
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
+        "_FOLDER_ID": app.config.folder_id,
         "_EMAIL_ID": user_email,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
@@ -181,6 +182,7 @@ def create_shared_workspace_build(
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
+        "_FOLDER_ID": app.config.workspace_folder_id,
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
@@ -197,6 +199,7 @@ def destroy_workspace_build(
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
+        "_FOLDER_ID": app.config.folder_id,
         "_EMAIL_ID": user_email,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
@@ -215,6 +218,7 @@ def destroy_shared_workspace_build(
     cloud_build.substitutions = {
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
+        "_FOLDER_ID": app.config.workspace_folder_id,
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
