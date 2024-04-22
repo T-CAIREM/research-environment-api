@@ -1,5 +1,4 @@
 from flask_socketio import SocketIO, join_room
-from os import environ
 
 socketio = SocketIO(cors_allowed_origins="*", logger=True)
 
