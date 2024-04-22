@@ -1,6 +1,7 @@
 from flask import request
 
 from research_environment_api.modules.identity_management import entities, services
+from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.identity_management import (
     identity_management_bp,
     schemas,
@@ -8,6 +9,7 @@ from research_environment_api.web.identity_management import (
 
 
 @identity_management_bp.post("/create")
+@validate_token
 def create_cloud_identity():
     """Creates a cloud identity.
     ---

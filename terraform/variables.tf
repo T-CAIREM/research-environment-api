@@ -134,3 +134,7 @@ variable "gcp_signed_url_expiration_time" {
 variable "gcp_cors_allowed_origins" {
   type = string
 }
+
+variable "cloud_research_environments_api_url" {
+  type = string
+}

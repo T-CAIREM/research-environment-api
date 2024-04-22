@@ -1,8 +1,10 @@
 from research_environment_api.modules.monitoring_management import monitoring
+from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.workflow import schemas, workflow_bp
 
 
 @workflow_bp.get("/<workflow_id>")
+@validate_token
 def get_workflow(workflow_id: str):
     """Fetches the specified workflow.
     ---
@@ -28,6 +30,7 @@ def get_workflow(workflow_id: str):
 
 
 @workflow_bp.get("/list/<user_email>")
+@validate_token
 def list_workflows(user_email):
     workflows_list = monitoring.list_active_workflows(user_email)
     serialized_workflows = schemas.Workflow(many=True).dump(workflows_list)

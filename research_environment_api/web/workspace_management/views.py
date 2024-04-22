@@ -1,6 +1,7 @@
 from flask import request
 
 from research_environment_api.modules.workspace_management import entities, services
+from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.workspace_management import (
     schemas,
     workspace_management_bp,
@@ -8,6 +9,7 @@ from research_environment_api.web.workspace_management import (
 
 
 @workspace_management_bp.post("/create")
+@validate_token
 def create_workspace():
     """Creates the specified workspace.
     ---
@@ -39,6 +41,7 @@ def create_workspace():
 
 
 @workspace_management_bp.delete("/delete")
+@validate_token
 def delete_workspace():
     """Deletes the specified workspace.
     ---
@@ -70,6 +73,7 @@ def delete_workspace():
 
 
 @workspace_management_bp.get("/<email>")
+@validate_token
 def list_active_workspaces(email: str):
     """Lists active workspaces for a specified user.
     ---
@@ -107,6 +111,7 @@ def list_active_workspaces(email: str):
 
 
 @workspace_management_bp.post("/shared/create")
+@validate_token
 def create_shared_workspace():
     """Creates a shared workspace where buckets will reside
     ---
@@ -144,6 +149,7 @@ def create_shared_workspace():
 
 
 @workspace_management_bp.delete("/shared/delete")
+@validate_token
 def delete_shared_workspace():
     """Deletes the specified shared workspace.
     ---
@@ -177,6 +183,7 @@ def delete_shared_workspace():
 
 
 @workspace_management_bp.get("/shared/<email>")
+@validate_token
 def list_active_shared_workspaces(email: str):
     """Lists active shared workspaces for a specified user.
     ---

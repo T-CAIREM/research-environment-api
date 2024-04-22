@@ -6,9 +6,11 @@ from research_environment_api.web.billing_management import (
     schemas,
 )
 from research_environment_api.web.cache import cache
+from research_environment_api.web.decorators import validate_token
 
 
 @billing_management_bp.get("/<email>")
+@validate_token
 @cache.cached(timeout=300)
 def list_billing_accounts(email: str):
     """Lists a user's billing accounts.
@@ -45,6 +47,7 @@ def list_billing_accounts(email: str):
 
 
 @billing_management_bp.post("/share")
+@validate_token
 def share_billing_account():
     """Shares a billing account.
     ---
@@ -80,6 +83,7 @@ def share_billing_account():
 
 
 @billing_management_bp.post("/revoke_access")
+@validate_token
 def revoke_billing_account_access():
     """Revokes a user's access to a billing account.
     ---
