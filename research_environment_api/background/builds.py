@@ -68,6 +68,7 @@ def create_jupyter_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_ENABLE_DATAPROC": app.config.enable_dataproc,
     }
 
     return cloud_build
@@ -109,6 +110,7 @@ def update_jupyter_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_ENABLE_DATAPROC": app.config.enable_dataproc,
     }
 
     return cloud_build

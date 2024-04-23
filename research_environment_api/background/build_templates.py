@@ -41,6 +41,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_enable_dataproc=${_ENABLE_DATAPROC}",
         ],
     },
     {
