@@ -25,7 +25,7 @@ def list_billing_accounts_for(
             id=billing_account.id,
             name=billing_account.name,
             cloud_link=_billing_account_cloud_link(billing_account.id),
-            is_owner=(billing_account.role == enums.BillingAccountRole.OWNER),
+            is_owner=True,
         )
         for billing_account in billing_accounts
     ]
