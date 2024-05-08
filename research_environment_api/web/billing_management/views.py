@@ -68,7 +68,6 @@ def share_billing_account():
     """
     body = request.get_json()
     share_billing_account_request = schemas.ShareBillingAccountRequest().load(body)
-
     owner_email = share_billing_account_request["owner_email"]
     user_email = share_billing_account_request["user_email"]
     billing_account_id = share_billing_account_request["billing_account_id"]
