@@ -11,6 +11,7 @@ from research_environment_api.modules.workbench_management.entities import (
 )
 from research_environment_api.modules.sharing_management.entities import SharedBucket
 from research_environment_api.background.enums import BuildType
+from research_environment_api.modules.app import app
 
 
 GOOGLE_REGIONS_SHORTCUTS = {
@@ -39,13 +40,16 @@ WORKSPACE_ACTIVITY_TYPE_MAP = {
 class WorkspaceCreation:
     region: Region
     user_email: str
+    user_groups: list[str]
     workspace_project_id: str = field(init=False)
     billing_account_id: str
+    organization_id: str = field(init=False)
     username: str = field(init=False)
 
     def __post_init__(self):
         self.username, domain = self.user_email.split("@")
         self.workspace_project_id = self._workspace_project_id()
+        self.organization_id = app.config.organization_id
 
     def _workspace_project_id(self):
         workspace_project_id = (

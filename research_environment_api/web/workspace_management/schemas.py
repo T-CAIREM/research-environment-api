@@ -19,6 +19,7 @@ class WorkspaceCreationRequest(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
+    user_groups = fields.List(fields.Str(), required=True)
 
 
 class WorkspaceDeletionRequest(WorkspaceCreationRequest):

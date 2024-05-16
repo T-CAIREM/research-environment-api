@@ -186,14 +186,17 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     dataset_identifier: str
     bucket_name: str
     region: Region
+    user_groups: list[str]
     gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
+    organization_id: str = field(init=False)
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
         self.vm_image = "workbench-instances-v20240214"
+        self.organization_id = app.config.organization_id
 
 
 @dataclass
@@ -205,6 +208,10 @@ class WorkbenchDestroy(BaseWorkbenchEntity):
 class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
     workbench_resource_id: str
+    organization_id: str = field(init=False)
+
+    def __post_init__(self):
+        self.organization_id = app.config.organization_id
 
 
 @dataclass

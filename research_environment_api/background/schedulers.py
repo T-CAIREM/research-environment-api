@@ -16,6 +16,9 @@ from research_environment_api.modules.workspace_management import (
 from research_environment_api.modules.sharing_management.services import (
     specify_buckets_fusing_permissions,
 )
+from research_environment_api.modules.user_group_management import (
+    services as user_group_services,
+)
 
 
 def create_jupyter_workbench(
@@ -31,6 +34,10 @@ def create_jupyter_workbench(
     dataset_identifier = workbench_creation_request.dataset_identifier
     workbench_id = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
     service_account_name = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    user_permissions_list = user_group_services.get_user_permissions(
+        workbench_creation_request.organization_id,
+        workbench_creation_request.user_groups,
+    )
 
     build = builds.create_jupyter_workbench_build(
         instance_name=workbench_id,
@@ -46,6 +53,7 @@ def create_jupyter_workbench(
         bucket_name=workbench_creation_request.bucket_name,
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:
@@ -76,11 +84,17 @@ def create_jupyter_workbench(
 def create_workspace(
     workspace_creation_request: workspace_entities.WorkspaceCreation,
 ) -> uuid.UUID:
+    user_permissions_list = user_group_services.get_user_permissions(
+        workspace_creation_request.organization_id,
+        workspace_creation_request.user_groups,
+    )
+
     build = builds.create_workspace_build(
         billing_account_id=workspace_creation_request.billing_account_id,
         workspace_project_id=workspace_creation_request.workspace_project_id,
         user_email=workspace_creation_request.user_email,
         region=workspace_creation_request.region,
+        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:
@@ -294,6 +308,12 @@ def update_jupyter_workbench(
         workbench.sharing_bucket_identifiers,
         workbench_update_request.user_email,
     )
+    user_permissions_list = (
+        user_group_services.get_roles_associated_with_service_account(
+            workbench.service_account_name,
+            workbench_update_request.workspace_project_id,
+        )
+    )
 
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -309,6 +329,7 @@ def update_jupyter_workbench(
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:
@@ -393,6 +414,10 @@ def create_rstudio_workbench(
     dataset_identifier = workbench_creation_request.dataset_identifier
     workbench_id = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
     service_account_name = f"rstudio-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    user_permissions_list = user_group_services.get_user_permissions(
+        workbench_creation_request.organization_id,
+        workbench_creation_request.user_groups,
+    )
 
     build = builds.create_rstudio_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
@@ -408,6 +433,7 @@ def create_rstudio_workbench(
         user_email=workbench_creation_request.user_email,
         bucket_name=workbench_creation_request.bucket_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:
@@ -479,6 +505,13 @@ def update_rstudio_workbench(
         workbench_update_request.user_email,
     )
 
+    user_permissions_list = (
+        user_group_services.get_roles_associated_with_service_account(
+            workbench.service_account_name,
+            workbench_update_request.workspace_project_id,
+        )
+    )
+
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
@@ -494,6 +527,7 @@ def update_rstudio_workbench(
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:

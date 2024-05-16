@@ -33,6 +33,19 @@ def _get_roles_associated_with_group(group_name: str, organization_id: str):
     ]
 
 
+def get_roles_associated_with_service_account(
+    service_account_name: str, project_id: str
+):
+    projects_client = app.config.google_cloud_resource_client
+    full_group_name = f"serviceAccount:{service_account_name}@healthdatanexus.ai"
+    response = projects_client.get_iam_policy({"resource": f"projects/{project_id}"})
+    return [
+        binding.role
+        for binding in response.bindings
+        if full_group_name in binding.members
+    ]
+
+
 def get_user_permissions(organization_id: str, user_groups: list[str]):
     user_permissions_list = [
         _get_roles_associated_with_group(group, organization_id)

@@ -41,6 +41,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
     },
     {
@@ -69,6 +70,7 @@ CREATE_WORKSPACE_STEPS = [
             "TF_VAR_emailid=${_EMAIL_ID}",
             "TF_VAR_workspace_region=${_WORKSPACE_REGION}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
+            "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
     },
     {
@@ -252,6 +254,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
     },
 ]
@@ -342,6 +345,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_brand_name=${_BRAND_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
     },
     {
@@ -401,6 +405,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_brand_name=${_BRAND_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
     },
 ]
