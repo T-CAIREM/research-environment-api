@@ -21,6 +21,14 @@ GOOGLE_REGIONS_SHORTCUTS = {
     Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
 }
 
+QUOTAS_TO_LIST = [
+    "compute.googleapis.com/regional_in_use_addresses",
+    "compute.googleapis.com/disks_total_storage",
+    "compute.googleapis.com/instances",
+    "compute.googleapis.com/nvidia_t4_gpus",
+    "compute.googleapis.com/cpus"
+]
+
 
 class WorkspaceStatus(StrEnum):
     CREATED = "created"
@@ -143,3 +151,9 @@ class EntityScaffolding:
     id: str
     status: Union[WorkbenchStatus, WorkspaceStatus]
     gcp_project_id: str
+
+
+@dataclass
+class WorkspaceListQuotasQuery:
+    workspace_project_id: str
+    region: str

@@ -220,3 +220,30 @@ def list_active_shared_workspaces(email: str):
     ).dump(shared_workspaces)
 
     return serialized_shared_workspaces, 200
+
+@workspace_management_bp.get("/quotas/<region>/<workspace_project_id>")
+@validate_token
+def list_workspace_quotas(region: str, workspace_project_id: str):
+    """Creates the specified workspace.
+    ---
+    post:
+      tags:
+        - workspace_management
+      description: Creates the specified workspace.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkspaceCreationRequest
+      responses:
+        200:
+          description: Returns the ID of the workflow.
+          content:
+            application/json:
+              schema: WorkspaceWorkflowIdentifier
+    """
+    list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load({"workspace_project_id": workspace_project_id, "region": region})
+    workspace_list_quotas_query_entity = entities.WorkspaceListQuotasQuery(
+        **list_workspace_quotas_request
+    )
+
+    return services.list_workspace_quotas(workspace_list_quotas_query_entity)
