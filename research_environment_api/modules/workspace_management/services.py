@@ -1,10 +1,11 @@
 import random
 import string
 import time
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, List
 
 from google.cloud import monitoring_v3, service_usage_v1
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
+from google.cloud.service_usage_v1.types import resources
 
 from research_environment_api.background import enums, schedulers
 from research_environment_api.modules.app import app
@@ -264,7 +265,7 @@ def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> s
 
 def list_workspace_quotas(
     workspace_list_quotas_query: entities.WorkspaceListQuotasQuery,
-):
+) -> List[dict]:
     # Initialize the clients
     project_id = workspace_list_quotas_query.workspace_project_id
     service_info = _get_service_info(project_id)
@@ -290,7 +291,7 @@ def list_workspace_quotas(
 
 
 @cache.memoize(timeout=86400)
-def _get_service_info(project_id):
+def _get_service_info(project_id: str) -> resources.Service:
     client = service_usage_v1.ServiceUsageClient()
     service_name = f"projects/{project_id}/services/compute.googleapis.com"
 
@@ -300,7 +301,7 @@ def _get_service_info(project_id):
 
 
 @cache.memoize(timeout=86400)
-def _get_current_metric_usage(project_id, region, metric):
+def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
     client = monitoring_v3.MetricServiceClient()
 
     # Query current usage for the given metric
@@ -330,7 +331,7 @@ def _get_current_metric_usage(project_id, region, metric):
     return 0 if len(results) == 0 else results[0].points[0].value.int64_value
 
 
-def _build_filter(project_id, region, metric):
+def _build_filter(project_id: str, region: str, metric: str) -> str:
     return (
         'resource.type="consumer_quota" AND '
         'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
