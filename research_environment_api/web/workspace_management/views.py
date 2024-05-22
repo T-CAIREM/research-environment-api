@@ -221,29 +221,35 @@ def list_active_shared_workspaces(email: str):
 
     return serialized_shared_workspaces, 200
 
+
 @workspace_management_bp.get("/quotas/<region>/<workspace_project_id>")
 @validate_token
 def list_workspace_quotas(region: str, workspace_project_id: str):
-    """Creates the specified workspace.
+    """Lists limits and current usage for entities.QUOTAS_TO_LIST quotas.
     ---
     post:
       tags:
         - workspace_management
-      description: Creates the specified workspace.
+      description: Lists limits and current usage for entities.QUOTAS_TO_LIST quotas.
       requestBody:
         content:
           application/json:
-            schema: WorkspaceCreationRequest
+            schema: ListWorkspaceQuotasRequest
       responses:
         200:
-          description: Returns the ID of the workflow.
+          description: Returns a list of dicts containing quota name, limit and current usage.
           content:
             application/json:
-              schema: WorkspaceWorkflowIdentifier
+              schema:
+                type: array
+                items: dict
     """
-    list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load({"workspace_project_id": workspace_project_id, "region": region})
+    list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load(
+        {"workspace_project_id": workspace_project_id, "region": region}
+    )
     workspace_list_quotas_query_entity = entities.WorkspaceListQuotasQuery(
         **list_workspace_quotas_request
     )
+    quotas_list = services.list_workspace_quotas(workspace_list_quotas_query_entity)
 
-    return services.list_workspace_quotas(workspace_list_quotas_query_entity)
+    return quotas_list, 200

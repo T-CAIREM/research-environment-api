@@ -26,7 +26,7 @@ QUOTAS_TO_LIST = [
     "compute.googleapis.com/disks_total_storage",
     "compute.googleapis.com/instances",
     "compute.googleapis.com/nvidia_t4_gpus",
-    "compute.googleapis.com/cpus"
+    "compute.googleapis.com/cpus",
 ]
 
 

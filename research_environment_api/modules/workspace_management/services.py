@@ -262,7 +262,9 @@ def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> s
     return f"{dataset_identifier[:15]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
 
 
-def list_workspace_quotas(workspace_list_quotas_query: entities.WorkspaceListQuotasQuery):
+def list_workspace_quotas(
+    workspace_list_quotas_query: entities.WorkspaceListQuotasQuery,
+):
     # Initialize the clients
     project_id = workspace_list_quotas_query.workspace_project_id
     service_info = _get_service_info(project_id)
@@ -276,15 +278,18 @@ def list_workspace_quotas(workspace_list_quotas_query: entities.WorkspaceListQuo
             continue
 
         quota_info = {
-            'metric_name': limit.display_name,
-            'limit': limit.values["DEFAULT"],
-            'usage': _get_current_metric_usage(project_id, workspace_list_quotas_query.region, limit.metric)
+            "metric_name": limit.display_name,
+            "limit": limit.values["DEFAULT"],
+            "usage": _get_current_metric_usage(
+                project_id, workspace_list_quotas_query.region, limit.metric
+            ),
         }
         quota_list.append(quota_info)
 
-    return quota_list, 201
+    return quota_list
 
-@cache.cached(timeout=300, key_prefix='get_service_info')
+
+@cache.memoize(timeout=86400)
 def _get_service_info(project_id):
     client = service_usage_v1.ServiceUsageClient()
     service_name = f"projects/{project_id}/services/compute.googleapis.com"
@@ -293,27 +298,30 @@ def _get_service_info(project_id):
     request = service_usage_v1.GetServiceRequest(name=service_name)
     return client.get_service(request=request)
 
-@cache.cached(timeout=300, key_prefix='get_current_metric_usage')
+
+@cache.memoize(timeout=86400)
 def _get_current_metric_usage(project_id, region, metric):
     client = monitoring_v3.MetricServiceClient()
 
     # Query current usage for the given metric
-    project_name = f'projects/{project_id}'
-    interval = monitoring_v3.TimeInterval({
-        "end_time": {"seconds": int(time.time())},
-        "start_time": {"seconds": int(time.time()) - 604800}
-    })
+    project_name = f"projects/{project_id}"
+    interval = monitoring_v3.TimeInterval(
+        {
+            "end_time": {"seconds": int(time.time())},
+            "start_time": {"seconds": int(time.time()) - 604800},  # one week
+        }
+    )
     aggregation = monitoring_v3.Aggregation(
         alignment_period={"seconds": 60},
         cross_series_reducer=monitoring_v3.Aggregation.Reducer.REDUCE_SUM,
-        per_series_aligner=monitoring_v3.Aggregation.Aligner.ALIGN_NEXT_OLDER
+        per_series_aligner=monitoring_v3.Aggregation.Aligner.ALIGN_NEXT_OLDER,
     )
     request = monitoring_v3.ListTimeSeriesRequest(
         name=project_name,
         filter=_build_filter(project_id, region, metric),
         interval=interval,
         aggregation=aggregation,
-        view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL
+        view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
     )
 
     client.list_time_series(request)
@@ -323,9 +331,11 @@ def _get_current_metric_usage(project_id, region, metric):
 
 
 def _build_filter(project_id, region, metric):
-    return ('resource.type="consumer_quota" AND '
-            'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
-            f'resource.label.project_id="{project_id}" AND '
-            'resource.label.service="compute.googleapis.com" AND '
-            f'metric.label.quota_metric="{metric}" AND '
-            f'resource.label.location="{region}"')
+    return (
+        'resource.type="consumer_quota" AND '
+        'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
+        f'resource.label.project_id="{project_id}" AND '
+        'resource.label.service="compute.googleapis.com" AND '
+        f'metric.label.quota_metric="{metric}" AND '
+        f'resource.label.location="{region}"'
+    )
