@@ -340,3 +340,8 @@ def _build_filter(project_id: str, region: str, metric: str) -> str:
         f'metric.label.quota_metric="{metric}" AND '
         f'resource.label.location="{region}"'
     )
+
+def clear_quotas_cache(project_id, region):
+    for metric in entities.QUOTAS_TO_LIST:
+        cache.delete_memoized(_get_current_metric_usage, project_id, region, metric)
+    cache.delete_memoized(_get_service_info, project_id)
