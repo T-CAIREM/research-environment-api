@@ -24,7 +24,7 @@ from research_environment_api.modules.monitoring_management import (
     models,
     monitoring as monitoring_services,
 )
-from research_environment_api.web.cache import cache
+from research_environment_api.web.cache import cache, QUOTAS_CACHE_TIMEOUT
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
@@ -265,32 +265,26 @@ def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> s
 
 def list_workspace_quotas(
     workspace_list_quotas_query: entities.WorkspaceListQuotasQuery,
-) -> List[dict]:
+) -> List[entities.QuotaInfo]:
     # Initialize the clients
     project_id = workspace_list_quotas_query.workspace_project_id
     service_info = _get_service_info(project_id)
+    quotas_to_list = [metric.value for metric in entities.QuotaMetrics]
 
-    quota_list = []
-    for limit in service_info.config.quota.limits:
-        if not limit.metric in entities.QUOTAS_TO_LIST:
-            continue
-
-        if limit.values["DEFAULT"] <= 0:
-            continue
-
-        quota_info = {
-            "metric_name": limit.display_name,
-            "limit": limit.values["DEFAULT"],
-            "usage": _get_current_metric_usage(
+    return [
+        entities.QuotaInfo(
+            metric_name=limit.display_name,
+            limit=limit.values["DEFAULT"],
+            usage=_get_current_metric_usage(
                 project_id, workspace_list_quotas_query.region, limit.metric
             ),
-        }
-        quota_list.append(quota_info)
+        )
+        for limit in service_info.config.quota.limits
+        if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
+    ]
 
-    return quota_list
 
-
-@cache.memoize(timeout=86400)
+@cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
 def _get_service_info(project_id: str) -> resources.Service:
     client = service_usage_v1.ServiceUsageClient()
     service_name = f"projects/{project_id}/services/compute.googleapis.com"
@@ -300,7 +294,7 @@ def _get_service_info(project_id: str) -> resources.Service:
     return client.get_service(request=request)
 
 
-@cache.memoize(timeout=86400)
+@cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
 def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
     client = monitoring_v3.MetricServiceClient()
 
@@ -341,7 +335,10 @@ def _build_filter(project_id: str, region: str, metric: str) -> str:
         f'resource.label.location="{region}"'
     )
 
-def clear_quotas_cache(project_id, region):
-    for metric in entities.QUOTAS_TO_LIST:
-        cache.delete_memoized(_get_current_metric_usage, project_id, region, metric)
+
+def clear_quotas_cache(project_id: str, region: str) -> None:
+    for metric in entities.QuotaMetrics:
+        cache.delete_memoized(
+            _get_current_metric_usage, project_id, region, metric.value
+        )
     cache.delete_memoized(_get_service_info, project_id)

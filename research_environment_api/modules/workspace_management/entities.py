@@ -21,13 +21,13 @@ GOOGLE_REGIONS_SHORTCUTS = {
     Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
 }
 
-QUOTAS_TO_LIST = [
-    "compute.googleapis.com/regional_in_use_addresses",
-    "compute.googleapis.com/disks_total_storage",
-    "compute.googleapis.com/instances",
-    "compute.googleapis.com/nvidia_t4_gpus",
-    "compute.googleapis.com/cpus",
-]
+
+class QuotaMetrics(StrEnum):
+    IN_USE_IP_ADDRESSES = "compute.googleapis.com/regional_in_use_addresses"
+    PERSISTENT_DISK_TOTAL = "compute.googleapis.com/disks_total_storage"
+    VM_INSTANCES = "compute.googleapis.com/instances"
+    CPUS = "compute.googleapis.com/cpus"
+    NVIDIA_T4_GPUS = "compute.googleapis.com/nvidia_t4_gpus"
 
 
 class WorkspaceStatus(StrEnum):
@@ -157,3 +157,10 @@ class EntityScaffolding:
 class WorkspaceListQuotasQuery:
     workspace_project_id: str
     region: str
+
+
+@dataclass
+class QuotaInfo:
+    metric_name: str
+    limit: int
+    usage: int
