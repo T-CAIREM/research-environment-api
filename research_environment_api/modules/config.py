@@ -10,6 +10,7 @@ import google.cloud.storage
 import google.cloud.notebooks_v2
 import google.cloud.resourcemanager_v3
 import google.cloud.iam_admin_v1
+from google.cloud import service_usage_v1, monitoring_v3
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -128,6 +129,16 @@ class Config:
         )
         self.google_cloud_notebooks_operation_client = (
             self.google_cloud_notebooks_client._transport.operations_client
+        )
+        self.google_service_usage_client = (
+            service_usage_v1.ServiceUsageClient(
+                credentials=self.service_account_credentials
+            )
+        )
+        self.google_metric_service_client = (
+            monitoring_v3.MetricServiceClient(
+                credentials=self.service_account_credentials
+            )
         )
 
         self.organization_client = google.cloud.resourcemanager_v3.OrganizationsClient(

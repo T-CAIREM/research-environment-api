@@ -286,7 +286,7 @@ def list_workspace_quotas(
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
 def _get_service_info(project_id: str) -> resources.Service:
-    client = service_usage_v1.ServiceUsageClient()
+    client = app.config.google_service_usage_client
     service_name = f"projects/{project_id}/services/compute.googleapis.com"
 
     # Retrieve quota metrics for each enabled service
@@ -296,7 +296,7 @@ def _get_service_info(project_id: str) -> resources.Service:
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
 def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
-    client = monitoring_v3.MetricServiceClient()
+    client = app.config.google_metric_service_client
 
     # Query current usage for the given metric
     project_name = f"projects/{project_id}"
