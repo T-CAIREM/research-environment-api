@@ -2,21 +2,23 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.user_group_management import entities
 
 import itertools
+import json
 
 
 def create_group(user_group_creation_entity: entities.UserGroupCreation):
     identity_client = app.config.cloud_identity_client
     group = {
         "labels": {"cloudidentity.googleapis.com/groups.discussion_forum": ""},
-        "parent": f"organizations/{user_group_creation_entity.organization_id}",
+        "parent": f"customers/{user_group_creation_entity.customer_id}",
         "displayName": f"hdn-{user_group_creation_entity.group_name}",
         "description": user_group_creation_entity.description,
         "groupKey": {
             "id": f"hdn-{user_group_creation_entity.group_name}@healthdatanexus.ai"
         },
     }
-    group = identity_client.groups().create(group)
-    return group
+    group = identity_client.groups().create(body=group)
+    group_json = json.loads(group.to_json())
+    return group_json["body"]
 
 
 def _get_roles_associated_with_group(group_name: str, organization_id: str):

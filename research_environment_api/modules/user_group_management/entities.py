@@ -6,13 +6,18 @@ from research_environment_api.modules.app import app
 class UserGroupCreation:
     group_name: str
     description: str
-    organization_id: str = field(init=False)
+    customer_id: str = field(init=False)
 
     def __post_init__(self):
-        self.organization_id = app.config.organization_id
+        self.customer_id = app.config.customer_id
 
 
 @dataclass
 class GetUserPermissions:
     groups: str
     organization_id: str
+
+
+@dataclass
+class UserGroupDeletion:
+    group_name: str
