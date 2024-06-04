@@ -2,7 +2,6 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.user_group_management import entities
 
 import itertools
-import json
 
 
 def create_group(user_group_creation_entity: entities.UserGroupCreation):
@@ -16,9 +15,20 @@ def create_group(user_group_creation_entity: entities.UserGroupCreation):
             "id": f"hdn-{user_group_creation_entity.group_name}@healthdatanexus.ai"
         },
     }
-    group = identity_client.groups().create(body=group)
-    group_json = json.loads(group.to_json())
-    return group_json["body"]
+    group = (
+        identity_client.groups()
+        .create(body=group, initialGroupConfig="WITH_INITIAL_OWNER")
+        .execute()
+    )
+    return group
+
+
+def delete_group(user_group_deletion_entity: entities.UserGroupDeletion):
+    identity_client = app.config.cloud_identity_client
+    group_id = f"hdn-{user_group_deletion_entity.group_name}@healthdatanexus.ai"
+    group = identity_client.groups().lookup(groupKey_id=group_id).execute()
+    deleted_group = identity_client.groups().delete(name=group["name"]).execute()
+    return deleted_group
 
 
 def _get_roles_associated_with_group(group_name: str, organization_id: str):
