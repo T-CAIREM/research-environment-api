@@ -13,11 +13,5 @@ class UserGroupCreation:
 
 
 @dataclass
-class GetUserPermissions:
-    groups: str
-    organization_id: str
-
-
-@dataclass
 class UserGroupDeletion:
     group_name: str
