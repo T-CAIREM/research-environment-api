@@ -35,6 +35,7 @@ locals {
     WORKBENCHES_PARENT_PROJECT_ID = var.workbenches_parent_project_id
     GCP_SIGNED_URL_EXPIRATION_TIME = var.gcp_signed_url_expiration_time
     GCP_CORS_ALLOWED_ORIGINS = var.gcp_cors_allowed_origins
+    ORGANIZATION_ID = var.cloud_organization_id
     CLOUD_RESEARCH_ENVIRONMENTS_API_URL = var.cloud_research_environments_api_url
   }
 }

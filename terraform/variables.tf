@@ -138,3 +138,7 @@ variable "gcp_cors_allowed_origins" {
 variable "cloud_research_environments_api_url" {
   type = string
 }
+
+variable "cloud_organization_id" {
+  type = string
+}
