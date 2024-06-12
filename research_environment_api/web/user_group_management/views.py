@@ -42,7 +42,7 @@ def create_group():
 def delete_group():
     """Deletes a Google group that is used to manage permissions.
     ---
-    post:
+    delete:
       tags:
         - user_group_management
       description: Deletes a Google user group used to manage user permissions
@@ -64,3 +64,56 @@ def delete_group():
     )
     group = services.delete_group(user_group_deletion_entity)
     return group, 200
+
+
+@user_group_bp.get("/roles")
+@validate_token
+def list_roles():
+    """Lists all predetermined and organization based roles provided by Google.
+    ---
+    get:
+      tags:
+        - user_group_management
+      description: Lists all predetermined and organization based roles provided by Google
+      requestBody:
+        content:
+          application/json:
+            schema: UserGroupRoleListingRequest
+      responses:
+        200:
+          description: Returns a list of Google roles.
+          content:
+            application/json:
+              schema:
+    """
+    user_group_roles_listing_entity = entities.UserGroupRoleListing()
+    role_entity_list = services.get_google_roles_list(user_group_roles_listing_entity)
+    roles_list = schemas.GoogleRole(many=True).dump(role_entity_list)
+    return roles_list, 200
+
+
+@user_group_bp.post("/roles/add")
+@validate_token
+def add_roles():
+    """Adds roles to a specific Google Group.
+    ---
+    post:
+      tags:
+        - user_group_management
+      description: Adds roles to a specific Google Group
+      requestBody:
+        content:
+          application/json:
+            schema: UserGroupRoleListingRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    group_role_addition = schemas.GroupRoleListChangeRequest().load(body)
+    add_role_to_group_entity = entities.ChangeGroupRoles(**group_role_addition)
+    services.add_role_to_group(add_role_to_group_entity)
+    return {}, 200
