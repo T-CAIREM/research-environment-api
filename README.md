@@ -37,3 +37,18 @@ sops --encrypt credentials.json > credentials.enc.json
 
 *REMEMBER THAT ONLY ENCRYPTED FILE NEEDS TO BE PUSHED TO REMOTE REPOSITORY*
 
+### Terraform Variables Management
+
+To decrypt terraform variables in directory `./terraform/tfvars/dev` or `./terraform/tfvars/prod` run
+
+```commandline
+sops --decrypt terraform.tfvars.enc > terraform.tfvars
+```
+
+To update terraform variables decrypt them using above command, change or add new value in `terraform.tfvars` file, and encrypt using:
+
+```commandline
+sops --encrypt terraform.tfvars > terraform.tfvars.enc
+```
+
+Decrypted tfvars file needs to placed inside `./terraform` directory for it to work.
