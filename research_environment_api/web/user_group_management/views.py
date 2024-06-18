@@ -104,7 +104,7 @@ def add_roles():
       requestBody:
         content:
           application/json:
-            schema: UserGroupRoleListingRequest
+            schema: GroupRoleListChangeRequest
       responses:
         200:
           description: Returns an empty object.
@@ -116,4 +116,31 @@ def add_roles():
     group_role_addition = schemas.GroupRoleListChangeRequest().load(body)
     add_role_to_group_entity = entities.ChangeGroupRoles(**group_role_addition)
     services.add_role_to_group(add_role_to_group_entity)
+    return {}, 200
+
+
+@user_group_bp.post("/roles/remove")
+@validate_token
+def remove_roles():
+    """Removes roles from a specific Google Group.
+    ---
+    post:
+      tags:
+        - user_group_management
+      description: Removes roles from a specific Google Group
+      requestBody:
+        content:
+          application/json:
+            schema: GroupRoleListChangeRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    group_role_addition = schemas.GroupRoleListChangeRequest().load(body)
+    remove_role_from_group_entity = entities.ChangeGroupRoles(**group_role_addition)
+    services.remove_roles_from_group(remove_role_from_group_entity)
     return {}, 200

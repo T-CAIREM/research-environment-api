@@ -1,5 +1,7 @@
 from research_environment_api.modules.app import app
 from research_environment_api.modules.user_group_management import entities
+from google import protobuf
+from typing import Optional
 
 import itertools
 
@@ -95,6 +97,26 @@ def get_google_roles_list(
     return predefined_roles + organization_roles
 
 
+def _copy_policy(policy) -> dict:
+    policy_keys = ["members", "bindings"]
+    # Filter out gRPC keys (version, etag)
+    return {
+        key: value
+        for key, value in protobuf.json_format.MessageToDict(policy).items()
+        if key in policy_keys
+    }
+
+
+def _get_policy_user_binding(policy: dict, role: str) -> Optional[dict]:
+    return next(
+        filter(
+            lambda binding: binding["role"] == role,
+            policy["bindings"],
+        ),
+        None,
+    )
+
+
 def add_role_to_group(add_role_to_group_entity: entities.ChangeGroupRoles):
     organization_client = app.config.organization_client
     full_group_name = _get_full_group_name(add_role_to_group_entity.group_name)
@@ -103,21 +125,27 @@ def add_role_to_group(add_role_to_group_entity: entities.ChangeGroupRoles):
     policy = organization_client.get_iam_policy(
         {"resource": f"organizations/{add_role_to_group_entity.organization_id}"}
     )
-    google_bindings = policy.bindings
-    for binding in google_bindings:
+    new_policy = _copy_policy(policy)
+    for binding in new_policy["bindings"]:
         if (
-            binding.role in add_role_to_group_entity.role_list
+            binding["role"] in add_role_to_group_entity.role_list
             and group_binding not in binding["members"]
         ):
-            binding["members"].add(group_binding)
-            add_role_to_group_entity.role_list.remove(binding.role)
+            if group_binding not in binding["members"]:
+                binding["members"].append(group_binding)
+
+            add_role_to_group_entity.role_list.remove(binding["role"])
 
     for unassigned_role in add_role_to_group_entity.role_list:
-        google_bindings.append(
+        new_policy["bindings"].append(
             {"role": unassigned_role, "members": {f"{group_binding}"}}
         )
-
-    organization_client.set_iam_policy(policy)
+    organization_client.set_iam_policy(
+        {
+            "policy": new_policy,
+            "resource": f"organizations/{add_role_to_group_entity.organization_id}",
+        }
+    )
 
 
 def remove_roles_from_group(remove_role_from_group_entity: entities.ChangeGroupRoles):
@@ -128,13 +156,17 @@ def remove_roles_from_group(remove_role_from_group_entity: entities.ChangeGroupR
     policy = organization_client.get_iam_policy(
         {"resource": f"organizations/{remove_role_from_group_entity.organization_id}"}
     )
-    google_bindings = policy.bindings
-    for binding in google_bindings:
+    new_policy = _copy_policy(policy)
+    for binding in new_policy["bindings"]:
         if (
-            binding.role in remove_role_from_group_entity.role_list
-            and group_binding not in binding["members"]
+            binding["role"] in remove_role_from_group_entity.role_list
+            and group_binding in binding["members"]
         ):
             binding["members"].remove(group_binding)
-            remove_role_from_group_entity.role_list.remove(binding.role)
-
-    organization_client.set_iam_policy(policy)
+            remove_role_from_group_entity.role_list.remove(binding["role"])
+    organization_client.set_iam_policy(
+        {
+            "policy": new_policy,
+            "resource": f"organizations/{remove_role_from_group_entity.organization_id}",
+        }
+    )
