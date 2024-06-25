@@ -6,6 +6,7 @@ from research_environment_api.web.user_group_management import (
     user_group_bp,
 )
 from research_environment_api.modules.user_group_management import services, entities
+from research_environment_api.web.cache import cache
 
 
 @user_group_bp.post("/create")
@@ -84,11 +85,62 @@ def list_roles():
           description: Returns a list of Google roles.
           content:
             application/json:
-              schema:
+              schema: GoogleRole
     """
     user_group_roles_listing_entity = entities.UserGroupRoleListing()
     role_entity_list = services.get_google_roles_list(user_group_roles_listing_entity)
     roles_list = schemas.GoogleRole(many=True).dump(role_entity_list)
+    return roles_list, 200
+
+
+@user_group_bp.get("/roles/iam")
+@validate_token
+@cache.cached(timeout=300)
+def get_groups_iam_permissions():
+    """Gets full list of IAM roles associated with selected groups.
+    ---
+    get:
+      tags:
+        - user_group_management
+      description: Gets full list of IAM roles associated with selected groups
+      requestBody:
+        content:
+          application/json:
+            schema: UserGroupRoleListingRequest
+      responses:
+        200:
+          description: Returns a list Google Groups and their IAM Roles.
+          content:
+            application/json:
+              schema:
+    """
+    user_groups_iam_list_entity = entities.UserGroupRoleListing()
+    roles_list = services.get_user_groups_iam_roles(user_groups_iam_list_entity)
+    return roles_list, 200
+
+
+@user_group_bp.get("/roles/iam/<group_name>")
+@validate_token
+def get_user_group_iam_roles(group_name: str):
+    """Get roles for a specific Google Group.
+    ---
+    get:
+      tags:
+        - user_group_management
+      description: Get roles for a specific Google Group
+      requestBody:
+        content:
+          application/json:
+            schema: UserGroupRoleListingRequest
+      responses:
+        200:
+          description: Returns roles for a specific Google Group.
+          content:
+            application/json:
+              schema:
+    """
+    user_group_iam_listing_entity = entities.UserGroupIAMListing(group_name=group_name)
+    roles_list = services.get_user_group_iam_roles(user_group_iam_listing_entity)
     return roles_list, 200
 
 

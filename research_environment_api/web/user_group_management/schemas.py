@@ -19,3 +19,7 @@ class GoogleRole(Schema):
 class GroupRoleListChangeRequest(Schema):
     group_name = fields.Str(required=True)
     role_list = fields.List(fields.Str(), required=True)
+
+
+class GetGroupsRolesRequest(Schema):
+    group_names = fields.List(fields.Str(), required=True)
