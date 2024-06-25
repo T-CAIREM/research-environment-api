@@ -2,29 +2,55 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Iterable, Optional, List
+from os import environ
 
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+from google.cloud.compute_v1.types.compute import AggregatedListMachineTypesRequest
 
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
 from research_environment_api.modules.monitoring_management import models
+
+from google.cloud import compute_v1
 
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachoneResources", ["cpu", "memory"]
 )
 
 
-MACHINE_TYPE_TO_RESOURCE_MAP = {
-    "n1-standard-2": ComputeEngineMachineResources(2.0, 7.5),
-    "n1-standard-4": ComputeEngineMachineResources(4.0, 15.0),
-    "n1-standard-8": ComputeEngineMachineResources(8.0, 30.0),
-    "n1-standard-16": ComputeEngineMachineResources(16.0, 60.0),
-    "n2-standard-2": ComputeEngineMachineResources(2.0, 8.0),
-    "n2-standard-4": ComputeEngineMachineResources(4.0, 16.0),
-    "n2-standard-8": ComputeEngineMachineResources(8.0, 32.0),
-    "n2-standard-16": ComputeEngineMachineResources(16.0, 64.0),
-}
+def generate_machine_types(page_result, zones):
 
+    machine_types_dict = {}
+
+    for zone in zones:
+        machine_types = page_result.items[zone]
+        for machine_type in machine_types.machine_types:
+            machine_type_name = machine_type.name.split("/")[-1]
+            machine_type_enum_name = machine_type_name.upper().replace("-", "_")
+            if machine_type_enum_name not in machine_types_dict.keys():
+                machine_types_dict[machine_type_enum_name] = machine_type_name
+
+    return StrEnum("MachineType", machine_types_dict)
+
+def generate_required_maps(project_id: str):
+    machine_type_to_resource_map = {}
+    compute_client = compute_v1.MachineTypesClient()
+    machine_types_request = AggregatedListMachineTypesRequest(project=project_id)
+    page_result = compute_client.aggregated_list(machine_types_request)
+    zones = [zone for zone in page_result.items]
+    machine_type_enum = generate_machine_types(page_result, zones)
+    for zone in page_result.items:
+        machine_types = page_result.items[zone]
+        for machine_type in machine_types.machine_types:
+            machine_type_name = machine_type.name.split("/")[-1]
+            machine_type_to_resource_map[machine_type_name] = ComputeEngineMachineResources(
+                machine_type.guest_cpus,
+                machine_type.memory_mb / 1024,
+            )
+    return machine_type_to_resource_map, machine_type_enum
+
+
+MACHINE_TYPE_TO_RESOURCE_MAP, MachineType = generate_required_maps(environ["PROJECT_ID"])
 
 class Region(StrEnum):
     US_CENTRAL = "us-central1"
@@ -46,17 +72,6 @@ class WorkbenchStatus(StrEnum):
     DESTROYING = "destroying"
     CREATING = "creating"
     STARTING = "starting"
-
-
-class MachineType(StrEnum):
-    N1_SMALL = "n1-standard-2"
-    N1_MEDIUM = "n1-standard-4"
-    N1_LARGE = "n1-standard-8"
-    N1_XLARGE = "n1-standard-16"
-    N2_SMALL = "n2-standard-2"
-    N2_MEDIUM = "n2-standard-4"
-    N2_LARGE = "n2-standard-8"
-    N2_XLARGE = "n2-standard-16"
 
 
 class GpuAcceleratorType(StrEnum):
@@ -123,8 +138,10 @@ class Workbench:
         bucket_name = metadata["bucket_name"]
         vm_image = metadata["vm_image"]
         service_account_name = metadata["service_account_name"]
-        machine_type = MachineType(instance.machine_type.split("/")[-1])
-        computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
+        machine_type_name = instance.machine_type.split("/")[-1]
+        computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
+        if not computing_resources:
+            raise ValueError(f"Machine type {machine_type_name} not found.")
         gpu_accelerator_type = (
             GpuAcceleratorType(
                 instance.guest_accelerators[0].accelerator_type.split("/")[-1]
@@ -167,7 +184,7 @@ class Workbench:
             status=status,
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
-            machine_type=machine_type,
+            machine_type=MachineType(machine_type_name),
             url=maybe_proxy_url,
             zone=zone,
             type=workbench_type,
@@ -189,7 +206,9 @@ class BaseWorkbenchEntity:
 @dataclass
 class WorkbenchCreate(BaseWorkbenchEntity):
     workspace_numeric_id: str
-    machine_type: MachineType
+    machine_type: str
+    memory: float
+    cpu: int
     disk_size: int
     dataset_identifier: str
     bucket_name: str
