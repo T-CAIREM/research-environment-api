@@ -8,6 +8,8 @@ import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
 import google.cloud.storage
 import google.cloud.notebooks_v2
+import google.cloud.resourcemanager_v3
+
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -39,6 +41,7 @@ class Config:
         self.organization_domain = environ.get(
             "ORGANIZATION_DOMAIN", "healthdatanexus.ai"
         )
+        self.organization_id = environ.get("ORGANIZATION_ID")
         self.billing_account_creator_group_id = environ[
             "BILLING_ACCOUNT_CREATOR_GROUP_ID"
         ]
@@ -91,6 +94,10 @@ class Config:
         self.google_workspace_client = WorkspaceClient(
             credentials=self.service_account_credentials
         )
+        self.admin_directory_client = (
+            self.google_workspace_client.admin_directory_client
+        )
+        self.cloud_identity_client = self.google_workspace_client.cloud_identity_client
         self.google_cloud_resource_client = google.cloud.resourcemanager.ProjectsClient(
             credentials=self.service_account_credentials
         )
@@ -120,6 +127,10 @@ class Config:
         )
         self.google_cloud_notebooks_operation_client = (
             self.google_cloud_notebooks_client._transport.operations_client
+        )
+
+        self.organization_client = google.cloud.resourcemanager_v3.OrganizationsClient(
+            credentials=self.service_account_credentials
         )
 
 
