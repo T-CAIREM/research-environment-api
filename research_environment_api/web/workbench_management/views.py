@@ -1,6 +1,7 @@
 from flask import request
 
 from research_environment_api.modules.workbench_management import entities, services
+from research_environment_api.web.cache import cache
 from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.workbench_management import (
     schemas,
@@ -45,7 +46,7 @@ def create_workbench():
     workbench_entity = entities.WorkbenchCreate(
         **workbench_creation_request,
         region=workspace_region,
-        workspace_numeric_id=workspace_numeric_id
+        workspace_numeric_id=workspace_numeric_id,
     )
     workbench_activity_id = services.schedule_workbench_create(workbench_entity)
     workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(

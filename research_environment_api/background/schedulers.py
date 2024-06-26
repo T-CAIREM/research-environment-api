@@ -56,6 +56,11 @@ def create_jupyter_workbench(
         user_permissions_list=user_permissions_list,
     )
 
+    _clear_quotas_cache(
+        workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
+    )
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = monitoring_models.WorkbenchActivity(
@@ -213,6 +218,9 @@ def stop_compute_engine_workbench(
         instance_name=workbench_stop_request.workbench_resource_id,
         user_email=workbench_stop_request.user_email,
     )
+
+    _clear_quotas_cache(workbench_stop_request.workspace_project_id, workbench.region)
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = monitoring_models.WorkbenchActivity(
@@ -243,6 +251,9 @@ def stop_jupyter_workbench(
         instance_name=workbench_stop_request.workbench_resource_id,
         user_email=workbench_stop_request.user_email,
     )
+
+    _clear_quotas_cache(workbench_stop_request.workspace_project_id, workbench.region)
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = monitoring_models.WorkbenchActivity(
@@ -273,6 +284,9 @@ def start_jupyter_workbench(
         instance_name=workbench_start_request.workbench_resource_id,
         user_email=workbench_start_request.user_email,
     )
+
+    _clear_quotas_cache(workbench_start_request.workspace_project_id, workbench.region)
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = monitoring_models.WorkbenchActivity(
@@ -314,6 +328,8 @@ def update_jupyter_workbench(
             workbench_update_request.workspace_project_id,
         )
     )
+
+    _clear_quotas_cache(workbench_update_request.workspace_project_id, workbench.region)
 
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -363,6 +379,10 @@ def destroy_jupyter_workbench(
         gcp_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench_destroy_request.workbench_resource_id,
         user_email=workbench_destroy_request.user_email,
+    )
+
+    _clear_quotas_cache(
+        workbench_destroy_request.workspace_project_id, workbench.region
     )
 
     build = builds.destroy_jupyter_workbench_build(
@@ -419,6 +439,11 @@ def create_rstudio_workbench(
         workbench_creation_request.user_groups,
     )
 
+    _clear_quotas_cache(
+        workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
+    )
+
     build = builds.create_rstudio_workbench_build(
         workspace_project_id=workbench_creation_request.workspace_project_id,
         workspace_numeric_id=workbench_creation_request.workspace_numeric_id,
@@ -469,6 +494,9 @@ def start_rstudio_workbench(
         instance_name=workbench_start_request.workbench_resource_id,
         user_email=workbench_start_request.user_email,
     )
+
+    _clear_quotas_cache(workbench_start_request.workspace_project_id, workbench.region)
+
     with app.database_session() as session:
         with session.begin():
             workbench_activity = monitoring_models.WorkbenchActivity(
@@ -511,6 +539,8 @@ def update_rstudio_workbench(
             workbench_update_request.workspace_project_id,
         )
     )
+
+    _clear_quotas_cache(workbench_update_request.workspace_project_id, workbench.region)
 
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -560,6 +590,10 @@ def destroy_rstudio_workbench(
         workbench_destroy_request.user_email,
     )
 
+    _clear_quotas_cache(
+        workbench_destroy_request.workspace_project_id, workbench.region
+    )
+
     build = builds.destroy_rstudio_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench.id,
@@ -596,3 +630,12 @@ def destroy_rstudio_workbench(
             )()
 
             return workbench_activity.id
+
+
+def _clear_quotas_cache(workspace_project_id, region):
+    # import here to avoid circular import
+    from research_environment_api.modules.workspace_management import (
+        services as workspace_services,
+    )
+
+    workspace_services.clear_quotas_cache(workspace_project_id, region)

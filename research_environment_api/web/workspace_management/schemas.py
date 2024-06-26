@@ -90,3 +90,8 @@ class EntityScaffoldingWorkspaceSchema(OneOfSchema):
 
 class WorkspaceWorkflowIdentifier(Schema):
     workflow_id = fields.Str(required=True)
+
+
+class ListWorkspaceQuotasRequest(Schema):
+    workspace_project_id = fields.Str(required=True)
+    region = fields.Enum(Region, by_value=True, required=True)
