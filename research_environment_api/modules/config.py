@@ -9,7 +9,7 @@ import google.cloud.resourcemanager
 import google.cloud.storage
 import google.cloud.notebooks_v2
 import google.cloud.resourcemanager_v3
-
+import google.cloud.iam_admin_v1
 from google.oauth2 import service_account
 
 from research_environment_api.library.google.billing import BillingClient
@@ -131,6 +131,9 @@ class Config:
         )
 
         self.organization_client = google.cloud.resourcemanager_v3.OrganizationsClient(
+            credentials=self.service_account_credentials
+        )
+        self.google_iam_client = google.cloud.iam_admin_v1.IAMClient(
             credentials=self.service_account_credentials
         )
 

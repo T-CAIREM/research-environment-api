@@ -1,5 +1,7 @@
 from research_environment_api.modules.app import app
 from research_environment_api.modules.user_group_management import entities
+from google import protobuf
+from typing import Optional
 
 import itertools
 
@@ -15,9 +17,7 @@ def create_group(user_group_creation_entity: entities.UserGroupCreation):
         "parent": f"customers/{user_group_creation_entity.customer_id}",
         "displayName": f"hdn-{user_group_creation_entity.group_name}",
         "description": user_group_creation_entity.description,
-        "groupKey": {
-            "id": _get_full_group_name(user_group_creation_entity.group_name)
-        },
+        "groupKey": {"id": _get_full_group_name(user_group_creation_entity.group_name)},
     }
     group = (
         identity_client.groups()
@@ -71,3 +71,102 @@ def get_user_permissions(organization_id: str, user_groups: list[str]):
         itertools.chain.from_iterable(user_permissions_list)
     )
     return flattened_user_permissions_list
+
+
+def get_google_roles_list(
+    user_group_role_listing_entity: entities.UserGroupRoleListing,
+):
+    iam_client = app.config.google_iam_client
+
+    predefined_roles_pager = iam_client.list_roles()
+    organization_roles_pager = iam_client.list_roles(
+        request={
+            "parent": f"organizations/{user_group_role_listing_entity.organization_id}"
+        }
+    )
+
+    predefined_roles = [
+        entities.GoogleRole.from_gcp_role(role_instance=role)
+        for role in predefined_roles_pager
+    ]
+    organization_roles = [
+        entities.GoogleRole.from_gcp_role(role_instance=role)
+        for role in organization_roles_pager
+    ]
+
+    return predefined_roles + organization_roles
+
+
+def _copy_policy(policy) -> dict:
+    policy_keys = ["members", "bindings"]
+    # Filter out gRPC keys (version, etag)
+    return {
+        key: value
+        for key, value in protobuf.json_format.MessageToDict(policy).items()
+        if key in policy_keys
+    }
+
+
+def _get_policy_user_binding(policy: dict, role: str) -> Optional[dict]:
+    return next(
+        filter(
+            lambda binding: binding["role"] == role,
+            policy["bindings"],
+        ),
+        None,
+    )
+
+
+def add_role_to_group(add_role_to_group_entity: entities.ChangeGroupRoles):
+    organization_client = app.config.organization_client
+    full_group_name = _get_full_group_name(add_role_to_group_entity.group_name)
+    group_binding = f"group:{full_group_name}"
+
+    policy = organization_client.get_iam_policy(
+        {"resource": f"organizations/{add_role_to_group_entity.organization_id}"}
+    )
+    new_policy = _copy_policy(policy)
+    for binding in new_policy["bindings"]:
+        if (
+            binding["role"] in add_role_to_group_entity.role_list
+            and group_binding not in binding["members"]
+        ):
+            if group_binding not in binding["members"]:
+                binding["members"].append(group_binding)
+
+            add_role_to_group_entity.role_list.remove(binding["role"])
+
+    for unassigned_role in add_role_to_group_entity.role_list:
+        new_policy["bindings"].append(
+            {"role": unassigned_role, "members": {f"{group_binding}"}}
+        )
+    organization_client.set_iam_policy(
+        {
+            "policy": new_policy,
+            "resource": f"organizations/{add_role_to_group_entity.organization_id}",
+        }
+    )
+
+
+def remove_roles_from_group(remove_role_from_group_entity: entities.ChangeGroupRoles):
+    organization_client = app.config.organization_client
+    full_group_name = _get_full_group_name(remove_role_from_group_entity.group_name)
+    group_binding = f"group:{full_group_name}"
+
+    policy = organization_client.get_iam_policy(
+        {"resource": f"organizations/{remove_role_from_group_entity.organization_id}"}
+    )
+    new_policy = _copy_policy(policy)
+    for binding in new_policy["bindings"]:
+        if (
+            binding["role"] in remove_role_from_group_entity.role_list
+            and group_binding in binding["members"]
+        ):
+            binding["members"].remove(group_binding)
+            remove_role_from_group_entity.role_list.remove(binding["role"])
+    organization_client.set_iam_policy(
+        {
+            "policy": new_policy,
+            "resource": f"organizations/{remove_role_from_group_entity.organization_id}",
+        }
+    )
