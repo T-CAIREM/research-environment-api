@@ -4,6 +4,10 @@ from research_environment_api.modules.user_group_management import entities
 import itertools
 
 
+def _get_full_group_name(group_name: str):
+    return f"hdn-{group_name}@healthdatanexus.ai"
+
+
 def create_group(user_group_creation_entity: entities.UserGroupCreation):
     identity_client = app.config.cloud_identity_client
     group = {
@@ -12,7 +16,7 @@ def create_group(user_group_creation_entity: entities.UserGroupCreation):
         "displayName": f"hdn-{user_group_creation_entity.group_name}",
         "description": user_group_creation_entity.description,
         "groupKey": {
-            "id": f"hdn-{user_group_creation_entity.group_name}@healthdatanexus.ai"
+            "id": _get_full_group_name(user_group_creation_entity.group_name)
         },
     }
     group = (
@@ -33,7 +37,7 @@ def delete_group(user_group_deletion_entity: entities.UserGroupDeletion):
 
 def _get_roles_associated_with_group(group_name: str, organization_id: str):
     organization_client = app.config.organization_client
-    full_group_name = f"group:{group_name}@healthdatanexus.ai"
+    full_group_name = _get_full_group_name(group_name)
 
     response = organization_client.get_iam_policy(
         {"resource": f"organizations/{organization_id}"}
