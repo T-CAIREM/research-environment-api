@@ -37,6 +37,7 @@ locals {
     GCP_CORS_ALLOWED_ORIGINS = var.gcp_cors_allowed_origins
     ORGANIZATION_ID = var.cloud_organization_id
     CLOUD_RESEARCH_ENVIRONMENTS_API_URL = var.cloud_research_environments_api_url
+    CUSTOMER_ID                         = var.gcp_customer_id
   }
 }
 

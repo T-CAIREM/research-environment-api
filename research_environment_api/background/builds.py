@@ -46,6 +46,7 @@ def create_jupyter_workbench_build(
     bucket_name: str,
     vm_image: str,
     sharing_bucket_permission_dict: dict[str, str],
+    user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -68,6 +69,7 @@ def create_jupyter_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
     }
 
     return cloud_build
@@ -87,6 +89,7 @@ def update_jupyter_workbench_build(
     instance_name: str,
     service_account_name: str,
     sharing_bucket_permission_dict: dict[str, str],
+    user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
@@ -109,6 +112,7 @@ def update_jupyter_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
     }
 
     return cloud_build
@@ -157,6 +161,7 @@ def create_workspace_build(
     workspace_project_id: str,
     user_email: str,
     region: Region,
+    user_permissions_list: list[str],
 ):
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_WORKSPACE_STEPS
@@ -167,6 +172,7 @@ def create_workspace_build(
         "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
     }
 
     return cloud_build
@@ -245,6 +251,7 @@ def create_rstudio_workbench_build(
     user_email: str,
     bucket_name: str,
     sharing_bucket_permission_dict: dict[str, str],
+    user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
@@ -274,6 +281,7 @@ def create_rstudio_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
     }
 
     return cloud_build
@@ -294,6 +302,7 @@ def update_rstudio_workbench_build(
     vm_image: str,
     brand_name: str,
     sharing_bucket_permission_dict: dict[str, str],
+    user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
@@ -323,6 +332,7 @@ def update_rstudio_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
     }
 
     return cloud_build

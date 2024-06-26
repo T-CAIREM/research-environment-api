@@ -42,6 +42,7 @@ class Config:
             "ORGANIZATION_DOMAIN", "healthdatanexus.ai"
         )
         self.organization_id = environ.get("ORGANIZATION_ID")
+        self.customer_id = environ.get("CUSTOMER_ID")
         self.billing_account_creator_group_id = environ[
             "BILLING_ACCOUNT_CREATOR_GROUP_ID"
         ]

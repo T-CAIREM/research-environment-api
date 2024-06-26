@@ -142,3 +142,7 @@ variable "cloud_research_environments_api_url" {
 variable "cloud_organization_id" {
   type = string
 }
+
+variable "gcp_customer_id" {
+  type = string
+}

@@ -15,13 +15,17 @@ from research_environment_api.web.workbench_management.schemas import (
 from research_environment_api.web.sharing_management.schemas import SharedBucket
 
 
-class WorkspaceCreationRequest(Schema):
+class BaseWorkspaceSchema(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
 
 
-class WorkspaceDeletionRequest(WorkspaceCreationRequest):
+class WorkspaceCreationRequest(BaseWorkspaceSchema):
+    user_groups = fields.List(fields.Str(), required=True)
+
+
+class WorkspaceDeletionRequest(BaseWorkspaceSchema):
     workspace_project_id = fields.Str(required=True)
 
 

@@ -22,6 +22,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     bucket_name = fields.Str(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
     disk_size = fields.Int(required=True)
+    user_groups = fields.List(fields.Str(), required=True)
     gpu_accelerator_type = fields.Enum(
         GpuAcceleratorType,
         by_value=True,
