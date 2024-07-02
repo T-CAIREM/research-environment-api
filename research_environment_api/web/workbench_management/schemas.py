@@ -21,6 +21,8 @@ class WorkbenchCreateRequest(WorkbenchBase):
     dataset_identifier = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
+    memory = fields.Float(required=True)
+    cpu = fields.Int(required=True)
     disk_size = fields.Int(required=True)
     user_groups = fields.List(fields.Str(), required=True)
     gpu_accelerator_type = fields.Enum(
@@ -48,7 +50,7 @@ class Workbench(Schema):
     gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
     dataset_identifier = fields.Str(required=True)
-    cpu = fields.Float(required=True)
+    cpu = fields.Int(required=True)
     memory = fields.Float(required=True)
     disk_size = fields.Int(required=True)
     machine_type = fields.Enum(MachineType, by_value=True, required=True)
