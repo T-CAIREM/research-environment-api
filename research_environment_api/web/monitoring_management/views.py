@@ -1,5 +1,3 @@
-from flask import request
-
 from research_environment_api.modules.monitoring_management import services
 from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.monitoring_management import (
@@ -11,22 +9,18 @@ from research_environment_api.web.monitoring_management import (
 @monitoring_management_bp.get("/datasets")
 @validate_token
 def list_workbench_monitoring_data_entries():
-    """Creates a cloud identity.
+    """Lists monitoring data, for example total usage time, for datasets.
     ---
-    post:
+    get:
       tags:
-        - identity_management
-      description: Creates a cloud identity.
-      requestBody:
-        content:
-          application/json:
-            schema: IdentityProvisioningRequest
+        - monitoring_management
+      description: Lists monitoring data for datasets.
       responses:
         200:
-          description: Returns the created cloud identity.
+          description: Returns monitoring data list
           content:
             application/json:
-              schema: ProvisionedIdentity
+              schema: WorkbenchMonitoringDataEntry
     """
 
     workbenches_monitoring_data_entries = (

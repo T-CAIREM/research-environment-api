@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Tuple
 
 
 @dataclass
@@ -9,7 +10,9 @@ class WorkbenchMonitoringDataEntry:
     total_time: str
 
     @classmethod
-    def transform_workbench_monitoring_data(cls, key, total_time):
+    def transform_workbench_monitoring_data(
+        cls, key: Tuple[str, str, str], total_time: str
+    ):
         user_email = key[0]
         dataset_identifier = key[1]
         instance_type = key[2]

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Tuple
 
 from research_environment_api.modules.monitoring_management import entities, monitoring
 
@@ -10,7 +11,9 @@ intervals = (
 )
 
 
-def list_workbench_monitoring_data_entries():
+def list_workbench_monitoring_data_entries() -> (
+    List[entities.WorkbenchMonitoringDataEntry]
+):
     workbench_monitoring_data_entries = (
         monitoring.list_workbench_monitoring_data_entries()
     )
@@ -35,7 +38,7 @@ def list_workbench_monitoring_data_entries():
     return serialized_workbench_monitoring_data_entries
 
 
-def _calculate_total_time(timestamps):
+def _calculate_total_time(timestamps: List[Tuple[datetime, datetime]]) -> str:
     now_timestamp = datetime.now()
 
     # array of tuples (datetime, bool) where bool means if it is beginning or end, True == beginning
@@ -64,7 +67,7 @@ def _calculate_total_time(timestamps):
     return _display_time(total_time)
 
 
-def _display_time(seconds):
+def _display_time(seconds: float) -> str:
     result = []
 
     for name, count in intervals:
