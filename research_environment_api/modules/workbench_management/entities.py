@@ -100,8 +100,6 @@ class Workbench:
         service_account_name = metadata["service_account_name"]
         machine_type_name = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
-        if not computing_resources:
-            raise ValueError(f"Machine type {machine_type_name} not found.")
         gpu_accelerator_type = (
             GpuAcceleratorType(
                 instance.guest_accelerators[0].accelerator_type.split("/")[-1]
