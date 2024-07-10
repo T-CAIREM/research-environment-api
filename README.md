@@ -1,5 +1,5 @@
 # Research Environment API
-
+.
 ## Bootstrapping a Cloud SQL database
 
 ### Permissions
