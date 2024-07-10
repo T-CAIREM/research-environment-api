@@ -1,26 +1,16 @@
-from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Iterable, Optional, List
+from os import environ
 
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
 from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.workbench_management.utils import generate_required_maps
 
-ComputeEngineMachineResources = namedtuple(
-    "ComputeEngineMachoneResources", ["cpu", "memory"]
-)
-
-
-MACHINE_TYPE_TO_RESOURCE_MAP = {
-    "n1-standard-2": ComputeEngineMachineResources(2.0, 7.5),
-    "n1-standard-4": ComputeEngineMachineResources(4.0, 15.0),
-    "n1-standard-8": ComputeEngineMachineResources(8.0, 30.0),
-    "n1-standard-16": ComputeEngineMachineResources(16.0, 60.0),
-}
-
+MACHINE_TYPE_TO_RESOURCE_MAP, MachineType = generate_required_maps(environ["PROJECT_ID"])
 
 class Region(StrEnum):
     US_CENTRAL = "us-central1"
@@ -42,13 +32,6 @@ class WorkbenchStatus(StrEnum):
     DESTROYING = "destroying"
     CREATING = "creating"
     STARTING = "starting"
-
-
-class MachineType(StrEnum):
-    SMALL = "n1-standard-2"
-    MEDIUM = "n1-standard-4"
-    LARGE = "n1-standard-8"
-    XLARGE = "n1-standard-16"
 
 
 class GpuAcceleratorType(StrEnum):
@@ -115,8 +98,8 @@ class Workbench:
         bucket_name = metadata["bucket_name"]
         vm_image = metadata["vm_image"]
         service_account_name = metadata["service_account_name"]
-        machine_type = MachineType(instance.machine_type.split("/")[-1])
-        computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP[machine_type]
+        machine_type_name = instance.machine_type.split("/")[-1]
+        computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
         gpu_accelerator_type = (
             GpuAcceleratorType(
                 instance.guest_accelerators[0].accelerator_type.split("/")[-1]
@@ -159,7 +142,7 @@ class Workbench:
             status=status,
             cpu=computing_resources.cpu,
             memory=computing_resources.memory,
-            machine_type=machine_type,
+            machine_type=MachineType(machine_type_name),
             url=maybe_proxy_url,
             zone=zone,
             type=workbench_type,
@@ -181,7 +164,9 @@ class BaseWorkbenchEntity:
 @dataclass
 class WorkbenchCreate(BaseWorkbenchEntity):
     workspace_numeric_id: str
-    machine_type: MachineType
+    machine_type: str
+    memory: float
+    cpu: int
     disk_size: int
     dataset_identifier: str
     bucket_name: str

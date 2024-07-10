@@ -1,9 +1,10 @@
 from dotenv import load_dotenv
 
+# Loading the env variables to be used while loading the app
+load_dotenv()
+
 from research_environment_api.background.app import create_celery
 from research_environment_api.modules.app import app as research_environment_backend_app
-
-load_dotenv()
 
 research_environment_backend_app.initialize()
 
