@@ -189,7 +189,7 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
     },
     {
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./vpc-sp", "apply", "-auto-approve"],
+        "args": ["-chdir=./vpc-sp", "destroy", "-auto-approve"],
         "env": [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
