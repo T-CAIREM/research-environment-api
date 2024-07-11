@@ -8,9 +8,14 @@ from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInsta
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
 from research_environment_api.modules.monitoring_management import models
-from research_environment_api.modules.workbench_management.utils import generate_required_maps
+from research_environment_api.modules.workbench_management.utils import (
+    generate_required_maps,
+)
 
-MACHINE_TYPE_TO_RESOURCE_MAP, MachineType = generate_required_maps(environ["PROJECT_ID"])
+MACHINE_TYPE_TO_RESOURCE_MAP, MachineType = generate_required_maps(
+    environ["PROJECT_ID"]
+)
+
 
 class Region(StrEnum):
     US_CENTRAL = "us-central1"
