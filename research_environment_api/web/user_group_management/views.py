@@ -115,7 +115,7 @@ def get_groups_iam_permissions():
               schema:
     """
     user_groups_iam_list_entity = entities.UserGroupRoleListing()
-    roles_list = services.get_user_groups_iam_roles(user_groups_iam_list_entity)
+    roles_list = services.list_user_groups_iam_roles(user_groups_iam_list_entity)
     return roles_list, 200
 
 
