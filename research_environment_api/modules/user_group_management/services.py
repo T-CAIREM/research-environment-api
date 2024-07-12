@@ -2,12 +2,18 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.user_group_management import entities
 from google import protobuf
 from typing import Optional
+import re
 
 import itertools
 
 
 def _get_full_group_name(group_name: str):
     return f"hdn-{group_name}@healthdatanexus.ai"
+
+
+def _extract_group_name(full_group_string: str):
+    # group pattern: "group:hdn-{group_name}@healthdatanexus.ai"
+    return re.split("group:|@healthdatanexus\.ai", full_group_string)[1][4:]
 
 
 def create_group(user_group_creation_entity: entities.UserGroupCreation):
@@ -95,6 +101,36 @@ def get_google_roles_list(
     ]
 
     return predefined_roles + organization_roles
+
+
+def get_user_group_iam_roles(user_group_iam_role_listing_entity: entities.UserGroupIAMListing):
+    organization_client = app.config.organization_client
+    full_group_name = _get_full_group_name(user_group_iam_role_listing_entity.group_name)
+    group_binding = f"group:{full_group_name}"
+
+    policy = organization_client.get_iam_policy(
+        {"resource": f"organizations/{user_group_iam_role_listing_entity.organization_id}"}
+    )
+
+    group_roles = filter(lambda binding: group_binding in binding.members, policy.bindings)
+
+    return [group_role_entity.role for group_role_entity in group_roles]
+
+
+def list_user_groups_iam_roles(user_groups_iam_role_listing_entity: entities.UserGroupRoleListing):
+    organization_client = app.config.organization_client
+    group_binding_search_phrase = f"group:hdn-"
+
+    policy = organization_client.get_iam_policy(
+        {"resource": f"organizations/{user_groups_iam_role_listing_entity.organization_id}"}
+    )
+    groups_iam_dict = {}
+    for binding in policy.bindings:
+        for member in binding.members:
+            if group_binding_search_phrase in member:
+                groups_iam_dict.setdefault(_extract_group_name(member), []).append(binding.role)
+
+    return groups_iam_dict
 
 
 def _copy_policy(policy) -> dict:

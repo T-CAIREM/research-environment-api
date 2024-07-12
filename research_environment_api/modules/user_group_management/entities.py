@@ -28,6 +28,11 @@ class UserGroupRoleListing:
 
 
 @dataclass
+class UserGroupIAMListing(UserGroupRoleListing):
+    group_name: str
+
+
+@dataclass
 class ChangeGroupRoles:
     group_name: str
     role_list: list[str]
