@@ -22,7 +22,7 @@ CLONE_GITHUB_REPO = [
         ],
         "secret_env": ["GITHUB_SSH_KEY"],
         "volumes": [{"name": "ssh", "path": "/root/.ssh"}],
-        "wait_for": ["add_github_to_ssh_known_hosts"]
+        "wait_for": ["add_github_to_ssh_known_hosts"],
     },
 ]
 
