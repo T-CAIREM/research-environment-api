@@ -38,5 +38,5 @@ class WorkbenchMonitoringData(Base):
         Enum(InstanceType), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime())
     workbench_id: Mapped[str] = mapped_column(String(), nullable=True)
