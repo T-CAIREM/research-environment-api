@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime
 from typing import List, Tuple
 
@@ -20,19 +21,23 @@ def list_workbench_monitoring_data_entries() -> (
 
     monitoring_data_to_timestamps = {}
     for entry in workbench_monitoring_data_entries:
-        key = (entry.user_email, entry.dataset_identifier, entry.instance_type)
+        identifier = entities.WorkbenchMonitoringIdentifier(
+            user_email=entry.user_email,
+            dataset_identifier=entry.dataset_identifier,
+            instance_type=entry.instance_type,
+        )
         timestamps = (entry.created_at, entry.deleted_at)
 
-        if key not in monitoring_data_to_timestamps:
-            monitoring_data_to_timestamps[key] = []
+        if identifier not in monitoring_data_to_timestamps:
+            monitoring_data_to_timestamps[identifier] = []
 
-        monitoring_data_to_timestamps[key].append(timestamps)
+        monitoring_data_to_timestamps[identifier].append(timestamps)
 
     serialized_workbench_monitoring_data_entries = [
         entities.WorkbenchMonitoringDataEntry.transform_workbench_monitoring_data(
-            key, _calculate_total_time(monitoring_data_to_timestamps[key])
+            identifier, _calculate_total_time(monitoring_data_to_timestamps[identifier])
         )
-        for key in monitoring_data_to_timestamps.keys()
+        for identifier in monitoring_data_to_timestamps.keys()
     ]
 
     return serialized_workbench_monitoring_data_entries

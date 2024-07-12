@@ -31,7 +31,7 @@ class WorkflowTask(Task):
 
     def skip_to_last_step(self):
         # The first element of the list is the last task in the chain.
-        self.request.chain = self.request.chain[:2]
+        self.request.chain = self.request.chain[:1]
 
     def kill_chain(self):
         # Kills the existing chain without any cleanup.

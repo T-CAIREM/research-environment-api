@@ -1,5 +1,11 @@
+from collections import namedtuple
 from dataclasses import dataclass
-from typing import Tuple
+
+
+WorkbenchMonitoringIdentifier = namedtuple(
+    "WorkbenchMonitoringIdentifier",
+    ["user_email", "dataset_identifier", "instance_type"],
+)
 
 
 @dataclass
@@ -11,15 +17,11 @@ class WorkbenchMonitoringDataEntry:
 
     @classmethod
     def transform_workbench_monitoring_data(
-        cls, key: Tuple[str, str, str], total_time: str
+        cls, identifier: WorkbenchMonitoringIdentifier, total_time: str
     ):
-        user_email = key[0]
-        dataset_identifier = key[1]
-        instance_type = key[2]
-
         return cls(
-            user_email=user_email,
-            dataset_identifier=dataset_identifier,
-            instance_type=instance_type.value,
+            user_email=identifier.user_email,
+            dataset_identifier=identifier.dataset_identifier,
+            instance_type=identifier.instance_type.value,
             total_time=total_time,
         )
