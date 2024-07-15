@@ -38,6 +38,7 @@ locals {
     ORGANIZATION_ID = var.cloud_organization_id
     CLOUD_RESEARCH_ENVIRONMENTS_API_URL = var.cloud_research_environments_api_url
     CUSTOMER_ID                         = var.gcp_customer_id
+    GITHUB_SSH_KEY_KSM_ID               = var.github_ssh_key_ksm_id
   }
 }
 
