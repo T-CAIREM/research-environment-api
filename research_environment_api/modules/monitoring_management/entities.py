@@ -25,3 +25,9 @@ class WorkbenchMonitoringDataEntry:
             instance_type=identifier.instance_type.value,
             total_time=total_time,
         )
+
+
+@dataclass
+class UsersPerDataset:
+    dataset_identifier: str
+    user_emails: list[str]
