@@ -146,3 +146,7 @@ variable "cloud_organization_id" {
 variable "gcp_customer_id" {
   type = string
 }
+
+variable "github_ssh_key_ksm_id" {
+  type = string
+}
