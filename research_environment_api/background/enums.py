@@ -23,3 +23,8 @@ class OperationStatus(StrEnum):
     IN_PROGRESS = "in_progress"
     FAILURE = "failure"
     SUCCESS = "success"
+
+
+class InstanceType(StrEnum):
+    JUPYTER = "jupyter"
+    RSTUDIO = "rstudio"

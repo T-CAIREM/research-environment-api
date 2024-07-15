@@ -23,3 +23,12 @@ def get_workflow(workflow_id: str) -> models.WorkbenchActivity:
             session.query(models.WorkbenchActivity).filter_by(id=workflow_id).one()
         )
     return workbench_activity
+
+
+def list_workbench_monitoring_data_entries():
+    with app.database_session() as session:
+        workbench_monitoring_data_entries = session.query(
+            models.WorkbenchMonitoringData
+        ).all()
+
+    return workbench_monitoring_data_entries

@@ -1,3 +1,4 @@
+from datetime import datetime
 from os import environ
 
 from typing import List, Optional, Tuple, TypeVar
@@ -13,7 +14,9 @@ from research_environment_api.background import (
     constants,
     operations,
     workflows,
+    enums,
 )
+from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
 from research_environment_api.modules.monitoring_management import models
@@ -55,6 +58,7 @@ def process_cloud_build_result(
     user_email: str,
     workbench_activity_id: str,
     fallback_zones: Optional[List[str]] = None,
+    dataset_identifier: str = None,
 ) -> Optional[operations.BuildOperation]:
     operation, build_id = operation_context
     build = app.config.google_cloud_build_client.get_build(
@@ -98,6 +102,7 @@ def process_cloud_build_result(
                     fallback_zones=new_fallback_zones,
                     user_email=user_email,
                     workbench_activity_id=workbench_activity_id,
+                    dataset_identifier=dataset_identifier,
                 )()
                 self.kill_chain()
             else:
@@ -110,6 +115,7 @@ def process_cloud_build_result(
                     fallback_zones=new_fallback_zones,
                     user_email=user_email,
                     workbench_activity_id=workbench_activity_id,
+                    dataset_identifier=dataset_identifier,
                 )()
                 self.kill_chain()
 
@@ -261,6 +267,68 @@ def check_rstudio_page_status(
         self.retry(countdown=30)
 
     return passthrough
+
+
+@shared_task
+def add_monitoring_entry(
+    operation: operations.Operation,
+    workbench_activity_id: str,
+    instance_type: enums.InstanceType,
+    dataset_identifier: str,
+):
+    # locally workbenches fail even if they are created, to test this feature please comment below condition
+    # and change skip_to_last_step function to skip to second to last step
+    if operation.status() == OperationStatus.FAILURE:
+        return operation
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = (
+                session.query(models.WorkbenchActivity)
+                .filter_by(id=workbench_activity_id)
+                .one()
+            )
+
+            workbench_monitoring_data = models.WorkbenchMonitoringData(
+                workbench_id=workbench_activity.workbench_id,
+                user_email=workbench_activity.invoker_email,
+                dataset_identifier=dataset_identifier,
+                instance_type=instance_type,
+                created_at=datetime.now(),
+            )
+
+            session.add(workbench_monitoring_data)
+
+    return operation
+
+
+@shared_task
+def mark_monitoring_entry_as_deleted(
+    operation: operations.Operation, workbench_activity_id: str
+):
+    if operation.status() == OperationStatus.FAILURE:
+        return operation
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = (
+                session.query(models.WorkbenchActivity)
+                .filter_by(id=workbench_activity_id)
+                .one()
+            )
+
+            workbench_monitoring_data = (
+                session.query(models.WorkbenchMonitoringData)
+                .filter_by(workbench_id=workbench_activity.workbench_id)
+                .one_or_none()
+            )
+
+            if workbench_monitoring_data is None:
+                return operation
+
+            workbench_monitoring_data.deleted_at = datetime.now()
+
+    return operation
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:

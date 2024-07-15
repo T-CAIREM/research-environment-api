@@ -81,6 +81,7 @@ def create_jupyter_workbench(
                 instance_name=workbench_id,
                 fallback_zones=fallback_zones,
                 workbench_activity_id=workbench_activity.id,
+                dataset_identifier=workbench_creation_request.dataset_identifier,
             )()
 
             return workbench_activity.id
@@ -481,6 +482,7 @@ def create_rstudio_workbench(
                 instance_name=workbench_id,
                 user_email=workbench_creation_request.user_email,
                 fallback_zones=fallback_zones,
+                dataset_identifier=workbench_creation_request.dataset_identifier,
             )()
 
             return workbench_activity.id
