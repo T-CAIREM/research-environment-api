@@ -22,13 +22,15 @@ def _base_build() -> cloudbuild_v1.Build:
     cloud_build = cloudbuild_v1.Build()
     cloud_build.service_account = app.config.cloud_build_service_account_name
     cloud_build.options = {"logging": "CLOUD_LOGGING_ONLY"}
-    cloud_build.source = {
-        "repo_source": {
-            "project_id": app.config.project_id,
-            "repo_name": app.config.terraform_repo_name,
-            "branch_name": app.config.terraform_branch_name,
-        }
+    cloud_build.available_secrets = {
+        "secret_manager": [
+            {
+                "version_name": app.config.github_ssh_key_ksm_id,
+                "env": "GITHUB_SSH_KEY",
+            }
+        ]
     }
+
     return cloud_build
 
 
@@ -70,6 +72,8 @@ def create_jupyter_workbench_build(
             sharing_bucket_permission_dict.values()
         ),
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -113,6 +117,8 @@ def update_jupyter_workbench_build(
             sharing_bucket_permission_dict.values()
         ),
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -151,6 +157,8 @@ def destroy_jupyter_workbench_build(
         "_SERVICE_ACCOUNT_NAME": service_account_name,
         "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -173,6 +181,8 @@ def create_workspace_build(
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -191,6 +201,8 @@ def create_shared_workspace_build(
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -208,6 +220,8 @@ def destroy_workspace_build(
         "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -226,6 +240,8 @@ def destroy_shared_workspace_build(
         "_EMAIL_ID": user_email,
         "_SHARING_FOLDER_ID": app.config.sharing_folder_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -282,6 +298,8 @@ def create_rstudio_workbench_build(
             sharing_bucket_permission_dict.values()
         ),
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -333,6 +351,8 @@ def update_rstudio_workbench_build(
             sharing_bucket_permission_dict.values()
         ),
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build
@@ -379,6 +399,8 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }
 
     return cloud_build

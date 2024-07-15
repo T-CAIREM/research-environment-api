@@ -1,4 +1,39 @@
-CREATE_JUPYTER_WORKBENCH_STEPS = [
+CLONE_GITHUB_REPO = [
+    {
+        "id": "add_github_to_ssh_known_hosts",
+        "name": "gcr.io/cloud-builders/git",
+        "secret_env": ["GITHUB_SSH_KEY"],
+        "entrypoint": "/bin/sh",
+        "args": [
+            "-c",
+            'pwd && echo "$$GITHUB_SSH_KEY" >> /root/.ssh/id_rsa && chmod 400 /root/.ssh/id_rsa && ssh-keyscan -t rsa github.com > /root/.ssh/known_hosts',
+        ],
+        "volumes": [{"name": "ssh", "path": "/root/.ssh"}],
+    },
+    {
+        "id": "clone_github_repo",
+        "name": "gcr.io/cloud-builders/git",
+        "args": [
+            "clone",
+            "--single-branch",
+            "--branch",
+            "${_TERRAFORM_BRANCH_NAME}",
+            "git@github.com:${_TERRAFORM_REPO_NAME}.git",
+        ],
+        "secret_env": ["GITHUB_SSH_KEY"],
+        "volumes": [{"name": "ssh", "path": "/root/.ssh"}],
+        "wait_for": ["add_github_to_ssh_known_hosts"],
+    },
+]
+
+
+CREATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
+    {
+        "name": "gcr.io/cloud-builders/git",
+        "entrypoint": "/bin/sh",
+        "args": ["-c", "ls && pwd"],
+        "dir_": "terraform-workbench-creation",
+    },
     {
         "name": "python",
         "args": [
@@ -6,6 +41,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
@@ -16,10 +52,12 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -43,23 +81,27 @@ CREATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "entrypoint": "/bin/sh",
         "args": ["workbench/jupyter/terraform_apply.sh"],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-CREATE_WORKSPACE_STEPS = [
+CREATE_WORKSPACE_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": ["python3", "project/python3.py", "${_PROJECT_ID}"],
-        "wait_for": ["-"],
+        "wait_for": ["clone_github_repo"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./project", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -72,15 +114,18 @@ CREATE_WORKSPACE_STEPS = [
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
         "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
-        "wait_for": ["-"],
+        "wait_for": ["clone_github_repo"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -89,10 +134,11 @@ CREATE_WORKSPACE_STEPS = [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-CREATE_SHARED_WORKSPACE_STEPS = [
+CREATE_SHARED_WORKSPACE_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -100,11 +146,13 @@ CREATE_SHARED_WORKSPACE_STEPS = [
             "sharing/create-sharing-project/python3.py",
             "${_PROJECT_ID}",
         ],
-        "wait_for": ["-"],
+        "wait_for": ["clone_github_repo"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./sharing/create-sharing-project", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -115,15 +163,18 @@ CREATE_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_email=${_EMAIL_ID}",
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
         "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
-        "wait_for": ["-"],
+        "wait_for": ["clone_github_repo"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -132,18 +183,21 @@ CREATE_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-DESTROY_WORKSPACE_STEPS = [
+DESTROY_WORKSPACE_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
-        "wait_for": ["-"],
+        "wait_for": ["clone_github_repo"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -152,14 +206,17 @@ DESTROY_WORKSPACE_STEPS = [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
         "args": ["python3", "project/python3.py", "${_PROJECT_ID}"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./project", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -171,10 +228,11 @@ DESTROY_WORKSPACE_STEPS = [
             "TF_VAR_workspace_region=${_WORKSPACE_REGION}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-DESTROY_SHARED_WORKSPACE_STEPS = [
+DESTROY_SHARED_WORKSPACE_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -182,10 +240,12 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
             "sharing/create-sharing-project/python3.py",
             "${_PROJECT_ID}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./vpc-sp", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -194,10 +254,12 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_project_id=${_PROJECT_ID}",
             "TF_VAR_perimeter_name=${_PERIMETER_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./sharing/create-sharing-project", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -208,11 +270,12 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
             "TF_VAR_email=${_EMAIL_ID}",
             "TF_VAR_sharing_folder_id=${_SHARING_FOLDER_ID}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
 
-UPDATE_JUPYTER_WORKBENCH_STEPS = [
+UPDATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -220,6 +283,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
@@ -230,10 +294,12 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -256,10 +322,11 @@ UPDATE_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-DESTROY_JUPYTER_WORKBENCH_STEPS = [
+DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -267,10 +334,12 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "workbench/jupyter/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/jupyter", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -292,11 +361,12 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
 
-CREATE_RSTUDIO_WORKBENCH_STEPS = [
+CREATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -304,6 +374,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
@@ -314,10 +385,12 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/rstudio", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -347,16 +420,18 @@ CREATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "entrypoint": "/bin/sh",
         "args": ["workbench/rstudio/terraform_apply.sh"],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
 
-UPDATE_RSTUDIO_WORKBENCH_STEPS = [
+UPDATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -364,6 +439,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "python",
@@ -374,10 +450,12 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/rstudio", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -407,10 +485,11 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
 ]
 
-DESTROY_RSTUDIO_WORKBENCH_STEPS = [
+DESTROY_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
     {
         "name": "python",
         "args": [
@@ -418,10 +497,12 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "workbench/rstudio/python3.py",
             "${_INSTANCE_NAME}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/rstudio", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
     },
     {
         "name": "hashicorp/terraform",
@@ -450,5 +531,56 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS = [
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
         ],
+        "dir_": "terraform-workbench-creation",
     },
+]
+
+CREATE_JUPYTER_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *CREATE_JUPYTER_WORKBENCH_STEPS_PARTIAL,
+]
+
+DESTROY_JUPYTER_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL,
+]
+
+CREATE_WORKSPACE_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *CREATE_WORKSPACE_STEPS_PARTIAL,
+]
+
+CREATE_SHARED_WORKSPACE_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *CREATE_SHARED_WORKSPACE_STEPS_PARTIAL,
+]
+
+DESTROY_WORKSPACE_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *DESTROY_WORKSPACE_STEPS_PARTIAL,
+]
+
+DESTROY_SHARED_WORKSPACE_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *DESTROY_SHARED_WORKSPACE_STEPS_PARTIAL,
+]
+
+UPDATE_JUPYTER_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *UPDATE_JUPYTER_WORKBENCH_STEPS_PARTIAL,
+]
+
+CREATE_RSTUDIO_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *CREATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL,
+]
+
+UPDATE_RSTUDIO_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *UPDATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL,
+]
+
+DESTROY_RSTUDIO_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *DESTROY_RSTUDIO_WORKBENCH_STEPS_PARTIAL,
 ]
