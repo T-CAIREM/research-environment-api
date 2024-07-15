@@ -112,7 +112,7 @@ def get_groups_iam_permissions():
           description: Returns a list Google Groups and their IAM Roles.
           content:
             application/json:
-              schema:
+              schema: GoogleRole
     """
     user_groups_iam_list_entity = entities.UserGroupRoleListing()
     roles_list = services.list_user_groups_iam_roles(user_groups_iam_list_entity)
@@ -137,10 +137,11 @@ def get_user_group_iam_roles(group_name: str):
           description: Returns roles for a specific Google Group.
           content:
             application/json:
-              schema:
+              schema: GoogleRole
     """
     user_group_iam_listing_entity = entities.UserGroupIAMListing(group_name=group_name)
-    roles_list = services.get_user_group_iam_roles(user_group_iam_listing_entity)
+    role_entity_list = services.get_user_group_iam_roles(user_group_iam_listing_entity)
+    roles_list = schemas.GoogleRole(many=True).dump(role_entity_list)
     return roles_list, 200
 
 

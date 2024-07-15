@@ -3,6 +3,10 @@ from research_environment_api.modules.user_group_management import entities
 from google import protobuf
 from typing import Optional
 import re
+from research_environment_api.web.cache import cache
+
+from google import api_core
+
 
 import itertools
 
@@ -103,32 +107,51 @@ def get_google_roles_list(
     return predefined_roles + organization_roles
 
 
-def get_user_group_iam_roles(user_group_iam_role_listing_entity: entities.UserGroupIAMListing):
+def get_user_group_iam_roles(
+    user_group_iam_role_listing_entity: entities.UserGroupIAMListing,
+):
     organization_client = app.config.organization_client
-    full_group_name = _get_full_group_name(user_group_iam_role_listing_entity.group_name)
+    full_group_name = _get_full_group_name(
+        user_group_iam_role_listing_entity.group_name
+    )
     group_binding = f"group:{full_group_name}"
 
     policy = organization_client.get_iam_policy(
-        {"resource": f"organizations/{user_group_iam_role_listing_entity.organization_id}"}
+        {
+            "resource": f"organizations/{user_group_iam_role_listing_entity.organization_id}"
+        }
     )
 
-    group_roles = filter(lambda binding: group_binding in binding.members, policy.bindings)
+    group_roles = filter(
+        lambda binding: group_binding in binding.members, policy.bindings
+    )
 
-    return [group_role_entity.role for group_role_entity in group_roles]
+    google_roles = [
+        get_google_role_entity(group_role_entity.role)
+        for group_role_entity in group_roles
+    ]
+
+    return [role for role in google_roles if role is not None]
 
 
-def list_user_groups_iam_roles(user_groups_iam_role_listing_entity: entities.UserGroupRoleListing):
+def list_user_groups_iam_roles(
+    user_groups_iam_role_listing_entity: entities.UserGroupRoleListing,
+):
     organization_client = app.config.organization_client
     group_binding_search_phrase = f"group:hdn-"
 
     policy = organization_client.get_iam_policy(
-        {"resource": f"organizations/{user_groups_iam_role_listing_entity.organization_id}"}
+        {
+            "resource": f"organizations/{user_groups_iam_role_listing_entity.organization_id}"
+        }
     )
     groups_iam_dict = {}
     for binding in policy.bindings:
         for member in binding.members:
             if group_binding_search_phrase in member:
-                groups_iam_dict.setdefault(_extract_group_name(member), []).append(binding.role)
+                groups_iam_dict.setdefault(_extract_group_name(member), []).append(
+                    binding.role
+                )
 
     return groups_iam_dict
 
@@ -206,3 +229,13 @@ def remove_roles_from_group(remove_role_from_group_entity: entities.ChangeGroupR
             "resource": f"organizations/{remove_role_from_group_entity.organization_id}",
         }
     )
+
+
+@cache.cached(timeout=86400, key_prefix="google_role")
+def get_google_role_entity(role_string: str) -> Optional[entities.GoogleRole]:
+    iam_client = app.config.google_iam_client
+    try:
+        google_role = iam_client.get_role(request={"name": role_string})
+    except api_core.exceptions.NotFound as e:
+        return None
+    return entities.GoogleRole.from_gcp_role(google_role)
