@@ -113,6 +113,7 @@ CREATE_WORKSPACE_STEPS_PARTIAL = [
             "TF_VAR_workspace_region=${_WORKSPACE_REGION}",
             "TF_VAR_workspace_controller_project_name=${_WORKSPACE_CONTROLLER_PROJECT_NAME}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
+            "TF_VAR_folder_id=${_GOOGLE_WORKSPACES_FOLDER_ID}",
         ],
         "dir_": "terraform-workbench-creation",
     },
