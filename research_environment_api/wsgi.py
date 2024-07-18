@@ -1,4 +1,5 @@
 import marshmallow
+from celery.schedules import crontab
 from dotenv import load_dotenv
 from flask import jsonify
 

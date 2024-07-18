@@ -1,3 +1,5 @@
+import csv
+import os
 from datetime import datetime
 from os import environ
 
@@ -19,7 +21,7 @@ from research_environment_api.background import (
 from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
-from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.monitoring_management import models, services
 
 T = TypeVar("T")
 
@@ -329,6 +331,37 @@ def mark_monitoring_entry_as_deleted(
             workbench_monitoring_data.deleted_at = datetime.now()
 
     return operation
+
+
+@shared_task
+def export_csv_reports():
+    active_users_per_dataset = services.get_active_users_per_dataset()
+
+    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d")}.csv'
+
+    _create_csv(active_users_per_dataset, filename)
+
+    _upload_to_gcs(filename)
+
+    os.remove(filename)
+
+
+def _create_csv(data, filename):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Dataset Identifier', 'User Email'])  # Add your headers here
+
+        for entry in data:
+            dataset_identifier = entry.dataset_identifier
+            for email in entry.user_emails:
+                writer.writerow([dataset_identifier, email])
+
+
+def _upload_to_gcs(source_file_name):
+    bucket = app.config.google_cloud_storage_client.bucket("hdn_monitoring_exports")
+    destination_blob_name = "active_users_per_dataset/" + source_file_name
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(source_file_name)
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
