@@ -150,7 +150,7 @@ def list_user_groups_iam_roles(
         for member in binding.members:
             if group_binding_search_phrase in member:
                 groups_iam_dict.setdefault(_extract_group_name(member), []).append(
-                    binding.role
+                    get_google_role_entity(binding.role)
                 )
 
     return groups_iam_dict
