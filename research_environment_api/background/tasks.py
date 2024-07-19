@@ -339,7 +339,7 @@ def export_active_users_per_dataset():
     active_users_per_dataset = services.get_active_users_per_dataset()
     csv_rows = [[entry.dataset_identifier, email] for entry in active_users_per_dataset for email in entry.user_emails]
 
-    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d_%H%M%S")}.csv'
+    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d")}.csv'
 
     column_names = ['Dataset Identifier', 'User Email']
 
@@ -355,7 +355,7 @@ def export_datasets_total_usage_time():
     workbench_monitoring_entries = services.list_workbench_monitoring_data_entries()
     csv_rows = [[entry.dataset_identifier, entry.user_email, entry.instance_type, entry.total_time] for entry in workbench_monitoring_entries]
 
-    filename = f'datasets_total_usage_time_{datetime.now().strftime("%Y_%m_%d_%H%M%S")}.csv'
+    filename = f'datasets_total_usage_time_{datetime.now().strftime("%Y_%m_%d")}.csv'
 
     column_names = ['Dataset Identifier', 'User Email', 'Instance Type', 'Total Usage Time']
 

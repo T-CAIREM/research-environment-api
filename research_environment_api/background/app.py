@@ -30,12 +30,12 @@ def _setup_periodic_tasks(celery: Celery) -> None:
         # Executes every Sunday morning at midnight
         'export-active-users-per-dataset-weekly': {
             'task': 'research_environment_api.background.tasks.export_active_users_per_dataset',
-            'schedule': 60.0,#crontab(hour='0', minute=0, day_of_week=7),
+            'schedule': crontab(hour='0', minute=0, day_of_week=6),
             'args': (),
         },
         'export-datasets-total-usage-time-weekly': {
             'task': 'research_environment_api.background.tasks.export_datasets_total_usage_time',
-            'schedule': 60.0,  # crontab(hour='0', minute=0, day_of_week=7),
+            'schedule': crontab(hour=0, minute=0, day_of_week=6),
             'args': (),
         },
     }
