@@ -38,11 +38,11 @@ def list_workbench_monitoring_data_entries() -> (
     return workbench_monitoring_data_entries
 
 
-def get_user_emails_for_dataset_identifiers() -> (
+def get_active_users_per_dataset() -> (
     Iterable[models.WorkbenchMonitoringData]
 ):
     with app.database_session() as session:
-        workbench_monitoring_data_entries = (
+        active_users_per_dataset_entries = (
             session.query(
                 models.WorkbenchMonitoringData.dataset_identifier,
                 func.array_agg(models.WorkbenchMonitoringData.user_email).label(
@@ -54,4 +54,4 @@ def get_user_emails_for_dataset_identifiers() -> (
             .all()
         )
 
-    return workbench_monitoring_data_entries
+    return active_users_per_dataset_entries

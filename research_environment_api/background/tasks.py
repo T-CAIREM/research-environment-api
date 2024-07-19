@@ -19,6 +19,7 @@ from research_environment_api.background import (
     enums,
 )
 from research_environment_api.background.enums import OperationStatus
+from research_environment_api.modules.helpers.exports import helpers as exports_helpers
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
 from research_environment_api.modules.monitoring_management import models, services
@@ -334,34 +335,35 @@ def mark_monitoring_entry_as_deleted(
 
 
 @shared_task
-def export_csv_reports():
+def export_active_users_per_dataset():
     active_users_per_dataset = services.get_active_users_per_dataset()
+    csv_rows = [[entry.dataset_identifier, email] for entry in active_users_per_dataset for email in entry.user_emails]
 
-    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d")}.csv'
+    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d_%H%M%S")}.csv'
 
-    _create_csv(active_users_per_dataset, filename)
+    column_names = ['Dataset Identifier', 'User Email']
 
-    _upload_to_gcs(filename)
+    exports_helpers.create_csv(csv_rows, filename, column_names)
+
+    exports_helpers.upload_to_gcs(filename, "active_users_per_dataset")
 
     os.remove(filename)
 
 
-def _create_csv(data, filename):
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Dataset Identifier', 'User Email'])  # Add your headers here
+@shared_task
+def export_datasets_total_usage_time():
+    workbench_monitoring_entries = services.list_workbench_monitoring_data_entries()
+    csv_rows = [[entry.dataset_identifier, entry.user_email, entry.instance_type, entry.total_time] for entry in workbench_monitoring_entries]
 
-        for entry in data:
-            dataset_identifier = entry.dataset_identifier
-            for email in entry.user_emails:
-                writer.writerow([dataset_identifier, email])
+    filename = f'datasets_total_usage_time_{datetime.now().strftime("%Y_%m_%d_%H%M%S")}.csv'
 
+    column_names = ['Dataset Identifier', 'User Email', 'Instance Type', 'Total Usage Time']
 
-def _upload_to_gcs(source_file_name):
-    bucket = app.config.google_cloud_storage_client.bucket("hdn_monitoring_exports")
-    destination_blob_name = "active_users_per_dataset/" + source_file_name
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_name)
+    exports_helpers.create_csv(csv_rows, filename, column_names)
+
+    exports_helpers.upload_to_gcs(filename, "datasets_total_usage_time")
+
+    os.remove(filename)
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
