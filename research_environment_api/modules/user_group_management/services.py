@@ -231,7 +231,7 @@ def remove_roles_from_group(remove_role_from_group_entity: entities.ChangeGroupR
     )
 
 
-@cache.cached(timeout=86400, key_prefix="google_role")
+@cache.memoize(timeout=86400)
 def get_google_role_entity(role_string: str) -> Optional[entities.GoogleRole]:
     iam_client = app.config.google_iam_client
     try:
