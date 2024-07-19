@@ -223,6 +223,7 @@ def destroy_workspace_build(
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_GOOGLE_WORKSPACES_FOLDER_ID": app.config.workbenches_parent_project_id,
     }
 
     return cloud_build
