@@ -28,8 +28,11 @@ def handle_error(e):
     if isinstance(e, marshmallow.ValidationError):
         http_code = 400
 
-    response = {
-        "error": f"{type(e).__name__}, {e.messages}",
-    }
+    response = {"error": type(e).__name__}
+
+    if hasattr(e, "messages"):
+        response["error"] += f", {e.messages}"
+    elif hasattr(e, "description"):
+        response["error"] += f", {e.description}"
 
     return jsonify(response), http_code
