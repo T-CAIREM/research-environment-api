@@ -43,9 +43,7 @@ def list_workbench_monitoring_data_entries() -> (
 
 
 def get_active_users_per_dataset() -> List[entities.UsersPerDataset]:
-    active_workbench_monitoring_data_entries = (
-        monitoring.get_active_users_per_dataset()
-    )
+    active_workbench_monitoring_data_entries = monitoring.get_active_users_per_dataset()
 
     return [
         entities.UsersPerDataset(entry.dataset_identifier, entry.user_emails)

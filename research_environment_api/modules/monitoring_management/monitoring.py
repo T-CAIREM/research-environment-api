@@ -38,9 +38,7 @@ def list_workbench_monitoring_data_entries() -> (
     return workbench_monitoring_data_entries
 
 
-def get_active_users_per_dataset() -> (
-    Iterable[models.WorkbenchMonitoringData]
-):
+def get_active_users_per_dataset() -> Iterable[models.WorkbenchMonitoringData]:
     with app.database_session() as session:
         active_users_per_dataset_entries = (
             session.query(

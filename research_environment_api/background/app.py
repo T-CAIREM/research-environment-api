@@ -28,14 +28,14 @@ def create_celery(broker_url: str, result_backend: str) -> Celery:
 def _setup_periodic_tasks(celery: Celery) -> None:
     celery.conf.beat_schedule = {
         # Executes every Sunday morning at midnight
-        'export-active-users-per-dataset-weekly': {
-            'task': 'research_environment_api.background.tasks.export_active_users_per_dataset',
-            'schedule': crontab(hour='0', minute=0, day_of_week=6),
-            'args': (),
+        "export-active-users-per-dataset-weekly": {
+            "task": "research_environment_api.background.tasks.export_active_users_per_dataset",
+            "schedule": crontab(hour="0", minute=0, day_of_week=6),
+            "args": (),
         },
-        'export-datasets-total-usage-time-weekly': {
-            'task': 'research_environment_api.background.tasks.export_datasets_total_usage_time',
-            'schedule': crontab(hour=0, minute=0, day_of_week=6),
-            'args': (),
+        "export-datasets-total-usage-time-weekly": {
+            "task": "research_environment_api.background.tasks.export_datasets_total_usage_time",
+            "schedule": crontab(hour=0, minute=0, day_of_week=6),
+            "args": (),
         },
     }
