@@ -1,4 +1,3 @@
-from collections import namedtuple
 from datetime import datetime
 from typing import List, Tuple
 
@@ -41,6 +40,15 @@ def list_workbench_monitoring_data_entries() -> (
     ]
 
     return serialized_workbench_monitoring_data_entries
+
+
+def get_active_users_per_dataset() -> List[entities.UsersPerDataset]:
+    active_workbench_monitoring_data_entries = monitoring.get_active_users_per_dataset()
+
+    return [
+        entities.UsersPerDataset(entry.dataset_identifier, entry.user_emails)
+        for entry in active_workbench_monitoring_data_entries
+    ]
 
 
 def _calculate_total_time(timestamps: List[Tuple[datetime, datetime]]) -> str:

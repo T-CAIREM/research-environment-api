@@ -1,3 +1,5 @@
+import csv
+import os
 from datetime import datetime
 from os import environ
 
@@ -17,9 +19,10 @@ from research_environment_api.background import (
     enums,
 )
 from research_environment_api.background.enums import OperationStatus
+from research_environment_api.modules.helpers.exports import helpers as exports_helpers
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import WorkbenchType
-from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.monitoring_management import models, services
 
 T = TypeVar("T")
 
@@ -329,6 +332,55 @@ def mark_monitoring_entry_as_deleted(
             workbench_monitoring_data.deleted_at = datetime.now()
 
     return operation
+
+
+@shared_task
+def export_active_users_per_dataset():
+    active_users_per_dataset = services.get_active_users_per_dataset()
+    csv_rows = [
+        [entry.dataset_identifier, email]
+        for entry in active_users_per_dataset
+        for email in entry.user_emails
+    ]
+
+    filename = f'active_users_per_dataset_{datetime.now().strftime("%Y_%m_%d")}.csv'
+
+    column_names = ["Dataset Identifier", "User Email"]
+
+    exports_helpers.create_csv(csv_rows, filename, column_names)
+
+    exports_helpers.upload_to_gcs(filename, "active_users_per_dataset")
+
+    os.remove(filename)
+
+
+@shared_task
+def export_datasets_total_usage_time():
+    workbench_monitoring_entries = services.list_workbench_monitoring_data_entries()
+    csv_rows = [
+        [
+            entry.dataset_identifier,
+            entry.user_email,
+            entry.instance_type,
+            entry.total_time,
+        ]
+        for entry in workbench_monitoring_entries
+    ]
+
+    filename = f'datasets_total_usage_time_{datetime.now().strftime("%Y_%m_%d")}.csv'
+
+    column_names = [
+        "Dataset Identifier",
+        "User Email",
+        "Instance Type",
+        "Total Usage Time",
+    ]
+
+    exports_helpers.create_csv(csv_rows, filename, column_names)
+
+    exports_helpers.upload_to_gcs(filename, "datasets_total_usage_time")
+
+    os.remove(filename)
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
