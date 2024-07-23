@@ -69,6 +69,11 @@ def create_app():
         f"{app.static_url_path}/{SWAGGER_SPEC_FILE_NAME}",
     )
     app.register_blueprint(swagger_bp)
-    socketio.init_app(app, message_queue=environ.get("CELERY_BROKER_URL"))
+    socketio.init_app(
+        app,
+        message_queue=environ.get("CELERY_BROKER_URL"),
+        ping_interval=25,
+        ping_timeout=60,
+    )
 
     return app
