@@ -138,3 +138,42 @@ resource "google_cloud_run_v2_job" "migrate" {
     }
   }
 }
+
+# Adding a new command to purge celery queue tasks
+resource "google_cloud_run_v2_job" "purge" {
+  name     = "purge"
+  location = "us-central1"
+
+  template {
+    template {
+      volumes {
+        name = local.service_account_credentials_volume_name
+
+        secret {
+          secret = var.service_account_credentials_secret_name
+        }
+      }
+
+      containers {
+        image   = "${var.image_repository}:${var.image_tag}"
+        command = ["/bin/sh"]
+        args = ["-c", "celery -A core purge -f"]
+
+        volume_mounts {
+          name       = local.service_account_credentials_volume_name
+          mount_path = "/app/core_service_account_secret"
+        }
+
+        dynamic "env" {
+          for_each = local.env_vars
+          content {
+            name  = env.key
+            value = env.value
+          }
+        }
+      }
+
+      service_account = var.service_account_name
+    }
+  }
+}
