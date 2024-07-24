@@ -139,25 +139,17 @@ resource "google_cloud_run_v2_job" "migrate" {
   }
 }
 
-# Adding a new command to purge celery queue tasks
-resource "google_cloud_run_v2_job" "purge" {
-  name     = "purge"
-  location = "us-central1"
+# Adding a new command to purge celery queue tasks using vpc connector
+resource "google_cloud_run_v2_job" "purge_celery_queue" {
+  name     = "purge-celery-queue"
+  location = var.region
 
   template {
     template {
-      volumes {
-        name = local.service_account_credentials_volume_name
-
-        secret {
-          secret = var.service_account_credentials_secret_name
-        }
-      }
-
       containers {
         image   = "${var.image_repository}:${var.image_tag}"
         command = ["/bin/sh"]
-        args = ["-c", "celery -A core purge -f"]
+        args    = ["-c", "celery -A research_environment_api.worker purge -f"]
 
         volume_mounts {
           name       = local.service_account_credentials_volume_name
@@ -170,6 +162,17 @@ resource "google_cloud_run_v2_job" "purge" {
             name  = env.key
             value = env.value
           }
+        }
+      }
+      vpc_access {
+        connector = google_vpc_access_connector.connector.id
+      }
+
+      volumes {
+        name = local.service_account_credentials_volume_name
+
+        secret {
+          secret = var.service_account_credentials_secret_name
         }
       }
 
