@@ -39,6 +39,7 @@ locals {
     CLOUD_RESEARCH_ENVIRONMENTS_API_URL = var.cloud_research_environments_api_url
     CUSTOMER_ID                         = var.gcp_customer_id
     GITHUB_SSH_KEY_KSM_ID               = var.github_ssh_key_ksm_id
+    MONITORING_CSV_EXPORTS_ROOT_BUCKET  = var.monitoring_csv_exports_root_bucket
   }
 }
 

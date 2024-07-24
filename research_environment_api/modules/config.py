@@ -68,6 +68,9 @@ class Config:
         self.gcp_signed_url_expiration_time = environ["GCP_SIGNED_URL_EXPIRATION_TIME"]
         self.gcp_cors_allowed_origins = environ["GCP_CORS_ALLOWED_ORIGINS"]
         self.github_ssh_key_ksm_id = environ["GITHUB_SSH_KEY_KSM_ID"]
+        self.monitoring_csv_exports_root_bucket = environ[
+            "MONITORING_CSV_EXPORTS_ROOT_BUCKET"
+        ]
 
     def _init_database_config(self):
         if self.is_development():
