@@ -3,7 +3,7 @@ import string
 import time
 from typing import Iterable, Optional, Union, List
 
-from google.cloud import monitoring_v3, service_usage_v1
+from google.cloud import monitoring_v3, service_usage_v1, billing_v1
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 from google.cloud.service_usage_v1.types import resources
 
@@ -282,6 +282,17 @@ def list_workspace_quotas(
         for limit in service_info.config.quota.limits
         if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
     ]
+
+
+def update_workspace_billing_account(workspace_id: str, billing_account_id: str):
+    billing_info = billing_v1.ProjectBillingInfo(
+        billing_account_name=f"billingAccounts/{billing_account_id}",
+        billing_enabled=True,
+    )
+    project_name = f"projects/{workspace_id}"
+    app.config.google_cloud_billing_client.update_project_billing_info(
+        name=project_name, project_billing_info=billing_info
+    )
 
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)

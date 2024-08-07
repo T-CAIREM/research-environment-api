@@ -95,3 +95,8 @@ class WorkspaceWorkflowIdentifier(Schema):
 class ListWorkspaceQuotasRequest(Schema):
     workspace_project_id = fields.Str(required=True)
     region = fields.Enum(Region, by_value=True, required=True)
+
+
+class UpdateBillingAccountRequest(Schema):
+    workspace_project_id = fields.Str(required=True)
+    billing_account_id = fields.Str(required=True)
