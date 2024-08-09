@@ -97,6 +97,6 @@ class ListWorkspaceQuotasRequest(Schema):
     region = fields.Enum(Region, by_value=True, required=True)
 
 
-class UpdateBillingAccountRequest(Schema):
+class UpdateWorkspaceBillingAccountRequest(Schema):
     workspace_project_id = fields.Str(required=True)
     billing_account_id = fields.Str(required=True)

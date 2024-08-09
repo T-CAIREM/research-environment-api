@@ -255,9 +255,9 @@ def list_workspace_quotas(region: str, workspace_project_id: str):
     return quotas_list, 200
 
 
-@workspace_management_bp.post("/update_billing/")
+@workspace_management_bp.post("/update_billing")
 @validate_token
-def update_billing_account():
+def update_workspace_billing_account():
     """Revokes a user's access to a billing account.
     ---
     post:
@@ -276,10 +276,14 @@ def update_billing_account():
               schema:
     """
     body = request.get_json()
-    create_billing_account_request = schemas.UpdateBillingAccountRequest().load(body)
+    update_workspace_billing_account_request = (
+        schemas.UpdateWorkspaceBillingAccountRequest().load(body)
+    )
 
-    workspace_project_id = create_billing_account_request["workspace_project_id"]
-    billing_account_id = create_billing_account_request["billing_account_id"]
+    workspace_project_id = update_workspace_billing_account_request[
+        "workspace_project_id"
+    ]
+    billing_account_id = update_workspace_billing_account_request["billing_account_id"]
 
     services.update_workspace_billing_account(workspace_project_id, billing_account_id)
 
