@@ -253,3 +253,38 @@ def list_workspace_quotas(region: str, workspace_project_id: str):
     quotas_list = services.list_workspace_quotas(workspace_list_quotas_query_entity)
 
     return quotas_list, 200
+
+
+@workspace_management_bp.post("/update_billing")
+@validate_token
+def update_workspace_billing_account():
+    """Revokes a user's access to a billing account.
+    ---
+    post:
+      tags:
+        - workspace_management
+      description: Update workspace billing account.
+      requestBody:
+        content:
+          application/json:
+            schema: UpdateBillingAccountRequest
+      responses:
+        200:
+          description: Returns an empty object.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    update_workspace_billing_account_request = (
+        schemas.UpdateWorkspaceBillingAccountRequest().load(body)
+    )
+
+    workspace_project_id = update_workspace_billing_account_request[
+        "workspace_project_id"
+    ]
+    billing_account_id = update_workspace_billing_account_request["billing_account_id"]
+
+    services.update_workspace_billing_account(workspace_project_id, billing_account_id)
+
+    return {}, 200
