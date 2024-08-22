@@ -150,3 +150,7 @@ variable "gcp_customer_id" {
 variable "github_ssh_key_ksm_id" {
   type = string
 }
+
+variable "monitoring_csv_exports_root_bucket" {
+  type = string
+}

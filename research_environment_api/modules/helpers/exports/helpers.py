@@ -4,9 +4,6 @@ from typing import List
 from research_environment_api.modules.app import app
 
 
-HDN_MONITORING_EXPORTS_ROOT_FOLDER = "hdn_monitoring_exports"
-
-
 def create_csv(rows: List, filename: str, columns: List):
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
@@ -16,7 +13,7 @@ def create_csv(rows: List, filename: str, columns: List):
 
 def upload_to_gcs(source_file_name: str, destination_path: str):
     bucket = app.config.google_cloud_storage_client.bucket(
-        HDN_MONITORING_EXPORTS_ROOT_FOLDER
+        app.config.monitoring_csv_exports_root_bucket
     )
     destination_blob_name = f"{destination_path}/{source_file_name}"
     blob = bucket.blob(destination_blob_name)
