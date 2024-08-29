@@ -305,6 +305,7 @@ def start_jupyter_workbench(
                 instance_zone=workbench.zone,
                 workspace_project_id=workbench_start_request.workspace_project_id,
                 workbench_activity_id=workbench_activity.id,
+                dataset_identifier=workbench.dataset_identifier,
             )()
 
             return workbench_activity.id
@@ -516,6 +517,7 @@ def start_rstudio_workbench(
                 instance_zone=workbench.zone,
                 workspace_project_id=workbench_start_request.workspace_project_id,
                 workbench_activity_id=workbench_activity.id,
+                dataset_identifier=workbench.dataset_identifier,
             )()
 
             return workbench_activity.id
