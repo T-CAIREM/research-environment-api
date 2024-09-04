@@ -9,11 +9,11 @@ data "google_service_account" "modules-service-account" {
 }
 
 resource "google_dns_record_set" "kube-dns-a" {
-  name = "kube.api.dev.healthdatanexus.ai."
-  type = "A"
-  ttl  = 300
+  name         = "kube.api.dev.healthdatanexus.ai."
+  type         = "A"
+  ttl          = 300
   managed_zone = "api-dev-healthdatanexus-ai"
-  rrdatas = [google_compute_global_address.lb-ip.address]
+  rrdatas      = [google_compute_global_address.lb-ip.address]
 }
 
 resource "google_service_account" "backend-service-account" {
@@ -123,7 +123,7 @@ locals {
     PROJECT_ID                          = var.project_id
     DATABASE_NAME                       = var.database_name
     DATABASE_USER                       = var.service_account_name
-    CLOUD_SQL_INSTANCE_CONNECTION_NAME  = "research-environment-api-dev:us-central1:research-environment-api-dev"
+    CLOUD_SQL_INSTANCE_CONNECTION_NAME  = var.cloud_sql_instance_connection_name
     CELERY_RESULT_BACKEND               = "redis://${google_redis_instance.redis.host}:${google_redis_instance.redis.port}"
     CELERY_BROKER_URL                   = "redis://${google_redis_instance.redis.host}:${google_redis_instance.redis.port}"
     CACHE_TYPE                          = var.cache_type
@@ -146,9 +146,10 @@ locals {
     GCP_SIGNED_URL_EXPIRATION_TIME      = var.gcp_signed_url_expiration_time
     GCP_CORS_ALLOWED_ORIGINS            = var.gcp_cors_allowed_origins
     ORGANIZATION_ID                     = var.cloud_organization_id
-    CLOUD_RESEARCH_ENVIRONMENTS_API_URL = "http://34.49.118.202"
+    CLOUD_RESEARCH_ENVIRONMENTS_API_URL = var.cloud_research_environments_api_url
     CUSTOMER_ID                         = var.gcp_customer_id
     GITHUB_SSH_KEY_KSM_ID               = var.github_ssh_key_ksm_id
+    MONITORING_CSV_EXPORTS_ROOT_BUCKET  = var.monitoring_csv_exports_root_bucket
   }
 
   _backend_volumes = {
@@ -207,7 +208,7 @@ resource "kubernetes_deployment" "core" {
 
         container {
           name    = "core"
-          image   = "${var.image_repository}:2f1fcdad424291eb5ccb251b3867c6469774a572"
+          image   = "${var.image_repository}:${var.image_tag}"
           command = null
 
           resources {
@@ -298,7 +299,7 @@ resource "kubernetes_deployment" "celery" {
 
         container {
           name    = "celery"
-          image   = "${var.image_repository}:2f1fcdad424291eb5ccb251b3867c6469774a572"
+          image   = "${var.image_repository}:${var.image_tag}"
           command = ["/celery_endpoint.sh"]
 
           resources {
@@ -452,7 +453,7 @@ resource "kubernetes_cron_job_v1" "migrate" {
     failed_jobs_history_limit     = 3
     schedule                      = "0 0 31 2 *"
     successful_jobs_history_limit = 1
-    suspend = true
+    suspend                       = true
     job_template {
       metadata {}
       spec {
