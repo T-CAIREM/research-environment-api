@@ -10,3 +10,5 @@ terraform {
     bucket      = "research-environment-api-terraform-state"
   }
 }
+
+data "google_client_config" "default" {}

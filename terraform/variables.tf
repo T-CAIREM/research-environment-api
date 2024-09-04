@@ -151,6 +151,55 @@ variable "github_ssh_key_ksm_id" {
   type = string
 }
 
+variable "gcs_project_id" {
+  default = "data-project-333710"
+  type    = string
+}
+
+variable "domain" {
+  default = "dev.healthdatanexus.ai"
+  type    = string
+}
+
+variable "zones" {
+  default = ["us-central1-a"]
+  type    = list(string)
+}
+
+variable "audit_bucket_retention_seconds" {
+  default = 86400
+  type    = number
+}
+
+variable "audit_bucket_retention_locked" {
+  default = false
+  type    = bool
+}
+
+variable "service_account_simple_name" {
+  type = string
+}
+
+variable "cloud_sql_proxy_tag" {
+  default = "1.24.0"
+  type    = string
+}
+
+variable "backend_replicas" {
+  default = 1
+  type    = number
+}
+
+variable "backend_replicas_max" {
+  default = 5
+  type    = number
+}
+
+variable "scale_up_step" {
+  default = 1
+  type    = number
+}
+
 variable "monitoring_csv_exports_root_bucket" {
   type = string
 }
