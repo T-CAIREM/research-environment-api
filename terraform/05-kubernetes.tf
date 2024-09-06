@@ -114,7 +114,6 @@ variable "_backend_volumes" {
 
 locals {
   common_env = {
-    #    DATABASE_URL  = "postgresql://${google_sql_user.user-kube.name}:${random_password.data-platform-sql-password.result}@localhost:5432/research_environment_api_dev"
     APP_ENV                             = "production"
     PORT                                = 5000
     C_FORCE_ROOT                        = "True"
