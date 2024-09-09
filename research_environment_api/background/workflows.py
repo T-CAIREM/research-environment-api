@@ -54,6 +54,9 @@ def stop_compute_engine_workbench(
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
+        tasks.mark_monitoring_entry_as_deleted.s(
+            workbench_activity_id=workbench_activity_id
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -71,6 +74,9 @@ def stop_jupyter_workbench(
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
+        tasks.mark_monitoring_entry_as_deleted.s(
+            workbench_activity_id=workbench_activity_id
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 
@@ -80,6 +86,7 @@ def start_jupyter_workbench(
     instance_name: str,
     instance_zone: str,
     workbench_activity_id: str,
+    dataset_identifier: str,
 ):
     return chain(
         tasks.start_vertex_ai_instance.s(
@@ -92,6 +99,11 @@ def start_jupyter_workbench(
             workspace_project_id=workspace_project_id,
             instance_zone=instance_zone,
             instance_name=instance_name,
+        ),
+        tasks.add_monitoring_entry.s(
+            workbench_activity_id=workbench_activity_id,
+            instance_type=enums.InstanceType.JUPYTER,
+            dataset_identifier=dataset_identifier,
         ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
@@ -204,6 +216,7 @@ def start_rstudio_workbench(
     instance_name: str,
     instance_zone: str,
     workbench_activity_id: str,
+    dataset_identifier: str,
 ):
     return chain(
         tasks.start_compute_instance.s(
@@ -212,6 +225,11 @@ def start_rstudio_workbench(
             instance_zone=instance_zone,
         ),
         tasks.check_operation_status.s(),
+        tasks.add_monitoring_entry.s(
+            workbench_activity_id=workbench_activity_id,
+            instance_type=enums.InstanceType.RSTUDIO,
+            dataset_identifier=dataset_identifier,
+        ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
 

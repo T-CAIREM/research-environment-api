@@ -38,4 +38,9 @@ def _setup_periodic_tasks(celery: Celery) -> None:
             "schedule": crontab(hour=0, minute=0, day_of_week=6),
             "args": (),
         },
+        "mark-stale-workbenches-every-six-hours": {
+            "task": "research_environment_api.background.tasks.mark_monitoring_entry_for_stale_workbenches",
+            "schedule": crontab(minute=0, hour="*/6"),
+            "args": (),
+        },
     }

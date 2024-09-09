@@ -18,11 +18,17 @@ from research_environment_api.background import (
     workflows,
     enums,
 )
+
+import research_environment_api.modules.workbench_management.services as workbench_services
 from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.helpers.exports import helpers as exports_helpers
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management.entities import WorkbenchType
+from research_environment_api.modules.workbench_management.entities import (
+    WorkbenchType,
+    WorkbenchStatus,
+)
 from research_environment_api.modules.monitoring_management import models, services
+
 
 T = TypeVar("T")
 
@@ -322,7 +328,11 @@ def mark_monitoring_entry_as_deleted(
 
             workbench_monitoring_data = (
                 session.query(models.WorkbenchMonitoringData)
-                .filter_by(workbench_id=workbench_activity.workbench_id)
+                .filter(
+                    models.WorkbenchMonitoringData.workbench_id
+                    == workbench_activity.workbench_id,
+                    models.WorkbenchMonitoringData.deleted_at.is_(None),
+                )
                 .one_or_none()
             )
 
@@ -381,6 +391,37 @@ def export_datasets_total_usage_time():
     exports_helpers.upload_to_gcs(filename, "datasets_total_usage_time")
 
     os.remove(filename)
+
+
+@shared_task
+def mark_monitoring_entry_for_stale_workbenches():
+    with app.database_session() as session:
+        with session.begin():
+            all_active_workbenches = (
+                session.query(
+                    models.WorkbenchMonitoringData,
+                    models.WorkbenchActivity.workspace_id,
+                )
+                .join(
+                    models.WorkbenchActivity,
+                    models.WorkbenchMonitoringData.workbench_id
+                    == models.WorkbenchActivity.workbench_id,
+                    isouter=True,
+                )
+                .filter(models.WorkbenchMonitoringData.deleted_at.is_(None))
+                .all()
+            )
+
+            for monitoring_data, workspace_id in all_active_workbenches:
+                workbench = workbench_services.get_compute_engine_workbench(
+                    gcp_project_id=workspace_id,
+                    instance_name=monitoring_data.workbench_id,
+                    user_email=monitoring_data.user_email,
+                )
+                if workbench.status == WorkbenchStatus.STOPPED:
+                    monitoring_data.deleted_at = datetime.now()
+
+            session.commit()
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
