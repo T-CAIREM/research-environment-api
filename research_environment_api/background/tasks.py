@@ -328,8 +328,11 @@ def mark_monitoring_entry_as_deleted(
 
             workbench_monitoring_data = (
                 session.query(models.WorkbenchMonitoringData)
-                .filter_by(workbench_id=workbench_activity.workbench_id)
-                .filter(models.WorkbenchMonitoringData.deleted_at.is_(None))
+                .filter(
+                    models.WorkbenchMonitoringData.workbench_id
+                    == workbench_activity.workbench_id,
+                    models.WorkbenchMonitoringData.deleted_at.is_(None),
+                )
                 .one_or_none()
             )
 
