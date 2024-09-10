@@ -1,3 +1,12 @@
+resource "google_compute_global_address" "db-ip-range" {
+  name          = "${var.name}-db-ip-range"
+  network       = google_compute_network.gke-network.id
+  address_type  = "INTERNAL"
+  purpose       = "VPC_PEERING"
+  address       = "10.1.0.0"
+  prefix_length = 16
+}
+
 resource "google_sql_database_instance" "main" {
   name             = "${var.name}-${terraform.workspace}"
   region           = var.region
@@ -15,6 +24,7 @@ resource "google_sql_database_instance" "main" {
 
   deletion_protection = true
 }
+
 
 resource "google_sql_user" "user" {
   instance = google_sql_database_instance.main.name
