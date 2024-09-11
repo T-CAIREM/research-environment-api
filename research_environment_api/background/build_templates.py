@@ -208,7 +208,7 @@ CREATE_SHARED_WORKSPACE_STEPS_PARTIAL = [
 
 DESTROY_WORKSPACE_STEPS_PARTIAL = [
     {
-        "id": "workspace_destruction_setup",
+        "id": "workspace_vpc_destruction_setup",
         "name": "python",
         "args": ["python3", "vpc-sp/python3.py", "${_PROJECT_ID}"],
         "wait_for": ["clone_github_repo"],
