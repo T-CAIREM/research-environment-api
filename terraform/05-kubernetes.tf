@@ -584,6 +584,20 @@ resource "kubernetes_manifest" "lb-frontend" {
   }
 }
 
+resource "kubernetes_manifest" "lb-backend" {
+  manifest = {
+    "apiVersion" = "cloud.google.com/v1"
+    "kind" = "BackendConfig"
+    metadata = {
+      "name"      = "${var.name}-lb-backend"
+      "namespace" = "default"
+    }
+    "spec" = {
+      "timeoutSec" =  300
+    }
+  }
+}
+
 resource "kubernetes_ingress_v1" "core" {
   metadata {
     name = "${var.name}-backend"
@@ -592,6 +606,7 @@ resource "kubernetes_ingress_v1" "core" {
       "kubernetes.io/ingress.global-static-ip-name" = google_compute_global_address.lb-ip.name
       "networking.gke.io/managed-certificates"      = kubernetes_manifest.lb-cert.manifest.metadata.name
       "networking.gke.io/v1beta1.FrontendConfig"    = kubernetes_manifest.lb-frontend.manifest.metadata.name
+      "cloud.google.com/backend-config"             = "{'default': kubernetes_manifest.lb-backend.manifest.metadata.name}"
     }
   }
   spec {
