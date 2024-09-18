@@ -35,14 +35,6 @@ variable "cloud_sql_instance_connection_name" {
   type = string
 }
 
-variable "celery_broker_url" {
-  type = string
-}
-
-variable "celery_backend_url" {
-  type = string
-}
-
 variable "cache_type" {
   type = string
 }
@@ -157,7 +149,7 @@ variable "gcs_project_id" {
 }
 
 variable "domain" {
-  default = "dev.healthdatanexus.ai"
+  default = "kube.api.dev.healthdatanexus.ai"
   type    = string
 }
 
