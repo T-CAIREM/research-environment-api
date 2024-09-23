@@ -332,6 +332,84 @@ resource "kubernetes_deployment" "celery" {
   }
 }
 
+resource "kubernetes_deployment" "celery-flower" {
+  metadata {
+    name = "${var.name}-celery-flower"
+    labels = {
+      App = "${var.name}-celery-flower"
+    }
+  }
+
+  spec {
+    replicas = 1
+    selector {
+      match_labels = {
+        App = "${var.name}-celery-flower"
+      }
+    }
+    strategy {
+      type = "RollingUpdate"
+      rolling_update {
+        max_surge       = 0
+        max_unavailable = "50%"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          App = "${var.name}-celery-flower"
+        }
+      }
+      spec {
+        service_account_name = "${var.name}-backend"
+
+        dynamic "volume" {
+          for_each = local.backend_volumes
+
+          content {
+            name = volume.key
+            secret {
+              secret_name = volume.value.secret_name
+            }
+          }
+        }
+
+        container {
+          name    = "celery-flower"
+          image   = "${var.image_repository}:${var.image_tag}"
+          command = ["/flower_endpoint.sh"]
+
+          resources {
+            limits = {
+              cpu    = "200m"
+              memory = "1Gi"
+            }
+          }
+
+          dynamic "volume_mount" {
+            for_each = local.backend_volumes
+
+            content {
+              name       = volume_mount.key
+              mount_path = volume_mount.value.mount_path
+              read_only  = true
+            }
+          }
+
+          dynamic "env" {
+            for_each = local.common_env
+
+            content {
+              name  = env.key
+              value = env.value
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
   metadata {
     name = "${var.name}-backend-hpa"
