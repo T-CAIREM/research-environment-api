@@ -41,7 +41,7 @@ module "gke" {
   network_policy             = false
   default_max_pods_per_node  = 55
   remove_default_node_pool   = true
-  kubernetes_version         = "1.30.2-gke.1587003"
+  kubernetes_version         = "1.30.3-gke.1969001"
 
   node_pools = [
     {
