@@ -1,4 +1,4 @@
 #!/bin/sh
 
-celery -A research_environment_api.worker flower
+celery -A research_environment_api.worker flower --url_prefix=flower --basic_auth=admin:django123
 
