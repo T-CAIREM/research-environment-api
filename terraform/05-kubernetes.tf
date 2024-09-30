@@ -627,6 +627,27 @@ resource "kubernetes_service" "cloud-sql" {
   }
 }
 
+resource "kubernetes_service" "flower" {
+  metadata {
+    name = "${var.name}-flower"
+    annotations = {
+      "cloud.google.com/backend-config" = "{\"default\": \"${kubernetes_manifest.lb-backend-flower.manifest.metadata.name}\"}"
+    }
+  }
+  spec {
+    type = "NodePort"
+    selector = {
+      App = kubernetes_deployment.celery-flower.spec.0.template.0.metadata[0].labels.App
+    }
+    port {
+      name        = "http"
+      protocol    = "TCP"
+      port        = 5555
+      target_port = 5555
+    }
+  }
+}
+
 resource "google_compute_global_address" "lb-ip" {
   name = "${var.name}-lb-ip"
 }
@@ -675,6 +696,22 @@ resource "kubernetes_manifest" "lb-backend" {
   }
 }
 
+resource "kubernetes_manifest" "lb-backend-flower" {
+  manifest = {
+    "apiVersion" = "cloud.google.com/v1"
+    "kind"       = "BackendConfig"
+    "metadata" = {
+      "name"      = "${var.name}-lb-backend-flower"
+      "namespace" = "default"
+    }
+    "spec" = {
+      "healthCheck" = {
+        "requestPath"  = "/flower/healthcheck"
+      }
+    }
+  }
+}
+
 resource "kubernetes_ingress_v1" "core" {
   metadata {
     name = "${var.name}-backend"
@@ -688,6 +725,17 @@ resource "kubernetes_ingress_v1" "core" {
   spec {
     rule {
       http {
+        path {
+          backend {
+            service {
+              name = kubernetes_service.flower.metadata[0].name
+              port {
+                number = kubernetes_service.flower.spec[0].port[0].port
+              }
+            }
+          }
+          path = "/flower/*"
+        }
         path {
           backend {
             service {
