@@ -404,6 +404,10 @@ resource "kubernetes_deployment" "celery-flower" {
               value = env.value
             }
           }
+          env {
+            name  = "FLOWER_BASIC_AUTH"
+            value = var.flower_basic_auth
+          }
         }
       }
     }
