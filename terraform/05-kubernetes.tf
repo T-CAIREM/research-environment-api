@@ -9,10 +9,10 @@ data "google_service_account" "modules-service-account" {
 }
 
 resource "google_dns_record_set" "kube-dns-a" {
-  name         = "kube.api.dev.healthdatanexus.ai."
+  name         = "${var.domain}."
   type         = "A"
   ttl          = 300
-  managed_zone = "api-dev-healthdatanexus-ai"
+  managed_zone = var.dns_zone
   rrdatas      = [google_compute_global_address.lb-ip.address]
 }
 
@@ -136,7 +136,7 @@ locals {
     RSTUDIO_STARTUP_SCRIPT              = var.rstudio_startup_script
     NETWORK_NAME                        = var.network_name
     RSTUDIO_DNS_PROJECT                 = var.rstudio_dns_project
-    RSTUDIO_DNS_ZONE                    = var.rstudio_dns_zone
+    RSTUDIO_DNS_ZONE                    = var.dns_zone
     RSTUDIO_DOMAIN_NAME                 = var.rstudio_domain_name
     RSTUDIO_SSL_PRIVATE_KEY             = var.rstudio_ssl_private_key
     RSTUDIO_SSL_CERTIFICATE             = var.rstudio_ssl_certificate

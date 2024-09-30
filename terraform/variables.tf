@@ -91,7 +91,7 @@ variable "rstudio_dns_project" {
   type = string
 }
 
-variable "rstudio_dns_zone" {
+variable "dns_zone" {
   type = string
 }
 
@@ -149,7 +149,7 @@ variable "gcs_project_id" {
 }
 
 variable "domain" {
-  default = "kube.api.dev.healthdatanexus.ai"
+  default = "kube.api.healthdatanexus.ai"
   type    = string
 }
 
@@ -166,10 +166,6 @@ variable "audit_bucket_retention_seconds" {
 variable "audit_bucket_retention_locked" {
   default = false
   type    = bool
-}
-
-variable "service_account_simple_name" {
-  type = string
 }
 
 variable "cloud_sql_proxy_tag" {
