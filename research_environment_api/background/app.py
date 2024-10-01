@@ -1,7 +1,36 @@
 from celery import Celery
 from celery.schedules import crontab
-
+import logging
+import json
+from os import environ
 from research_environment_api.background.tasks import WorkflowTask
+from celery.signals import setup_logging, after_setup_logger
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "time": self.formatTime(record, self.datefmt),
+            "name": record.name,
+            "level": record.levelname,
+            "message": record.getMessage(),
+        }
+        return json.dumps(log_record)
+
+
+@setup_logging.connect
+def setup_logging(loglevel, **kwargs):
+    logger = logging.getLogger()
+    logger.propagate = False
+    logger.setLevel(loglevel)
+    handler = logging.StreamHandler()
+    if environ["APP_ENV"] == "production":
+        handler.setFormatter(JsonFormatter())
+        logger.addHandler(handler)
+    else:
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
 
 def create_celery(broker_url: str, result_backend: str) -> Celery:
@@ -19,7 +48,7 @@ def create_celery(broker_url: str, result_backend: str) -> Celery:
     celery.conf.task_serializer = "pickle"
     celery.conf.result_serializer = "pickle"
     celery.task_cls = WorkflowTask
-
+    celery.conf.worker_hijack_root_logger = False
     _setup_periodic_tasks(celery)
 
     return celery
