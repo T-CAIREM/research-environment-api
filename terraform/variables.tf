@@ -191,3 +191,8 @@ variable "scale_up_step" {
 variable "monitoring_csv_exports_root_bucket" {
   type = string
 }
+
+variable "flower_basic_auth" {
+  type = string
+  sensitive = true
+}
