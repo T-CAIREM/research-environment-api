@@ -10,3 +10,4 @@ class Workflow(Schema):
         WorkflowStatus, by_value=True, required=True, attribute="build_status"
     )
     error = fields.Str(required=False, attribute="build_error_information")
+    workspace_id = fields.Str(required=True)
