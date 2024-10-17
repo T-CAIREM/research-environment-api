@@ -28,7 +28,9 @@ def setup_logging(loglevel, **kwargs):
         handler.setFormatter(JsonFormatter())
         logger.addHandler(handler)
     else:
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
