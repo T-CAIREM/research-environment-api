@@ -136,16 +136,12 @@ def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
     return zone, *fallback_zones
 
 
-# dev - "186807312602", prod - "228219862362"
 def start_stopped_workbenches(folder_id: str):
-    projects_client = app.config.projects_client
-    request = google.cloud.resourcemanager_v3.ListProjectsRequest(
-        parent=f"folders/{folder_id}"
-    )
+    projects_client = app.config.google_cloud_resource_client
 
     project_ids = []
-    for project in projects_client.list_projects(request=request):
-        if project.state == google.cloud.resourcemanager_v3.Project.State.ACTIVE:
+    for project in projects_client.list_projects(parent=f"folders/{folder_id}"):
+        if project.state == google.cloud.resourcemanager.Project.State.ACTIVE:
             project_ids.append((project.project_id, project.labels["region"]))
 
     notebooks_client = app.config.google_cloud_notebooks_client
@@ -155,10 +151,9 @@ def start_stopped_workbenches(folder_id: str):
             continue
 
         for zone in constants.AVAILABLE_ZONES.get(region, ""):
-            request = google.cloud.notebooks_v2.ListInstancesRequest(
-                parent=f"projects/{project_id}/locations/{zone}",
-            )
-            for instance in notebooks_client.list_instances(request=request):
+            for instance in notebooks_client.list_instances(
+                parent=f"projects/{project_id}/locations/{zone}"
+            ):
                 if (
                     instance.state
                     != google.cloud.notebooks_v2.types.instance.State.STOPPED
