@@ -147,6 +147,9 @@ class Config:
         self.google_iam_client = google.cloud.iam_admin_v1.IAMClient(
             credentials=self.service_account_credentials
         )
+        self.projects_client = google.cloud.resourcemanager_v3.ProjectsClient(
+            credentials=self.service_account_credentials
+        )
 
 
 def create_config() -> Config:

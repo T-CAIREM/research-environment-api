@@ -1,9 +1,13 @@
 import random
 import string
+from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional, Tuple, Union
 
 from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
+import google.cloud.resourcemanager_v3
+import google.cloud.notebooks_v2
+
 
 from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
@@ -130,3 +134,47 @@ def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
     zones = constants.AVAILABLE_ZONES[region]
     zone, *fallback_zones = random.sample(zones, len(zones))
     return zone, *fallback_zones
+
+
+# dev - "186807312602", prod - "228219862362"
+def start_stopped_workbenches(folder_id: str):
+    projects_client = app.config.projects_client
+    request = google.cloud.resourcemanager_v3.ListProjectsRequest(
+        parent=f"folders/{folder_id}"
+    )
+
+    project_ids = []
+    for project in projects_client.list_projects(request=request):
+        if project.state == google.cloud.resourcemanager_v3.Project.State.ACTIVE:
+            project_ids.append((project.project_id, project.labels["region"]))
+
+    notebooks_client = app.config.google_cloud_notebooks_client
+    instances_to_start = []
+    for project_id, region in project_ids:
+        if region == "":
+            continue
+
+        for zone in constants.AVAILABLE_ZONES.get(region, ""):
+            request = google.cloud.notebooks_v2.ListInstancesRequest(
+                parent=f"projects/{project_id}/locations/{zone}",
+            )
+            for instance in notebooks_client.list_instances(request=request):
+                if (
+                    instance.state
+                    != google.cloud.notebooks_v2.types.instance.State.STOPPED
+                ):
+                    continue
+
+                update_time = instance.update_time
+                current_time = datetime.now(timezone.utc)
+                if current_time - update_time > timedelta(days=3):
+                    continue
+
+                instances_to_start.append(instance.name)
+
+    for instance_name in instances_to_start:
+        notebooks_client.start_instance(
+            {"name": instance_name},
+        )
+
+    return f"Started {len(instances_to_start)} instances."
