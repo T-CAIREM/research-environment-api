@@ -48,6 +48,7 @@ def delete_group(user_group_deletion_entity: entities.UserGroupDeletion):
 def _get_roles_associated_with_group(group_name: str, organization_id: str):
     organization_client = app.config.organization_client
     full_group_name = _get_full_group_name(group_name)
+    group_binding = f"group:{full_group_name}"
 
     response = organization_client.get_iam_policy(
         {"resource": f"organizations/{organization_id}"}
@@ -55,7 +56,7 @@ def _get_roles_associated_with_group(group_name: str, organization_id: str):
     return [
         binding.role
         for binding in response.bindings
-        if full_group_name in binding.members
+        if group_binding in binding.members
     ]
 
 
