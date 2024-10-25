@@ -695,7 +695,7 @@ resource "kubernetes_manifest" "lb-backend" {
       "namespace" = "default"
     }
     "spec" = {
-      "timeoutSec" = 300
+      "timeoutSec" = 600
     }
   }
 }
