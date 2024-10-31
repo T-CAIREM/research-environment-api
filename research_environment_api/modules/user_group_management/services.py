@@ -4,6 +4,11 @@ from google import protobuf
 from typing import Optional
 import re
 from research_environment_api.web.cache import cache
+from googleapiclient.errors import HttpError
+
+from research_environment_api.modules.user_group_management.exceptions import (
+    GoogleGroupAlreadyExists,
+)
 
 from google import api_core
 
@@ -29,12 +34,17 @@ def create_group(user_group_creation_entity: entities.UserGroupCreation):
         "description": user_group_creation_entity.description,
         "groupKey": {"id": _get_full_group_name(user_group_creation_entity.group_name)},
     }
-    group = (
-        identity_client.groups()
-        .create(body=group, initialGroupConfig="WITH_INITIAL_OWNER")
-        .execute()
-    )
-    return group
+    try:
+        group = (
+            identity_client.groups()
+            .create(body=group, initialGroupConfig="WITH_INITIAL_OWNER")
+            .execute()
+        )
+        return group
+    except HttpError as error:
+        if error.status_code == 409:
+            raise GoogleGroupAlreadyExists
+        raise error
 
 
 def delete_group(user_group_deletion_entity: entities.UserGroupDeletion):
