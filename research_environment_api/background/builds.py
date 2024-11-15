@@ -81,19 +81,11 @@ def create_jupyter_workbench_build(
 
 def update_jupyter_workbench_build(
     workspace_project_id: str,
-    region: Region,
     zone: str,
     machine_type: MachineType,
-    disk_size: int,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
-    dataset_identifier: str,
-    user_email: str,
     bucket_name: str,
-    vm_image: str,
     instance_name: str,
-    service_account_name: str,
     sharing_bucket_permission_dict: dict[str, str],
-    user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
@@ -101,22 +93,12 @@ def update_jupyter_workbench_build(
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
         "_INSTANCE_NAME": instance_name,
-        "_REGION": region.value,
-        "_DATASET": dataset_identifier,
-        "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
-        "_VM_IMAGE": vm_image,
-        "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
         "_ZONE": zone,
-        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
-        "_SERVICE_ACCOUNT_NAME": service_account_name,
-        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
-        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }

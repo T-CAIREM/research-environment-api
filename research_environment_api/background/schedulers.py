@@ -324,12 +324,6 @@ def update_jupyter_workbench(
         workbench.sharing_bucket_identifiers,
         workbench_update_request.user_email,
     )
-    user_permissions_list = (
-        user_group_services.get_roles_associated_with_service_account(
-            workbench.service_account_name,
-            workbench_update_request.workspace_project_id,
-        )
-    )
 
     _clear_quotas_cache(workbench_update_request.workspace_project_id, workbench.region)
 
@@ -337,17 +331,9 @@ def update_jupyter_workbench(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
         machine_type=workbench_update_request.machine_type,
-        user_email=workbench_update_request.user_email,
-        region=workbench.region,
-        disk_size=workbench.disk_size,
-        gpu_accelerator_type=workbench.gpu_accelerator_type,
-        dataset_identifier=workbench.dataset_identifier,
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
-        vm_image=workbench.vm_image,
-        service_account_name=workbench.service_account_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
-        user_permissions_list=user_permissions_list,
     )
 
     with app.database_session() as session:
