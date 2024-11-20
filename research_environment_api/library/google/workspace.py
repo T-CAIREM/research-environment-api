@@ -4,10 +4,12 @@ from googleapiclient.discovery import build
 
 
 class UserAlreadyExistsError(Exception):
+    description = "User already exists in organization"
     pass
 
 
 class GroupMembershipAlreadyExistsError(Exception):
+    description = "User has already been added to group"
     pass
 
 
