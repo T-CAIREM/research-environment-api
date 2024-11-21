@@ -2,6 +2,12 @@ from flask import request
 
 from research_environment_api.modules.workspace_management import entities, services
 from research_environment_api.web.decorators import validate_token
+from research_environment_api.modules.monitoring_management import (
+    entities as monitoring_entities,
+)
+from research_environment_api.modules.monitoring_management import (
+    services as monitoring_services,
+)
 from research_environment_api.web.workspace_management import (
     schemas,
     workspace_management_bp,
@@ -247,10 +253,12 @@ def list_workspace_quotas(region: str, workspace_project_id: str):
     list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load(
         {"workspace_project_id": workspace_project_id, "region": region}
     )
-    workspace_list_quotas_query_entity = entities.WorkspaceListQuotasQuery(
+    workspace_list_quotas_query_entity = monitoring_entities.BaseQuotaMetricsEntity(
         **list_workspace_quotas_request
     )
-    quotas_list = services.list_workspace_quotas(workspace_list_quotas_query_entity)
+    quotas_list = monitoring_services.check_google_quotas(
+        workspace_list_quotas_query_entity, monitoring_entities.GeneralQuotaMetrics
+    )
 
     return quotas_list, 200
 

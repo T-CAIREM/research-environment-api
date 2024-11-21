@@ -19,6 +19,12 @@ from research_environment_api.modules.sharing_management.services import (
 from research_environment_api.modules.user_group_management import (
     services as user_group_services,
 )
+from research_environment_api.modules.monitoring_management import (
+    services as monitoring_services,
+)
+from research_environment_api.modules.monitoring_management.entities import (
+    GeneralQuotaMetrics,
+)
 
 
 def create_jupyter_workbench(
@@ -56,9 +62,10 @@ def create_jupyter_workbench(
         user_permissions_list=user_permissions_list,
     )
 
-    _clear_quotas_cache(
+    monitoring_services.clear_quotas_cache(
         workbench_creation_request.workspace_project_id,
         workbench_creation_request.region,
+        GeneralQuotaMetrics,
     )
 
     with app.database_session() as session:
@@ -220,7 +227,11 @@ def stop_compute_engine_workbench(
         user_email=workbench_stop_request.user_email,
     )
 
-    _clear_quotas_cache(workbench_stop_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_stop_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
 
     with app.database_session() as session:
         with session.begin():
@@ -253,7 +264,11 @@ def stop_jupyter_workbench(
         user_email=workbench_stop_request.user_email,
     )
 
-    _clear_quotas_cache(workbench_stop_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_stop_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
 
     with app.database_session() as session:
         with session.begin():
@@ -286,7 +301,11 @@ def start_jupyter_workbench(
         user_email=workbench_start_request.user_email,
     )
 
-    _clear_quotas_cache(workbench_start_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_start_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
 
     with app.database_session() as session:
         with session.begin():
@@ -331,8 +350,17 @@ def update_jupyter_workbench(
         )
     )
 
-    _clear_quotas_cache(workbench_update_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
 
+    monitoring_services.check_workbench_update_quotas(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        workbench_update_request.machine_type,
+    )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
@@ -383,8 +411,10 @@ def destroy_jupyter_workbench(
         user_email=workbench_destroy_request.user_email,
     )
 
-    _clear_quotas_cache(
-        workbench_destroy_request.workspace_project_id, workbench.region
+    monitoring_services.clear_quotas_cache(
+        workbench_destroy_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
     )
 
     build = builds.destroy_jupyter_workbench_build(
@@ -441,9 +471,10 @@ def create_rstudio_workbench(
         workbench_creation_request.user_groups,
     )
 
-    _clear_quotas_cache(
+    monitoring_services.clear_quotas_cache(
         workbench_creation_request.workspace_project_id,
         workbench_creation_request.region,
+        GeneralQuotaMetrics,
     )
 
     build = builds.create_rstudio_workbench_build(
@@ -498,7 +529,11 @@ def start_rstudio_workbench(
         user_email=workbench_start_request.user_email,
     )
 
-    _clear_quotas_cache(workbench_start_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_start_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
 
     with app.database_session() as session:
         with session.begin():
@@ -544,7 +579,17 @@ def update_rstudio_workbench(
         )
     )
 
-    _clear_quotas_cache(workbench_update_request.workspace_project_id, workbench.region)
+    monitoring_services.clear_quotas_cache(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    monitoring_services.check_workbench_update_quotas(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        workbench_update_request.machine_type,
+    )
 
     build = builds.update_rstudio_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -594,8 +639,10 @@ def destroy_rstudio_workbench(
         workbench_destroy_request.user_email,
     )
 
-    _clear_quotas_cache(
-        workbench_destroy_request.workspace_project_id, workbench.region
+    monitoring_services.clear_quotas_cache(
+        workbench_destroy_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
     )
 
     build = builds.destroy_rstudio_workbench_build(
@@ -634,12 +681,3 @@ def destroy_rstudio_workbench(
             )()
 
             return workbench_activity.id
-
-
-def _clear_quotas_cache(workspace_project_id, region):
-    # import here to avoid circular import
-    from research_environment_api.modules.workspace_management import (
-        services as workspace_services,
-    )
-
-    workspace_services.clear_quotas_cache(workspace_project_id, region)
