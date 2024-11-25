@@ -696,6 +696,10 @@ resource "kubernetes_manifest" "lb-backend" {
     }
     "spec" = {
       "timeoutSec" = 600
+      sessionAffinity = {
+        affinityType           = "GENERATED_COOKIE"
+        affinityCookieTtlSec    = 3600   # 1 hour, adjust as needed
+      }
     }
   }
 }
