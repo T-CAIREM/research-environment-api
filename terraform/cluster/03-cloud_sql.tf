@@ -22,7 +22,13 @@ resource "google_sql_database_instance" "main" {
     }
   }
 
-  deletion_protection = true
+  deletion_protection = var.deletion_protection
+}
+
+resource "time_sleep" "wait_30_seconds" {
+  depends_on = [google_sql_database_instance.main]
+
+  create_duration = "30s"
 }
 
 
@@ -30,4 +36,8 @@ resource "google_sql_user" "user" {
   instance = google_sql_database_instance.main.name
   type     = "CLOUD_IAM_SERVICE_ACCOUNT"
   name     = replace(var.service_account_name, ".gserviceaccount.com", "")
+
+  depends_on = [
+    time_sleep.wait_30_seconds
+  ]
 }

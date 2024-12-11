@@ -95,6 +95,10 @@ variable "dns_zone" {
   type = string
 }
 
+variable "dns_zone_name" {
+  type = string
+}
+
 variable "rstudio_domain_name" {
   type = string
 }
@@ -165,6 +169,11 @@ variable "audit_bucket_retention_seconds" {
 
 variable "audit_bucket_retention_locked" {
   default = false
+  type    = bool
+}
+
+variable "deletion_protection" {
+  default = true
   type    = bool
 }
 

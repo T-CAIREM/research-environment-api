@@ -1,18 +1,32 @@
+data "google_container_cluster" "cluster" {
+  project = var.project_id
+  name = "${var.name}-cluster"
+  location = "us-central1-a"
+}
+
 provider "kubernetes" {
-  host                   = "https://${module.gke.endpoint}"
+  host                   = "https://${data.google_container_cluster.cluster.endpoint}"
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
+  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
 }
 
 data "google_service_account" "modules-service-account" {
   account_id = "projects/${var.project_id}/serviceAccounts/${var.service_account_name}"
 }
 
+resource "google_dns_managed_zone" "kube-dns-managed-zone" {
+  name        = var.dns_zone
+  dns_name    = "${var.dns_zone_name}."
+  description = "DNS zone for ${var.dns_zone}"
+
+  project = var.project_id
+}
+
 resource "google_dns_record_set" "kube-dns-a" {
   name         = "${var.domain}."
   type         = "A"
   ttl          = 300
-  managed_zone = var.dns_zone
+  managed_zone = google_dns_managed_zone.kube-dns-managed-zone.name
   rrdatas      = [google_compute_global_address.lb-ip.address]
 }
 
@@ -500,7 +514,7 @@ resource "kubernetes_deployment" "cloud-sql" {
             "/cloud_sql_proxy",
             "-verbose=false",
             "-structured_logs",
-            "-instances=${var.project_id}:${var.region}:${google_sql_database_instance.main.name}=tcp:0.0.0.0:5432"
+            "-instances=${var.project_id}:${var.region}:${var.name}-${terraform.workspace}=tcp:0.0.0.0:5432"
           ]
 
           resources {
