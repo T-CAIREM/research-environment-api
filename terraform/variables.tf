@@ -95,10 +95,6 @@ variable "dns_zone" {
   type = string
 }
 
-variable "dns_zone_name" {
-  type = string
-}
-
 variable "rstudio_domain_name" {
   type = string
 }

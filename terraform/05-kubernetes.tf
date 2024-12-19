@@ -14,19 +14,11 @@ data "google_service_account" "modules-service-account" {
   account_id = "projects/${var.project_id}/serviceAccounts/${var.service_account_name}"
 }
 
-resource "google_dns_managed_zone" "kube-dns-managed-zone" {
-  name        = var.dns_zone
-  dns_name    = "${var.dns_zone_name}."
-  description = "DNS zone for ${var.dns_zone}"
-
-  project = var.project_id
-}
-
 resource "google_dns_record_set" "kube-dns-a" {
   name         = "${var.domain}."
   type         = "A"
   ttl          = 300
-  managed_zone = google_dns_managed_zone.kube-dns-managed-zone.name
+  managed_zone = var.dns_zone
   rrdatas      = [google_compute_global_address.lb-ip.address]
 }
 
