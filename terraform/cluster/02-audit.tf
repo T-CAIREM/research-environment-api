@@ -17,7 +17,7 @@ resource "google_storage_bucket" "audit" {
   location                    = var.region
   storage_class               = "STANDARD"
   uniform_bucket_level_access = true
-  force_destroy               = false
+  force_destroy               = !var.deletion_protection
 
   retention_policy {
     retention_period = var.audit_bucket_retention_seconds

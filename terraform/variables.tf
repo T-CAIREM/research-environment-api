@@ -168,6 +168,11 @@ variable "audit_bucket_retention_locked" {
   type    = bool
 }
 
+variable "deletion_protection" {
+  default = true
+  type    = bool
+}
+
 variable "cloud_sql_proxy_tag" {
   default = "1.24.0"
   type    = string
