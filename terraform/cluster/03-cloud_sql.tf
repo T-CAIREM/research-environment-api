@@ -31,6 +31,17 @@ resource "time_sleep" "wait_30_seconds" {
   create_duration = "30s"
 }
 
+resource "google_sql_database" "database" {
+  name      = var.database_name
+  instance  = google_sql_database_instance.main.name
+  charset   = "UTF8"
+  collation = "en_US.UTF8"
+
+  depends_on = [
+    time_sleep.wait_30_seconds
+  ]
+}
+
 
 resource "google_sql_user" "user" {
   instance = google_sql_database_instance.main.name

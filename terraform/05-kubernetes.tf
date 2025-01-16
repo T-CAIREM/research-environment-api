@@ -506,7 +506,7 @@ resource "kubernetes_deployment" "cloud-sql" {
             "/cloud_sql_proxy",
             "-verbose=false",
             "-structured_logs",
-            "-instances=${var.project_id}:${var.region}:${var.name}-${terraform.workspace}=tcp:0.0.0.0:5432"
+            "-instances=${var.cloud_sql_instance_connection_name}=tcp:0.0.0.0:5432"
           ]
 
           resources {
