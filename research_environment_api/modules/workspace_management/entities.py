@@ -22,14 +22,6 @@ GOOGLE_REGIONS_SHORTCUTS = {
 }
 
 
-class QuotaMetrics(StrEnum):
-    IN_USE_IP_ADDRESSES = "compute.googleapis.com/regional_in_use_addresses"
-    PERSISTENT_DISK_TOTAL = "compute.googleapis.com/disks_total_storage"
-    VM_INSTANCES = "compute.googleapis.com/instances"
-    CPUS = "compute.googleapis.com/cpus"
-    NVIDIA_T4_GPUS = "compute.googleapis.com/nvidia_t4_gpus"
-
-
 class WorkspaceStatus(StrEnum):
     CREATED = "created"
     CREATING = "creating"
@@ -151,16 +143,3 @@ class EntityScaffolding:
     id: str
     status: Union[WorkbenchStatus, WorkspaceStatus]
     gcp_project_id: str
-
-
-@dataclass
-class WorkspaceListQuotasQuery:
-    workspace_project_id: str
-    region: str
-
-
-@dataclass
-class QuotaInfo:
-    metric_name: str
-    limit: int
-    usage: int
