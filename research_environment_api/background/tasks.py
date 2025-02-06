@@ -1,14 +1,17 @@
 import csv
+import logging
 import os
 from datetime import datetime
 from os import environ
 
 from typing import List, Optional, Tuple, TypeVar
+
+import google.cloud.resourcemanager_v3
 import requests
 
 from celery import Task, shared_task
 from flask_socketio import SocketIO
-from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
+from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild, Build
 
 from research_environment_api.background import (
     build_templates,
@@ -50,11 +53,15 @@ class WorkflowTask(Task):
 @shared_task
 def start_cloud_build(
     build: CloudBuild,
+    workbench_activity_id: str,
 ) -> Tuple[operations.BuildOperation, Tuple[operations.BuildOperation, str]]:
     build_operation = app.config.google_cloud_build_client.create_build(
         build=build, project_id=app.config.project_id
     )
     cloud_build_id = build_operation.metadata.build.id
+    check_and_process_cloud_build_operation.apply_async(
+        args=[cloud_build_id, workbench_activity_id], countdown=60 * 30
+    )
 
     operation = operations.BuildOperation(name=build_operation.operation.name)
     return operation, (operation, cloud_build_id)
@@ -153,6 +160,7 @@ def stop_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
+    workbench_activity_id: str,
 ) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     stop_operation = instance_client.stop(
@@ -164,6 +172,9 @@ def stop_compute_instance(
     operation = operations.InstanceOperation(
         project_id=workspace_project_id, zone=instance_zone, name=stop_operation.name
     )
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 
@@ -173,6 +184,7 @@ def stop_vertex_ai_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
+    workbench_activity_id: str,
 ) -> Tuple[operations.VertexAIOperation, operations.VertexAIOperation]:
     notebooks_client = app.config.google_cloud_notebooks_client
     notebook_instance_path_string = f"projects/{workspace_project_id}/locations/{instance_zone}/instances/{workbench_resource_id}"
@@ -180,6 +192,9 @@ def stop_vertex_ai_instance(
         {"name": notebook_instance_path_string},
     )
     operation = operations.VertexAIOperation(name=stop_operation.operation.name)
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 
@@ -189,6 +204,7 @@ def start_compute_instance(
     workspace_project_id: str,
     instance_name: str,
     instance_zone: str,
+    workbench_activity_id: str,
 ) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     start_operation = instance_client.start(
@@ -200,6 +216,9 @@ def start_compute_instance(
     operation = operations.InstanceOperation(
         project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
     )
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 
@@ -209,6 +228,7 @@ def start_vertex_ai_instance(
     workspace_project_id: str,
     instance_name: str,
     instance_zone: str,
+    workbench_activity_id: str,
 ) -> Tuple[operations.VertexAIOperation, operations.VertexAIOperation]:
     notebooks_client = app.config.google_cloud_notebooks_client
     notebook_instance_path_string = f"projects/{workspace_project_id}/locations/{instance_zone}/instances/{instance_name}"
@@ -216,6 +236,10 @@ def start_vertex_ai_instance(
         {"name": notebook_instance_path_string},
     )
     operation = operations.VertexAIOperation(name=start_operation.operation.name)
+
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 
@@ -422,6 +446,103 @@ def mark_monitoring_entry_for_stale_workbenches():
                     monitoring_data.deleted_at = datetime.now()
 
             session.commit()
+
+
+@shared_task
+def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
+    logging.info(
+        f"Running check_and_process_cloud_build_operation for {workbench_activity_id}."
+    )
+
+    # for start/stop operation there is not build to check
+    if build_id:
+        build = app.config.google_cloud_build_client.get_build(
+            project_id=app.config.project_id, id=build_id
+        )
+
+        if _build_in_progress(build):
+            logging.info(f"Build {build_id} is still in progress.")
+            check_and_process_cloud_build_operation.apply_async(
+                args=[build_id, workbench_activity_id], countdown=60 * 30
+            )
+            return
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = (
+                session.query(models.WorkbenchActivity)
+                .filter_by(id=workbench_activity_id)
+                .one()
+            )
+
+            if not workbench_activity.build_status == enums.WorkflowStatus.IN_PROGRESS:
+                logging.info(
+                    f"Build {workbench_activity_id} already processed properly."
+                )
+                return
+
+            type = workbench_activity.build_type.split("_")[0]
+
+            if type == "workspace" or type == "shared":
+                project = app.config.google_cloud_resource_client.get_project(
+                    name=f"projects/{workbench_activity.workspace_id}"
+                )
+
+                workbench_activity.build_status = (
+                    enums.WorkflowStatus.SUCCESS
+                    if project.state
+                    == google.cloud.resourcemanager_v3.Project.State.ACTIVE
+                    else enums.WorkflowStatus.FAILURE
+                )
+            else:
+                try:
+                    instance = _fetch_gce_instance(
+                        workbench_activity.workspace_id, workbench_activity.workbench_id
+                    )
+                    if (
+                        instance.status != "PROVISIONING"
+                        and instance.status != "STAGING"
+                    ):
+                        workbench_activity.build_status = enums.WorkflowStatus.SUCCESS
+                    else:
+                        logging.info(
+                            f"Workbench {workbench_activity_id} is still being provisioned."
+                        )
+                        check_and_process_cloud_build_operation.apply_async(
+                            args=[build_id, workbench_activity_id], countdown=60 * 30
+                        )
+                        return
+                except IndexError:
+                    # instance is not existing
+                    workbench_activity.build_status = enums.WorkflowStatus.FAILURE
+
+            logging.info(f"Workbench {workbench_activity_id} processed correctly.")
+            session.commit()
+
+    return
+
+
+def _build_in_progress(build: Build):
+    return build.status in [
+        Build.Status.WORKING,
+        Build.Status.QUEUED,
+        Build.Status.PENDING,
+    ]
+
+
+def _fetch_gce_instance(gcp_project_id: str, workbench_id):
+    gce_instances_per_zone = (
+        app.config.google_compute_engine_instances_client.aggregated_list(
+            project=gcp_project_id
+        )
+    )
+
+    return [
+        instance
+        for zone, instances_in_region in gce_instances_per_zone
+        for instance in instances_in_region.instances
+        if instance.name == workbench_id
+    ][0]
 
 
 def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:

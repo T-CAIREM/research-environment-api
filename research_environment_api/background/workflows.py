@@ -18,7 +18,7 @@ def create_jupyter_workbench(
 ):
     return chain(
         tasks.start_cloud_build.s(
-            build=build,
+            build=build, workbench_activity_id=workbench_activity_id
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
@@ -52,6 +52,7 @@ def stop_compute_engine_workbench(
             workspace_project_id=workspace_project_id,
             workbench_resource_id=instance_name,
             instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.mark_monitoring_entry_as_deleted.s(
@@ -93,6 +94,7 @@ def start_jupyter_workbench(
             workspace_project_id=workspace_project_id,
             instance_name=instance_name,
             instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.check_vertex_ai_setup_status.s(
@@ -118,7 +120,9 @@ def update_jupyter_workbench(
     instance_name: str,
 ):
     return chain(
-        tasks.start_cloud_build.s(build=build),
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             workbench_activity_id=workbench_activity_id, user_email=user_email
@@ -136,7 +140,9 @@ def destroy_jupyter_workbench(
     build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
 ):
     return chain(
-        tasks.start_cloud_build.s(build=build),
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             workbench_activity_id=workbench_activity_id, user_email=user_email
@@ -154,7 +160,9 @@ def create_workspace(
     workbench_activity_id: str,
 ):
     return chain(
-        tasks.start_cloud_build.s(build=build),
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             workbench_activity_id=workbench_activity_id, user_email=user_email
@@ -167,7 +175,9 @@ def destroy_workspace(
     build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
 ):
     return chain(
-        tasks.start_cloud_build.s(build=build),
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
             workbench_activity_id=workbench_activity_id, user_email=user_email
@@ -189,6 +199,7 @@ def create_rstudio_workbench(
     return chain(
         tasks.start_cloud_build.s(
             build=build,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
@@ -242,6 +253,7 @@ def update_rstudio_workbench(
     return chain(
         tasks.start_cloud_build.s(
             build=build,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
@@ -260,6 +272,7 @@ def destroy_rstudio_workbench(
     return chain(
         tasks.start_cloud_build.s(
             build=build,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.process_cloud_build_result.s(
