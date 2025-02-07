@@ -11,7 +11,7 @@ resource "google_sql_database_instance" "main" {
   name             = "${var.name}-${terraform.workspace}"
   region           = var.region
   database_version = "POSTGRES_15"
-  root_password = "postgres"
+  root_password    = var.root_postgres_password
 
   settings {
     tier              = var.db_tier
