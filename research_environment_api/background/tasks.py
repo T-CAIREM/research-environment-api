@@ -522,6 +522,69 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
     return
 
 
+def _get_activity_status(
+    workbench_activity: models.WorkbenchActivity, build: Build, instance
+):
+    if build.Status.SUCCESS:
+        return enums.WorkflowStatus.SUCCESS
+
+    if workbench_activity.build_type in [
+        enums.BuildType.WORKSPACE_DELETION,
+        enums.BuildType.SHARED_WORKSPACE_DELETION,
+    ]:
+        if not instance:
+            return enums.WorkflowStatus.SUCCESS
+
+        return (
+            enums.WorkflowStatus.SUCCESS
+            if instance.status
+            == google.cloud.resourcemanager_v3.Project.State.DELETE_REQUESTED
+            else enums.WorkflowStatus.FAILURE
+        )
+
+    if workbench_activity.build_type in [
+        enums.BuildType.WORKSPACE_CREATION,
+        enums.BuildType.SHARED_WORKSPACE_CREATION,
+    ]:
+        if not instance:
+            return enums.WorkflowStatus.FAILURE
+
+        return (
+            enums.WorkflowStatus.SUCCESS
+            if instance.status == google.cloud.resourcemanager_v3.Project.State.ACTIVE
+            else enums.WorkflowStatus.FAILURE
+        )
+
+    if workbench_activity.build_type == enums.BuildType.WORKBENCH_DESTROY:
+        if not instance:
+            return enums.WorkflowStatus.SUCCESS
+
+        return (
+            enums.WorkflowStatus.SUCCESS
+            if instance.status == "TERMINATED"
+            else enums.WorkflowStatus.FAILURE
+        )
+
+    if workbench_activity.build_type == enums.BuildType.WORKBENCH_STOP:
+        if not instance:
+            return enums.WorkflowStatus.FAILURE
+
+        return (
+            enums.WorkflowStatus.SUCCESS
+            if instance.status == "TERMINATED"
+            else enums.WorkflowStatus.FAILURE
+        )
+
+    if not instance:
+        return enums.WorkflowStatus.FAILURE
+
+    return (
+        enums.WorkflowStatus.SUCCESS
+        if instance.status == "RUNNING"
+        else enums.WorkflowStatus.FAILURE
+    )
+
+
 def _build_in_progress(build: Build):
     return build.status in [
         Build.Status.WORKING,
