@@ -448,12 +448,13 @@ def mark_monitoring_entry_for_stale_workbenches():
             session.commit()
 
 
-@shared_task
-def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
+@shared_task(bind=True)
+def check_and_process_cloud_build_operation(self, build_id, workbench_activity_id):
     logging.info(
         f"Running check_and_process_cloud_build_operation for {workbench_activity_id}."
     )
 
+    build = None
     # for start/stop operation there is not build to check
     if build_id:
         build = app.config.google_cloud_build_client.get_build(
@@ -462,9 +463,7 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
 
         if _build_in_progress(build):
             logging.info(f"Build {build_id} is still in progress.")
-            check_and_process_cloud_build_operation.apply_async(
-                args=[build_id, workbench_activity_id], countdown=60 * 30
-            )
+            self.retry(countdown=60 * 30)
             return
 
     with app.database_session() as session:
@@ -481,6 +480,12 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
                 )
                 return
 
+            if build and build.status == Build.Status.SUCCESS:
+                workbench_activity.build_status = enums.WorkflowStatus.SUCCESS
+                logging.info(f"Workbench {workbench_activity_id} processed correctly.")
+                session.commit()
+                return
+
             type = workbench_activity.build_type.split("_")[0]
 
             if type == "workspace" or type == "shared":
@@ -488,11 +493,8 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
                     name=f"projects/{workbench_activity.workspace_id}"
                 )
 
-                workbench_activity.build_status = (
-                    enums.WorkflowStatus.SUCCESS
-                    if project.state
-                    == google.cloud.resourcemanager_v3.Project.State.ACTIVE
-                    else enums.WorkflowStatus.FAILURE
+                workbench_activity.build_status = _get_activity_status(
+                    workbench_activity, project
                 )
             else:
                 try:
@@ -503,18 +505,20 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
                         instance.status != "PROVISIONING"
                         and instance.status != "STAGING"
                     ):
-                        workbench_activity.build_status = enums.WorkflowStatus.SUCCESS
+                        workbench_activity.build_status = _get_activity_status(
+                            workbench_activity, instance
+                        )
                     else:
                         logging.info(
                             f"Workbench {workbench_activity_id} is still being provisioned."
                         )
-                        check_and_process_cloud_build_operation.apply_async(
-                            args=[build_id, workbench_activity_id], countdown=60 * 30
-                        )
+                        self.retry(countdown=60 * 30)
                         return
                 except IndexError:
                     # instance is not existing
-                    workbench_activity.build_status = enums.WorkflowStatus.FAILURE
+                    workbench_activity.build_status = _get_activity_status(
+                        workbench_activity, None
+                    )
 
             logging.info(f"Workbench {workbench_activity_id} processed correctly.")
             session.commit()
@@ -522,12 +526,7 @@ def check_and_process_cloud_build_operation(build_id, workbench_activity_id):
     return
 
 
-def _get_activity_status(
-    workbench_activity: models.WorkbenchActivity, build: Build, instance
-):
-    if build.Status.SUCCESS:
-        return enums.WorkflowStatus.SUCCESS
-
+def _get_activity_status(workbench_activity: models.WorkbenchActivity, instance):
     if workbench_activity.build_type in [
         enums.BuildType.WORKSPACE_DELETION,
         enums.BuildType.SHARED_WORKSPACE_DELETION,

@@ -73,6 +73,7 @@ def stop_jupyter_workbench(
             workspace_project_id=workspace_project_id,
             workbench_resource_id=instance_name,
             instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.mark_monitoring_entry_as_deleted.s(
