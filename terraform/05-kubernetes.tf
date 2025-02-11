@@ -595,6 +595,71 @@ resource "kubernetes_cron_job_v1" "migrate" {
   }
 }
 
+resource "kubernetes_cron_job_v1" "grant-privileges" {
+
+  metadata {
+    name = "grant-privileges"
+  }
+
+  spec {
+    concurrency_policy            = "Replace"
+    failed_jobs_history_limit     = 3
+    schedule                      = "0 0 31 2 *"
+    successful_jobs_history_limit = 1
+    suspend                       = true
+    job_template {
+      metadata {}
+      spec {
+        backoff_limit              = 2
+        ttl_seconds_after_finished = 10
+        template {
+          metadata {}
+          spec {
+            service_account_name = "${var.name}-backend"
+
+            dynamic "volume" {
+              for_each = local.backend_volumes
+
+              content {
+                name = volume.key
+                secret {
+                  secret_name = volume.value.secret_name
+                }
+              }
+            }
+
+            container {
+              name    = "research-environment-api-dev-app"
+              image   = "${var.image_repository}:${var.image_tag}"
+              command = ["/grant_privileges.sh"]
+
+              dynamic "volume_mount" {
+                for_each = local.backend_volumes
+
+                content {
+                  name       = volume_mount.key
+                  mount_path = volume_mount.value.mount_path
+                  read_only  = true
+                }
+              }
+
+              dynamic "env" {
+                for_each = local.common_env
+
+                content {
+                  name  = env.key
+                  value = env.value
+                }
+              }
+            }
+            restart_policy = "Never"
+          }
+        }
+      }
+    }
+  }
+}
+
 
 resource "kubernetes_service" "core" {
   metadata {

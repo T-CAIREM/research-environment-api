@@ -201,3 +201,8 @@ variable "flower_basic_auth" {
   type = string
   sensitive = true
 }
+
+variable "root_postgres_password" {
+  default = "postgres"
+  type = string
+}
