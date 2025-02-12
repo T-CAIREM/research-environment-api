@@ -307,6 +307,7 @@ def add_monitoring_entry(
             )
 
             session.add(workbench_monitoring_data)
+            session.commit()
 
     return operation
 
@@ -333,13 +334,16 @@ def mark_monitoring_entry_as_deleted(
                     == workbench_activity.workbench_id,
                     models.WorkbenchMonitoringData.deleted_at.is_(None),
                 )
-                .one_or_none()
+                .all()
             )
 
-            if workbench_monitoring_data is None:
+            if not workbench_monitoring_data:
                 return operation
 
-            workbench_monitoring_data.deleted_at = datetime.now()
+            for record in workbench_monitoring_data:
+                record.deleted_at = datetime.now()
+
+            session.commit()
 
     return operation
 
