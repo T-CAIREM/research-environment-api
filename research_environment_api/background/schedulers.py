@@ -359,6 +359,7 @@ def update_jupyter_workbench(
         workspace_project_id=workbench_update_request.workspace_project_id,
         instance_name=workbench.id,
         machine_type=workbench_update_request.machine_type,
+        dataset_identifier=workbench.dataset_identifier,
         bucket_name=workbench.bucket_name,
         zone=workbench.zone,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,

@@ -83,6 +83,7 @@ def update_jupyter_workbench_build(
     workspace_project_id: str,
     zone: str,
     machine_type: MachineType,
+    dataset_identifier: str,
     bucket_name: str,
     instance_name: str,
     sharing_bucket_permission_dict: dict[str, str],
@@ -99,6 +100,7 @@ def update_jupyter_workbench_build(
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
         ),
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET_NAME": f"gs://{app.config.jupyter_startup_script}/{workspace_project_id}-{instance_name}-{dataset_identifier}-startup-script.sh",
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
     }

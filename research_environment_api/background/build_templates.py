@@ -354,6 +354,7 @@ UPDATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "--location=${_ZONE}",
             "--project",
             "${_PROJECT_ID}",
+            "--metadata=post-startup-script=${_JUPYTER_STARTUP_SCRIPT_BUCKET_NAME}",
         ],
     },
     {
