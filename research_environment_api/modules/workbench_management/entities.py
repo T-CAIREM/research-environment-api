@@ -185,7 +185,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
-        self.vm_image = "workbench-instances-v20240214"
+        self.vm_image = "workbench-instances-v20241224"
         self.organization_id = app.config.organization_id
 
 
