@@ -435,5 +435,5 @@ def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
     socketio.emit(
         event_name,
         data,
-        room=room,
+        to=room,
     )
