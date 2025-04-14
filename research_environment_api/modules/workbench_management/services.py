@@ -85,6 +85,19 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
     ]
 
 
+def validate_gpu_accelerator(project_id: str, name: str) -> bool:
+    client = app.config.google_compute_engine_accelerator_types_client
+    response = client.aggregated_list(project=project_id)
+
+    available_gpus = set()
+    for zone, accelerator_types_scoped_list in response:
+        if hasattr(accelerator_types_scoped_list, "accelerator_types") and accelerator_types_scoped_list.accelerator_types:
+            for accelerator in accelerator_types_scoped_list.accelerator_types:
+                available_gpus.add(accelerator.name)
+
+    return name in available_gpus
+
+
 def schedule_workbench_create(
     workbench_creation: entities.WorkbenchCreate,
 ):

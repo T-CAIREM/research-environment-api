@@ -5,17 +5,15 @@ from google.cloud.devtools import cloudbuild_v1
 from research_environment_api.background import build_templates
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import (
-    GpuAcceleratorType,
     MachineType,
     Region,
     WorkbenchType,
 )
 
-
-GPU_ACCELERATOR_TYPE_TO_NAME_MAP = {
-    GpuAcceleratorType.TESLA_T4: "NVIDIA_TESLA_T4",
-    None: "",
-}
+def format_gpu_accelerator_type(gpu_accelerator_type: str) -> str:
+    if not gpu_accelerator_type:
+        return ""
+    return gpu_accelerator_type.upper().replace("-", "_")
 
 
 def _base_build() -> cloudbuild_v1.Build:
@@ -42,7 +40,7 @@ def create_jupyter_workbench_build(
     disk_size: int,
     instance_name: str,
     service_account_name: str,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
+    gpu_accelerator_type: Optional[str],
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
@@ -58,7 +56,7 @@ def create_jupyter_workbench_build(
         "_ZONE": zone,
         "_MACHINE_TYPE": machine_type.value,
         "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
+        "_GPU_ACCELERATOR": format_gpu_accelerator_type(gpu_accelerator_type),
         "_DATASET": dataset_identifier,
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
@@ -114,7 +112,7 @@ def destroy_jupyter_workbench_build(
     zone: str,
     machine_type: MachineType,
     disk_size: int,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
+    gpu_accelerator_type: Optional[str],
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
@@ -133,7 +131,7 @@ def destroy_jupyter_workbench_build(
         "_EMAIL_ID": user_email,
         "_BUCKET_NAME": bucket_name,
         "_DISK_SIZE": str(disk_size),
-        "_GPU_ACCELERATOR": GPU_ACCELERATOR_TYPE_TO_NAME_MAP[gpu_accelerator_type],
+        "_GPU_ACCELERATOR": format_gpu_accelerator_type(gpu_accelerator_type),
         "_VM_IMAGE": vm_image,
         "_INSTANCE_NAME": instance_name,
         "_ZONE": zone,
@@ -233,10 +231,8 @@ def destroy_shared_workspace_build(
     return cloud_build
 
 
-def _normalize_gpu_accelerator_type(
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
-) -> str:
-    return "" if not gpu_accelerator_type else gpu_accelerator_type.value
+def _normalize_gpu_accelerator_type(gpu_accelerator_type: Optional[str]) -> str:
+    return gpu_accelerator_type or ""
 
 
 def create_rstudio_workbench_build(
@@ -248,7 +244,7 @@ def create_rstudio_workbench_build(
     disk_size: int,
     instance_name: str,
     service_account_name: str,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
+    gpu_accelerator_type: Optional[str],
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
@@ -299,7 +295,7 @@ def update_rstudio_workbench_build(
     disk_size: int,
     instance_name: str,
     service_account_name: str,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
+    gpu_accelerator_type: Optional[str],
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
@@ -352,7 +348,7 @@ def destroy_rstudio_workbench_build(
     disk_size: int,
     instance_name: str,
     service_account_name: str,
-    gpu_accelerator_type: Optional[GpuAcceleratorType],
+    gpu_accelerator_type: Optional[str],
     dataset_identifier: str,
     user_email: str,
     bucket_name: str,
