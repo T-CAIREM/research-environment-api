@@ -91,7 +91,10 @@ def validate_gpu_accelerator(project_id: str, name: str) -> bool:
 
     available_gpus = set()
     for zone, accelerator_types_scoped_list in response:
-        if hasattr(accelerator_types_scoped_list, "accelerator_types") and accelerator_types_scoped_list.accelerator_types:
+        if (
+            hasattr(accelerator_types_scoped_list, "accelerator_types")
+            and accelerator_types_scoped_list.accelerator_types
+        ):
             for accelerator in accelerator_types_scoped_list.accelerator_types:
                 available_gpus.add(accelerator.name)
 

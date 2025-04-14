@@ -10,6 +10,7 @@ from research_environment_api.modules.workbench_management.entities import (
     WorkbenchType,
 )
 
+
 def format_gpu_accelerator_type(gpu_accelerator_type: str) -> str:
     if not gpu_accelerator_type:
         return ""

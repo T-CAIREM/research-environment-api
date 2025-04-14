@@ -36,9 +36,12 @@ def create_workbench():
     workbench_creation_request = schemas.WorkbenchCreateRequest().load(body)
 
     selected_gpu = workbench_creation_request.get("gpu_accelerator_type")
-    if selected_gpu and not services.validate_gpu_accelerator(workbench_creation_request["workspace_project_id"],
-                                                              selected_gpu):
-        return {"error": f"'{selected_gpu}' is not available in GCP. Please try another GPU option."}, 500
+    if selected_gpu and not services.validate_gpu_accelerator(
+        workbench_creation_request["workspace_project_id"], selected_gpu
+    ):
+        return {
+            "error": f"'{selected_gpu}' is not available in GCP. Please try another GPU option."
+        }, 500
 
     # Serves as a form of input validation - is this user the owner of the specified workspace.
     username, domain = workbench_creation_request["user_email"].split("@")
