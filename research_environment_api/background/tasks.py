@@ -160,7 +160,7 @@ def stop_compute_instance(
     workspace_project_id: str,
     workbench_resource_id: str,
     instance_zone: str,
-    workbench_activity_id: str | None = None,
+    workbench_activity_id: str,
 ) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     stop_operation = instance_client.stop(
@@ -172,10 +172,9 @@ def stop_compute_instance(
     operation = operations.InstanceOperation(
         project_id=workspace_project_id, zone=instance_zone, name=stop_operation.name
     )
-    if workbench_activity_id:
-        check_and_process_cloud_build_operation.apply_async(
-            args=[None, workbench_activity_id], countdown=60 * 30
-        )
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 
@@ -205,7 +204,7 @@ def start_compute_instance(
     workspace_project_id: str,
     instance_name: str,
     instance_zone: str,
-    workbench_activity_id: str | None = None,
+    workbench_activity_id: str,
 ) -> Tuple[operations.InstanceOperation, operations.InstanceOperation]:
     instance_client = app.config.google_compute_engine_instances_client
     start_operation = instance_client.start(
@@ -217,10 +216,9 @@ def start_compute_instance(
     operation = operations.InstanceOperation(
         project_id=workspace_project_id, zone=instance_zone, name=start_operation.name
     )
-    if workbench_activity_id:
-        check_and_process_cloud_build_operation.apply_async(
-            args=[None, workbench_activity_id], countdown=60 * 30
-        )
+    check_and_process_cloud_build_operation.apply_async(
+        args=[None, workbench_activity_id], countdown=60 * 30
+    )
 
     return operation, operation
 

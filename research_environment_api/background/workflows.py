@@ -235,6 +235,7 @@ def start_rstudio_workbench(
             workspace_project_id=workspace_project_id,
             instance_name=instance_name,
             instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
         ),
         tasks.check_operation_status.s(),
         tasks.add_monitoring_entry.s(
