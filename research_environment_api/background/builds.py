@@ -2,6 +2,9 @@ from typing import Optional, List
 
 from google.cloud.devtools import cloudbuild_v1
 
+from research_environment_api.modules.workbench_management.utils import (
+    format_gpu_accelerator_type,
+)
 from research_environment_api.background import build_templates
 from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.entities import (
@@ -9,12 +12,6 @@ from research_environment_api.modules.workbench_management.entities import (
     Region,
     WorkbenchType,
 )
-
-
-def format_gpu_accelerator_type(gpu_accelerator_type: str) -> str:
-    if not gpu_accelerator_type:
-        return ""
-    return gpu_accelerator_type.upper().replace("-", "_")
 
 
 def _base_build() -> cloudbuild_v1.Build:

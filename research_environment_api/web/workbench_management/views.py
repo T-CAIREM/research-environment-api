@@ -37,7 +37,9 @@ def create_workbench():
 
     selected_gpu = workbench_creation_request.get("gpu_accelerator_type")
     if selected_gpu and not services.validate_gpu_accelerator(
-        workbench_creation_request["workspace_project_id"], selected_gpu
+        workbench_creation_request["workspace_project_id"],
+        selected_gpu,
+        workbench_creation_request["workbench_type"],
     ):
         return {
             "error": f"'{selected_gpu}' is not available in GCP. Please try another GPU option."
