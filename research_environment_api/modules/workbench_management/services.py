@@ -19,6 +19,10 @@ from research_environment_api.modules.monitoring_management import (
 from research_environment_api.modules.workspace_management.entities import (
     EntityScaffolding,
 )
+from research_environment_api.modules.workbench_management.utils import (
+    format_gpu_accelerator_type,
+)
+from google.cloud.notebooks_v2.types import AcceleratorConfig
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
@@ -87,10 +91,6 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
 
 def validate_gpu_accelerator(project_id: str, name: str, workbench_type: str) -> bool:
     if workbench_type == "jupyter":
-        from research_environment_api.modules.workbench_management.utils import (
-            format_gpu_accelerator_type,
-        )
-        from google.cloud.notebooks_v2.types import AcceleratorConfig
 
         valid_accelerators = {
             key
