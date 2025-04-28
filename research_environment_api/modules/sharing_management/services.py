@@ -1,3 +1,4 @@
+from datetime import datetime
 from research_environment_api.modules.app import app
 from research_environment_api.modules.sharing_management import entities, enums, models
 
@@ -67,6 +68,176 @@ def create_shared_bucket(shared_bucket_creation: entities.SharedBucketCreation):
     _add_iam_permissions(
         bucket, shared_bucket_creation.user_email, enums.IamSharingRole.ADMIN
     )
+
+
+def request_bucket_access(request_data: entities.BucketAccessRequestCreation):
+    """
+    Creates a new access request for a bucket
+    """
+    storage_client = app.config.google_cloud_storage_client
+    
+    # Validate that the bucket exists
+    try:
+        bucket = storage_client.get_bucket(request_data.bucket_name)
+    except Exception:
+        raise ValueError(f"Bucket {request_data.bucket_name} does not exist")
+
+    # Check if user already has access
+    if _user_has_access_to_bucket(
+        bucket.get_iam_policy(requested_policy_version=3).bindings, 
+        request_data.requester_email
+    ):
+        raise ValueError("You already have access to this bucket")
+    
+    with app.database_session() as session:
+        with session.begin():
+            # Check if there's already a pending request
+            existing_request = (
+                session.query(models.BucketAccessRequest)
+                .filter_by(
+                    bucket_name=request_data.bucket_name,
+                    requester_email=request_data.requester_email,
+                    status=enums.BucketRequestStatus.PENDING
+                )
+                .first()
+            )
+            
+            if existing_request:
+                raise ValueError("You already have a pending request for this bucket")
+
+            # Create new request
+            new_request = models.BucketAccessRequest(
+                requester_email=request_data.requester_email,
+                bucket_name=request_data.bucket_name,
+                requested_permissions=request_data.requested_permissions,
+                status=enums.BucketRequestStatus.PENDING
+            )
+            session.add(new_request)
+    
+    return True
+
+
+def list_pending_access_requests(list_filter: entities.ListPendingRequests) -> list[entities.PendingBucketAccessRequest]:
+    """
+    Lists pending access requests for buckets where the user is an owner or admin
+    """
+    storage_client = app.config.google_cloud_storage_client
+    
+    with app.database_session() as session:
+        # Get all pending requests
+        pending_requests = (
+            session.query(models.BucketAccessRequest)
+            .filter_by(status=enums.BucketRequestStatus.PENDING)
+            .all()
+        )
+        
+        # Filter requests to only include buckets where the user is owner/admin
+        authorized_requests = []
+        for request in pending_requests:
+            try:
+                bucket = storage_client.get_bucket(request.bucket_name)
+                policy = bucket.get_iam_policy(requested_policy_version=3)
+                
+                # Check if user is owner or admin
+                username = list_filter.admin_email.split('@')[0]
+                is_owner = _user_is_bucket_owner(bucket.labels, username)
+                is_admin = _user_is_bucket_admin(policy.bindings, list_filter.admin_email)
+                
+                if is_owner or is_admin:
+                    authorized_requests.append(
+                        entities.PendingBucketAccessRequest(
+                            request_id=request.id,
+                            requester_email=request.requester_email,
+                            bucket_name=request.bucket_name,
+                            requested_permissions=request.requested_permissions,
+                        )
+                    )
+            except Exception:
+                continue
+                
+        return authorized_requests
+
+
+def approve_bucket_access_request(decision_data: entities.BucketAccessRequestDecision):
+    """
+    Approves a bucket access request and grants permissions
+    """
+    storage_client = app.config.google_cloud_storage_client
+    
+    with app.database_session() as session:
+        with session.begin():
+            # Find the request
+            request = (
+                session.query(models.BucketAccessRequest)
+                .filter_by(id=decision_data.request_id, status=enums.BucketRequestStatus.PENDING)
+                .first()
+            )
+            
+            if not request:
+                raise ValueError("Request not found or already processed")
+            
+            # Update request status
+            request.status = enums.BucketRequestStatus.APPROVED
+            request.sharer_email = decision_data.sharer_email
+            request.updated_at = datetime.now()
+            
+            sharing_metadata = models.SharingData(
+                sharer_email=decision_data.sharer_email,
+                accessor_email=request.requester_email,
+                bucket_name=request.bucket_name,
+                project_id=request.project_id,
+                state=enums.SharingState.SHARED,
+            )
+            session.add(sharing_metadata)
+
+            # Grant permissions
+            _add_iam_permissions(
+                storage_client.bucket(request.bucket_name),
+                request.requester_email,
+                GCP_ROLE_ACCESS_MAPPING[request.requested_permissions]
+            )
+
+    return True
+
+
+def reject_bucket_access_request(decision_data: entities.BucketAccessRequestDecision):
+    """
+    Rejects a bucket access request
+    """
+    storage_client = app.config.google_cloud_storage_client
+    
+    with app.database_session() as session:
+        with session.begin():
+            # Find the request
+            bucket_access_request = (
+                session.query(models.BucketAccessRequest)
+                .filter_by(id=decision_data.request_id, status=enums.BucketRequestStatus.PENDING)
+                .first()
+            )
+            
+            if not bucket_access_request:
+                raise ValueError("Request not found or already processed")
+
+            bucket = storage_client.get_bucket(decision_data.bucket_name)
+            username = decision_data.sharer_email.split('@')[0]
+            is_owner = _user_is_bucket_owner(bucket.labels, username)
+            is_admin = _user_is_bucket_admin(
+                bucket.get_iam_policy(requested_policy_version=3).bindings,
+                decision_data.sharer_email
+            )
+            
+            if not (is_owner or is_admin):
+                raise InsufficientPermissionsError(
+                    "You must be a bucket owner or admin to reject requests"
+                )
+                
+            # Update request status
+            bucket_access_request.status = enums.BucketRequestStatus.REJECTED
+            bucket_access_request.sharer_email = decision_data.sharer_email
+            bucket_access_request.updated_at = datetime.now()
+            session.add(bucket_access_request)
+            
+    return True
 
 
 def delete_shared_bucket(shared_bucket_deletion: entities.SharedBucketDeletion):

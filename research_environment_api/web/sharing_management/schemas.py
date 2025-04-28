@@ -83,3 +83,27 @@ class SharedBucketObject(Schema):
     full_path = fields.Str(required=True)
     size = fields.Str()
     modification_time = fields.Str()
+
+
+class BucketAccessRequestCreationRequest(Schema):
+    accesor_email = fields.Str(required=True, validate=validate.Email())
+    bucket_name = fields.Str(required=True)
+    project_id = fields.Str(required=True)
+    requested_permissions = fields.Enum(
+        BucketPermissions, required=True, by_value=True
+    )
+
+class BucketAccessRequestDecisionRequest(Schema):
+    request_id = fields.Int(required=True)
+    sharer_email = fields.Str(required=True, validate=validate.Email())
+    bucket_name = fields.Str(required=True)
+    project_id = fields.Str(required=True)
+
+
+class PendingBucketAccessRequest(Schema):
+    request_id = fields.Int(required=True)
+    accesor_email = fields.Str(required=True, validate=validate.Email())
+    bucket_name = fields.Str(required=True)
+    requested_permissions = fields.Enum(
+        BucketPermissions, required=True, by_value=True
+    )

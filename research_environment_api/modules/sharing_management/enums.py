@@ -19,3 +19,9 @@ class SharingState(StrEnum):
 class BucketPermissions(StrEnum):
     READ_WRITE = "read_write"
     READ = "read"
+
+class BucketRequestStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"

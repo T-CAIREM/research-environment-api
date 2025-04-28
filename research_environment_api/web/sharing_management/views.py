@@ -99,6 +99,105 @@ def share_bucket():
     return {}, 200
 
 
+@sharing_management_bp.post("/bucket/request_access")
+@validate_token
+def request_bucket_access():
+    """Request access to a bucket.
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Submits a request for access to a shared bucket.
+      requestBody:
+        content:
+          application/json:
+            schema: BucketAccessRequestCreationRequest
+      responses:
+        201:
+          description: Access request created successfully.
+          content:
+            application/json:
+              schema:
+        400:
+          description: Invalid request, bucket doesn't exist, user already has access,
+                       or a pending request already exists.
+    """
+    body = request.get_json()
+    access_request = schemas.BucketAccessRequestCreationRequest().load(body)
+    access_request_entity = entities.BucketAccessRequestCreation(**access_request)
+
+    services.request_bucket_access(access_request_entity)
+
+    return {}, 201
+
+
+@sharing_management_bp.get("/bucket/pending_requests")
+@validate_token
+def list_pending_access_requests():
+    """List pending access requests for buckets owned/administered by the user.
+    ---
+    get:
+      tags:
+        - sharing_management
+      description: Lists all pending bucket access requests for buckets where the user is an owner or admin.
+      parameters:
+        - name: admin_email
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of pending requests.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: PendingBucketAccessRequest
+    """
+    admin_email = request.args.get("admin_email")
+    if not admin_email:
+        return {"error": "admin_email query parameter is required"}, 400
+
+    list_filter = entities.ListPendingRequests(admin_email=admin_email)
+    pending_requests = services.list_pending_access_requests(list_filter)
+    
+    return schemas.PendingBucketAccessRequest(many=True).dump(pending_requests), 200
+
+
+@sharing_management_bp.patch("/bucket/request_access/")
+@validate_token
+def bucket_access_request_response():
+    """Approve a bucket access request.
+    ---
+    patch:
+      tags:
+        - sharing_management
+      description: Approves a pending bucket access request.
+      requestBody:
+        content:
+          application/json:
+            schema: BucketAccessRequestDecisionRequest
+      responses:
+        200:
+          description: Request approved successfully.
+          content:
+            application/json:
+              schema: BucketAccessRequestDecisionResponse
+        400:
+          description: Request not found or already processed.
+        403:
+          description: Insufficient permissions to approve request.
+    """
+    body = request.get_json()
+    decision_request = schemas.BucketAccessRequestDecisionRequest().load(body)
+    decision_entity = entities.BucketAccessRequestDecision(**decision_request)
+
+    services.approve_bucket_access_request(decision_entity)
+
+    return schemas.BucketAccessRequestDecisionResponse().dump(decision_entity), 200
+
+
 @sharing_management_bp.post("/bucket/revoke_access")
 @validate_token
 def revoke_access_to_shared_bucket():
@@ -267,3 +366,5 @@ def delete_shared_bucket_content():
     services.delete_shared_bucket_content(delete_shared_bucket_content_entity)
 
     return {}, 200
+
+

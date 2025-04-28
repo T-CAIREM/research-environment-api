@@ -3,11 +3,12 @@ import string
 from dataclasses import dataclass, field
 from typing import Self
 from enum import StrEnum
+from datetime import datetime
 
 from research_environment_api.modules.workbench_management.entities import (
     Region,
 )
-from research_environment_api.modules.sharing_management.enums import BucketPermissions
+from research_environment_api.modules.sharing_management.enums import BucketPermissions, BucketRequestStatus
 
 from google.cloud.storage import Bucket as GCPBucket
 
@@ -127,3 +128,33 @@ class SharedBucketObject:
     full_path: str
     size: str = None
     modification_time: str = None
+
+
+@dataclass
+class BucketAccessRequestCreation:
+    requester_email: str
+    bucket_name: str
+    project_id: str
+    requested_permissions: BucketPermissions
+    
+
+@dataclass
+class BucketAccessRequestDecision:
+    request_id: int
+    sharer_email: str
+    bucket_name: str
+    project_id: str
+
+
+@dataclass
+class ListPendingRequests:
+    admin_email: str
+
+
+@dataclass
+class PendingBucketAccessRequest:
+    request_id: int
+    requester_email: str
+    bucket_name: str
+    project_id: str
+    requested_permissions: BucketPermissions
