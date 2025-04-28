@@ -144,11 +144,12 @@ class BucketAccessRequestDecision:
     sharer_email: str
     bucket_name: str
     project_id: str
+    decision: BucketRequestStatus
 
 
 @dataclass
 class ListPendingRequests:
-    admin_email: str
+    sharer_email: str
 
 
 @dataclass

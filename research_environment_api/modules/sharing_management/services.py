@@ -139,9 +139,9 @@ def list_pending_access_requests(list_filter: entities.ListPendingRequests) -> l
                 policy = bucket.get_iam_policy(requested_policy_version=3)
                 
                 # Check if user is owner or admin
-                username = list_filter.admin_email.split('@')[0]
+                username = list_filter.sharer_email.split('@')[0]
                 is_owner = _user_is_bucket_owner(bucket.labels, username)
-                is_admin = _user_is_bucket_admin(policy.bindings, list_filter.admin_email)
+                is_admin = _user_is_bucket_admin(policy.bindings, list_filter.sharer_email)
                 
                 if is_owner or is_admin:
                     authorized_requests.append(
@@ -158,7 +158,7 @@ def list_pending_access_requests(list_filter: entities.ListPendingRequests) -> l
         return authorized_requests
 
 
-def approve_bucket_access_request(decision_data: entities.BucketAccessRequestDecision):
+def bucket_access_request_response(decision_data: entities.BucketAccessRequestDecision):
     """
     Approves a bucket access request and grants permissions
     """
@@ -175,9 +175,12 @@ def approve_bucket_access_request(decision_data: entities.BucketAccessRequestDec
             
             if not request:
                 raise ValueError("Request not found or already processed")
-            
+
+            # Converting the decision str to enum
+            decision = enums.BucketRequestStatus(decision_data.decision)
+
             # Update request status
-            request.status = enums.BucketRequestStatus.APPROVED
+            request.status = decision
             request.sharer_email = decision_data.sharer_email
             request.updated_at = datetime.now()
             
@@ -197,46 +200,6 @@ def approve_bucket_access_request(decision_data: entities.BucketAccessRequestDec
                 GCP_ROLE_ACCESS_MAPPING[request.requested_permissions]
             )
 
-    return True
-
-
-def reject_bucket_access_request(decision_data: entities.BucketAccessRequestDecision):
-    """
-    Rejects a bucket access request
-    """
-    storage_client = app.config.google_cloud_storage_client
-    
-    with app.database_session() as session:
-        with session.begin():
-            # Find the request
-            bucket_access_request = (
-                session.query(models.BucketAccessRequest)
-                .filter_by(id=decision_data.request_id, status=enums.BucketRequestStatus.PENDING)
-                .first()
-            )
-            
-            if not bucket_access_request:
-                raise ValueError("Request not found or already processed")
-
-            bucket = storage_client.get_bucket(decision_data.bucket_name)
-            username = decision_data.sharer_email.split('@')[0]
-            is_owner = _user_is_bucket_owner(bucket.labels, username)
-            is_admin = _user_is_bucket_admin(
-                bucket.get_iam_policy(requested_policy_version=3).bindings,
-                decision_data.sharer_email
-            )
-            
-            if not (is_owner or is_admin):
-                raise InsufficientPermissionsError(
-                    "You must be a bucket owner or admin to reject requests"
-                )
-                
-            # Update request status
-            bucket_access_request.status = enums.BucketRequestStatus.REJECTED
-            bucket_access_request.sharer_email = decision_data.sharer_email
-            bucket_access_request.updated_at = datetime.now()
-            session.add(bucket_access_request)
-            
     return True
 
 

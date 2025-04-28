@@ -141,7 +141,7 @@ def list_pending_access_requests():
         - sharing_management
       description: Lists all pending bucket access requests for buckets where the user is an owner or admin.
       parameters:
-        - name: admin_email
+        - name: sharer_email
           in: query
           required: true
           schema:
@@ -155,11 +155,11 @@ def list_pending_access_requests():
                 type: array
                 items: PendingBucketAccessRequest
     """
-    admin_email = request.args.get("admin_email")
-    if not admin_email:
-        return {"error": "admin_email query parameter is required"}, 400
+    sharer_email = request.args.get("sharer_email")
+    if not sharer_email:
+        return {"error": "sharer_email query parameter is required"}, 400
 
-    list_filter = entities.ListPendingRequests(admin_email=admin_email)
+    list_filter = entities.ListPendingRequests(sharer_email=sharer_email)
     pending_requests = services.list_pending_access_requests(list_filter)
     
     return schemas.PendingBucketAccessRequest(many=True).dump(pending_requests), 200
@@ -193,7 +193,7 @@ def bucket_access_request_response():
     decision_request = schemas.BucketAccessRequestDecisionRequest().load(body)
     decision_entity = entities.BucketAccessRequestDecision(**decision_request)
 
-    services.approve_bucket_access_request(decision_entity)
+    services.bucket_access_request_response(decision_entity)
 
     return schemas.BucketAccessRequestDecisionResponse().dump(decision_entity), 200
 
