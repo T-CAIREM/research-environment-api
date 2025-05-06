@@ -105,6 +105,18 @@ class BucketAccessRequestDecisionRequest(Schema):
         ),
     )
 
+class BucketAccessRequestDecisionResponse(Schema):
+    request_id = fields.Int(required=True)
+    sharer_email = fields.Str(required=True, validate=validate.Email())
+    bucket_name = fields.Str(required=True)
+    project_id = fields.Str(required=True)
+    decision = fields.Str(
+        required=True,
+        validate=validate.OneOf(
+            ["approved", "rejected", "cancelled"], error="Invalid decision"
+        ),
+    )
+    timestamp = fields.DateTime(required=True)
 
 class PendingBucketAccessRequest(Schema):
     request_id = fields.Int(required=True)
