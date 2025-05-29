@@ -328,3 +328,34 @@ def update_workspace_billing_account(workspace_id: str, billing_account_id: str)
     app.config.google_cloud_billing_client.update_project_billing_info(
         name=project_name, project_billing_info=billing_info
     )
+
+
+def get_project(gcp_project_id: str, email: str):
+    gcp_project = app.config.google_cloud_resource_client.get_project(
+        request={"name": f"projects/{gcp_project_id}"}
+    )
+    workflows_in_progress = monitoring_services.list_active_workflows(email)
+    gcp_project_id = gcp_project.project_id
+    region = gcp_project.labels["region"]
+    owner = gcp_project.labels["cloud_identity_username"]
+
+    workspace_workflow_in_progress = _match_workspace_workflow(
+        gcp_project_id, workflows_in_progress
+    )
+    status = (
+        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
+        if workspace_workflow_in_progress
+        else entities.WorkspaceStatus.CREATED
+    )
+    status = (
+        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
+        if workspace_workflow_in_progress
+        else entities.WorkspaceStatus.CREATED
+    )
+
+    return entities.SimplifiedWorkspace(
+        gcp_project_id=gcp_project_id,
+        region=entities.Region(region),
+        status=status,
+        owner=owner,
+    )

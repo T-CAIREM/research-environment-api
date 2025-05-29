@@ -267,3 +267,35 @@ def delete_shared_bucket_content():
     services.delete_shared_bucket_content(delete_shared_bucket_content_entity)
 
     return {}, 200
+
+
+@sharing_management_bp.get("/<email>/<bucket_name>")
+@validate_token
+def get_shared_bucket(email: str, bucket_name: str):
+    """Gets shared bucket.
+    ---
+    post:
+      tags:
+        - sharing_management
+      description: Gets shared bucket.
+      requestBody:
+        content:
+          application/json:
+            schema: GetSharedBucketRequest
+      responses:
+        200:
+          description: Return shared bucket.
+          content:
+            application/json:
+              schema: SharedBucket
+    """
+    get_shared_bucket_request = schemas.GetSharedBucketRequest().load(
+        {"bucket_name": bucket_name, "user_email": email}
+    )
+
+    get_shared_bucket_entity = entities.GetSharedBucket(**get_shared_bucket_request)
+
+    shared_bucket = services.get_bucket(get_shared_bucket_entity)
+    serialized_shared_bucket = schemas.SharedBucket().dump(shared_bucket)
+
+    return serialized_shared_bucket, 200

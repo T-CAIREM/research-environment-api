@@ -33,6 +33,11 @@ class ListActiveWorkspacesRequest(Schema):
     email = fields.Str(required=True, validate=validate.Email())
 
 
+class GetActiveWorkspace(Schema):
+    workspace_project_id = fields.Str(required=True)
+    email = fields.Str(required=True, validate=validate.Email())
+
+
 class EntityScaffolding(Schema):
     id = fields.Str(required=True)
     status = fields.Str(required=True)
@@ -58,6 +63,13 @@ class Workspace(Schema):
     workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     is_owner = fields.Bool(required=True)
+
+
+class SimplifiedWorkspace(Schema):
+    gcp_project_id = fields.Str(required=True)
+    region = fields.Enum(Region, by_value=True, required=True)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+    owner = fields.Str(required=True)
 
 
 class SharedWorkspaceCreationRequest(Schema):

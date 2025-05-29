@@ -256,6 +256,27 @@ def specify_buckets_fusing_permissions(bucket_list: list[str], caller_email: str
     }
 
 
+def get_bucket(
+    get_bucket_entity: entities.GetSharedBucket,
+) -> Optional[entities.SharedBucket]:
+    storage_client = app.config.google_cloud_storage_client
+    bucket = storage_client.get_bucket(get_bucket_entity.bucket_name)
+    if not _user_has_access_to_bucket(
+        bucket.get_iam_policy(requested_policy_version=3).bindings,
+        get_bucket_entity.user_email,
+    ):
+        return None
+
+    return entities.SharedBucket.from_storage_instance(
+        bucket,
+        get_bucket_entity.username,
+        _user_is_bucket_admin(
+            bucket.get_iam_policy(requested_policy_version=3).bindings,
+            get_bucket_entity.user_email,
+        ),
+    )
+
+
 def _specify_bucket_fusing_permissions(
     bucket_name: str, caller_email: str
 ) -> Optional[enums.BucketPermissions]:

@@ -106,6 +106,16 @@ class WorkspaceListQuery:
 
 
 @dataclass
+class WorkspaceGetQuery:
+    workspace_project_id: str
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
+
+
+@dataclass
 class SharedWorkspaceListQuery:
     email: str
     username: str = field(init=False)
@@ -128,6 +138,14 @@ class Workspace:
     workbenches: Iterable[Workbench]
     status: WorkspaceStatus
     is_owner: bool
+
+
+@dataclass
+class SimplifiedWorkspace:
+    gcp_project_id: str
+    region: str
+    status: WorkspaceStatus
+    owner: str
 
 
 @dataclass

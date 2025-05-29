@@ -296,3 +296,41 @@ def update_workspace_billing_account():
     services.update_workspace_billing_account(workspace_project_id, billing_account_id)
 
     return {}, 200
+
+
+@workspace_management_bp.get("/<email>/<project_id>")
+@validate_token
+def get_project(email: str, project_id: str):
+    """Get active workspace for a specified user.
+    ---
+    get:
+      tags:
+        - workspace_management
+      description: Gets the active workspaces for a specified user.
+      parameters:
+      - in: path
+        name: project_id
+        schema:
+          type: string
+      responses:
+        200:
+          description: Returns a single workspace.
+          content:
+            application/json:
+              schema:
+                type: Workspace
+    """
+    list_active_workspaces_request = schemas.GetActiveWorkspace().load(
+        {"workspace_project_id": project_id, "email": email}
+    )
+    workspace_get_query_entity = entities.WorkspaceGetQuery(
+        **list_active_workspaces_request
+    )
+
+    workspaces = services.get_project(
+        workspace_get_query_entity.workspace_project_id,
+        workspace_get_query_entity.email,
+    )
+    serialized_workspace = schemas.SimplifiedWorkspace().dump(workspaces)
+
+    return serialized_workspace, 200
