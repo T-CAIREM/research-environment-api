@@ -221,7 +221,7 @@ def create_collaborative_workbench_build(
         "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
         "_INSTANCE_NAME": instance_name,
         "_SERVICE_ACCOUNT_NAME": service_account_name,
-        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
+        "_WORKBENCH_TYPE": WorkbenchType.COLLABORATIVE,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
             sharing_bucket_permission_dict.values()
