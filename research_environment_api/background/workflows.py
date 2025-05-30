@@ -41,6 +41,41 @@ def create_jupyter_workbench(
     )
 
 
+def create_collaborative_workbench(
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    workspace_project_id: str,
+    instance_zone: str,
+    instance_name: str,
+    fallback_zones: List[str],
+    workbench_activity_id: str,
+    dataset_identifier: str,
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(
+            fallback_zones=fallback_zones,
+            user_email=user_email,
+            workbench_activity_id=workbench_activity_id,
+            dataset_identifier=dataset_identifier,
+        ),
+        tasks.check_vertex_ai_setup_status.s(
+            workspace_project_id=workspace_project_id,
+            instance_zone=instance_zone,
+            instance_name=instance_name,
+        ),
+        tasks.add_monitoring_entry.s(
+            workbench_activity_id=workbench_activity_id,
+            instance_type=enums.InstanceType.COLLABORATIVE,
+            dataset_identifier=dataset_identifier,
+        ),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
 def stop_compute_engine_workbench(
     workspace_project_id: str,
     instance_name: str,
