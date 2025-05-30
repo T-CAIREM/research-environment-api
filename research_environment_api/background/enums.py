@@ -28,3 +28,4 @@ class OperationStatus(StrEnum):
 class InstanceType(StrEnum):
     JUPYTER = "jupyter"
     RSTUDIO = "rstudio"
+    COLLABORATIVE = "collaborative"

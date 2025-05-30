@@ -27,6 +27,7 @@ class Region(StrEnum):
 class WorkbenchType(StrEnum):
     JUPYTER = "jupyter"
     RSTUDIO = "rstudio"
+    COLLABORATIVE = "collaborative"
 
 
 class WorkbenchStatus(StrEnum):
