@@ -39,6 +39,10 @@ class WorkbenchStatus(StrEnum):
     STARTING = "starting"
 
 
+class GpuAcceleratorType(StrEnum):
+    TESLA_T4 = "nvidia-tesla-t4"
+
+
 GCE_STATUS_MAP = {
     "RUNNING": WorkbenchStatus.RUNNING,
     # There's a brief moment where, after the workflow is finished, a GCE instance has the STAGING status
@@ -79,7 +83,7 @@ class Workbench:
     brand_name: Optional[str] = None
     url: Optional[str] = None
     zone: Optional[str] = None
-    gpu_accelerator_type: Optional[str] = None
+    gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
@@ -102,7 +106,9 @@ class Workbench:
         machine_type_name = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
         gpu_accelerator_type = (
-            instance.guest_accelerators[0].accelerator_type.split("/")[-1]
+            GpuAcceleratorType(
+                instance.guest_accelerators[0].accelerator_type.split("/")[-1]
+            )
             if instance.guest_accelerators
             else None
         )
@@ -171,7 +177,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     bucket_name: str
     region: Region
     user_groups: list[str]
-    gpu_accelerator_type: Optional[str] = None
+    gpu_accelerator_type: Optional[GpuAcceleratorType] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
     organization_id: str = field(init=False)
     vm_image: str = field(init=False)

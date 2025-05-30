@@ -112,11 +112,6 @@ class Config:
                 credentials=self.service_account_credentials
             )
         )
-        self.google_compute_engine_accelerator_types_client = (
-            google.cloud.compute.AcceleratorTypesClient(
-                credentials=self.service_account_credentials
-            )
-        )
         self.google_compute_engine_instances_client = (
             google.cloud.compute.InstancesClient(
                 credentials=self.service_account_credentials

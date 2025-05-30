@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields
 
 from research_environment_api.modules.workbench_management.entities import (
+    GpuAcceleratorType,
     MachineType,
     WorkbenchType,
 )
@@ -24,7 +25,11 @@ class WorkbenchCreateRequest(WorkbenchBase):
     cpu = fields.Int(required=True)
     disk_size = fields.Int(required=True)
     user_groups = fields.List(fields.Str(), required=True)
-    gpu_accelerator_type = fields.Str(allow_none=True)
+    gpu_accelerator_type = fields.Enum(
+        GpuAcceleratorType,
+        by_value=True,
+        allow_none=True,
+    )
     sharing_bucket_identifiers = fields.List(fields.Str())
 
 

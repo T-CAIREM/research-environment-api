@@ -33,20 +33,10 @@ def generate_required_maps(project_id: str):
         machine_types = page_result.items[zone]
         for machine_type in machine_types.machine_types:
             machine_type_name = machine_type.name.split("/")[-1]
-            machine_type_to_resource_map[machine_type_name] = (
-                ComputeEngineMachineResources(
-                    machine_type.guest_cpus,
-                    machine_type.memory_mb / 1024,
-                )
+            machine_type_to_resource_map[
+                machine_type_name
+            ] = ComputeEngineMachineResources(
+                machine_type.guest_cpus,
+                machine_type.memory_mb / 1024,
             )
     return machine_type_to_resource_map, machine_type_enum
-
-
-def format_gpu_accelerator_type(gpu_accelerator_type: str) -> str:
-    """
-    Converts a GPU accelerator type from Google format (e.g., 'nvidia-tesla-k80')
-    to Vertex AI format (e.g., 'NVIDIA_TESLA_K80').
-    """
-    if not gpu_accelerator_type:
-        return ""
-    return gpu_accelerator_type.upper().replace("-", "_")
