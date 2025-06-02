@@ -497,7 +497,7 @@ UPDATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
         ],
     },
     {
-        "id": "jupyter_workbench_gcloud_start_instance",
+        "id": "collaborative_workbench_gcloud_start_instance",
         "name": "gcr.io/cloud-builders/gcloud",
         "args": [
             "instances",
