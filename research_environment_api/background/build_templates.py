@@ -135,7 +135,7 @@ CREATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
         "dir_": "terraform-workbench-creation",
     },
     {
-        "id": "jupyter_workbench_creation_terraform_plan",
+        "id": "collaborative_workbench_creation_terraform_plan",
         "name": "hashicorp/terraform",
         "args": ["-chdir=./workbench/jupyter-collaborative", "plan", "-out=tfplan.out"],
         "env": [
@@ -445,6 +445,72 @@ UPDATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
     },
 ]
 
+UPDATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
+    {
+        "id": "collaborative_workbench_update_set_backend_bucket",
+        "name": "python",
+        "args": [
+            "python3",
+            "workbench/jupyter-collaborative/python3.py",
+            "${_INSTANCE_NAME}",
+        ],
+        "dir_": "terraform-workbench-creation",
+    },
+    {
+        "id": "collaborative_workbench_update_set_config",
+        "name": "python",
+        "args": [
+            "python3",
+            "workbench/jupyter-collaborative/python4.py",
+            "${_BUCKET_NAME}",
+            "${_SHARING_BUCKET_IDENTIFIERS}",
+            "${_SHARING_BUCKET_PERMISSIONS}",
+        ],
+        "dir_": "terraform-workbench-creation",
+    },
+    {
+        "id": "collaborative_workbench_gcloud_stop_instance",
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "workbench",
+            "instances",
+            "stop",
+            "${_INSTANCE_NAME}",
+            "--location=${_ZONE}",
+            "--project",
+            "${_PROJECT_ID}",
+        ],
+    },
+    {
+        "id": "collaborative_workbench_gcloud_update_instance",
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "workbench",
+            "instances",
+            "update",
+            "${_INSTANCE_NAME}",
+            "--machine-type=${_MACHINE_TYPE}",
+            "--location=${_ZONE}",
+            "--project",
+            "${_PROJECT_ID}",
+            "--metadata=post-startup-script=${_JUPYTER_STARTUP_SCRIPT_BUCKET_NAME}",
+        ],
+    },
+    {
+        "id": "jupyter_workbench_gcloud_start_instance",
+        "name": "gcr.io/cloud-builders/gcloud",
+        "args": [
+            "instances",
+            "start",
+            "${_INSTANCE_NAME}",
+            "--location=${_ZONE}",
+            "--project",
+            "${_PROJECT_ID}",
+        ],
+    },
+]
+
+
 DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
     {
         "id": "jupyter_workbench_destruction_set_backend_bucket",
@@ -482,6 +548,50 @@ DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_collaborative=${_COLLABORATIVE}",
+        ],
+        "dir_": "terraform-workbench-creation",
+    },
+]
+
+DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
+    {
+        "id": "collaborative_workbench_destruction_set_backend_bucket",
+        "name": "python",
+        "args": [
+            "python3",
+            "workbench/jupyter-collaborative/python3.py",
+            "${_INSTANCE_NAME}",
+        ],
+        "dir_": "terraform-workbench-creation",
+    },
+    {
+        "id": "collaborative_workbench_destruction_terraform_init",
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./workbench/jupyter-collaborative", "init", "-reconfigure"],
+        "dir_": "terraform-workbench-creation",
+    },
+    {
+        "id": "collaborative_workbench_destruction_terraform_destroy",
+        "name": "hashicorp/terraform",
+        "args": ["-chdir=./workbench/jupyter-collaborative", "destroy", "-auto-approve"],
+        "env": [
+            "TF_VAR_machine_type=${_MACHINE_TYPE}",
+            "TF_VAR_project_id=${_PROJECT_ID}",
+            "TF_VAR_dataset=${_DATASET}",
+            "TF_VAR_region=${_REGION}",
+            "TF_VAR_emailid=${_EMAIL_ID}",
+            "TF_VAR_bucket_name=${_BUCKET_NAME}",
+            "TF_VAR_vm_image=${_VM_IMAGE}",
+            "TF_VAR_gpu_accelerator=${_GPU_ACCELERATOR}",
+            "TF_VAR_persistent_disk=${_DISK_SIZE}",
+            "TF_VAR_zone=${_ZONE}",
+            "TF_VAR_startup_script_bucket=${_JUPYTER_STARTUP_SCRIPT_BUCKET}",
+            "TF_VAR_name=${_INSTANCE_NAME}",
+            "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
+            "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
+            "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
+            "TF_VAR_collaborative=${_COLLABORATIVE}",
         ],
         "dir_": "terraform-workbench-creation",
     },
@@ -684,6 +794,11 @@ DESTROY_JUPYTER_WORKBENCH_STEPS = [
     *DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL,
 ]
 
+DESTROY_COLLABORATIVE_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL,
+]
+
 CREATE_WORKSPACE_STEPS = [
     *CLONE_GITHUB_REPO,
     *CREATE_WORKSPACE_STEPS_PARTIAL,
@@ -707,6 +822,11 @@ DESTROY_SHARED_WORKSPACE_STEPS = [
 UPDATE_JUPYTER_WORKBENCH_STEPS = [
     *CLONE_GITHUB_REPO,
     *UPDATE_JUPYTER_WORKBENCH_STEPS_PARTIAL,
+]
+
+UPDATE_COLLABORATIVE_WORKBENCH_STEPS = [
+    *CLONE_GITHUB_REPO,
+    *UPDATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL,
 ]
 
 CREATE_RSTUDIO_WORKBENCH_STEPS = [
