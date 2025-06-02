@@ -90,7 +90,7 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
 
 
 def validate_gpu_accelerator(project_id: str, name: str, workbench_type: str) -> bool:
-    if workbench_type == "jupyter" or workbench_type == "collaborative":
+    if workbench_type in ["jupyter", "collaborative"]:
 
         valid_accelerators = {
             key
