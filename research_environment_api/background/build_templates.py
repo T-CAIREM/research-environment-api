@@ -574,7 +574,11 @@ DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
     {
         "id": "collaborative_workbench_destruction_terraform_destroy",
         "name": "hashicorp/terraform",
-        "args": ["-chdir=./workbench/jupyter-collaborative", "destroy", "-auto-approve"],
+        "args": [
+            "-chdir=./workbench/jupyter-collaborative",
+            "destroy",
+            "-auto-approve",
+        ],
         "env": [
             "TF_VAR_machine_type=${_MACHINE_TYPE}",
             "TF_VAR_project_id=${_PROJECT_ID}",
