@@ -190,6 +190,99 @@ def destroy_jupyter_workbench(
     )
 
 
+def stop_collaborative_workbench(
+    workspace_project_id: str,
+    instance_name: str,
+    instance_zone: str,
+    workbench_activity_id: str,
+):
+    return chain(
+        tasks.stop_vertex_ai_instance.s(
+            workspace_project_id=workspace_project_id,
+            workbench_resource_id=instance_name,
+            instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
+        ),
+        tasks.check_operation_status.s(),
+        tasks.mark_monitoring_entry_as_deleted.s(
+            workbench_activity_id=workbench_activity_id
+        ),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
+def start_collaborative_workbench(
+    workspace_project_id: str,
+    instance_name: str,
+    instance_zone: str,
+    workbench_activity_id: str,
+    dataset_identifier: str,
+):
+    return chain(
+        tasks.start_vertex_ai_instance.s(
+            workspace_project_id=workspace_project_id,
+            instance_name=instance_name,
+            instance_zone=instance_zone,
+            workbench_activity_id=workbench_activity_id,
+        ),
+        tasks.check_operation_status.s(),
+        tasks.check_vertex_ai_setup_status.s(
+            workspace_project_id=workspace_project_id,
+            instance_zone=instance_zone,
+            instance_name=instance_name,
+        ),
+        tasks.add_monitoring_entry.s(
+            workbench_activity_id=workbench_activity_id,
+            instance_type=enums.InstanceType.COLLABORATIVE,
+            dataset_identifier=dataset_identifier,
+        ),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
+def update_collaborative_workbench(
+    build: cloudbuild_v1.Build,
+    user_email: str,
+    workbench_activity_id: str,
+    workspace_project_id: str,
+    instance_zone: str,
+    instance_name: str,
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
+        tasks.check_vertex_ai_setup_status.s(
+            workspace_project_id=workspace_project_id,
+            instance_zone=instance_zone,
+            instance_name=instance_name,
+        ),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
+def destroy_collaborative_workbench(
+    build: cloudbuild_v1.Build, user_email: str, workbench_activity_id: str
+):
+    return chain(
+        tasks.start_cloud_build.s(
+            build=build, workbench_activity_id=workbench_activity_id
+        ),
+        tasks.check_operation_status.s(),
+        tasks.process_cloud_build_result.s(
+            workbench_activity_id=workbench_activity_id, user_email=user_email
+        ),
+        tasks.mark_monitoring_entry_as_deleted.s(
+            workbench_activity_id=workbench_activity_id
+        ),
+        tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+    )
+
+
 def create_workspace(
     build: cloudbuild_v1.Build,
     user_email: str,
