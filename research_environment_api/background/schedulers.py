@@ -507,6 +507,191 @@ def destroy_jupyter_workbench(
             return workbench_activity.id
 
 
+def stop_collaborative_workbench(
+    workbench_stop_request: entities.WorkbenchToggleState,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_stop_request.workspace_project_id,
+        instance_name=workbench_stop_request.workbench_resource_id,
+        user_email=workbench_stop_request.user_email,
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_stop_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_stop_request.workspace_project_id,
+                invoker_email=workbench_stop_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_STOP,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.stop_collaborative_workbench(
+                workspace_project_id=workbench_stop_request.workspace_project_id,
+                instance_name=workbench.id,
+                instance_zone=workbench.zone,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            return workbench_activity.id
+
+
+def start_collaborative_workbench(
+    workbench_start_request: entities.WorkbenchToggleState,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_start_request.workspace_project_id,
+        instance_name=workbench_start_request.workbench_resource_id,
+        user_email=workbench_start_request.user_email,
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_start_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_start_request.workspace_project_id,
+                invoker_email=workbench_start_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_START,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.start_collaborative_workbench(
+                instance_name=workbench.id,
+                instance_zone=workbench.zone,
+                workspace_project_id=workbench_start_request.workspace_project_id,
+                workbench_activity_id=workbench_activity.id,
+                dataset_identifier=workbench.dataset_identifier,
+            )()
+
+            return workbench_activity.id
+
+
+def update_collaborative_workbench(
+    workbench_update_request: entities.WorkbenchUpdate,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_update_request.workspace_project_id,
+        instance_name=workbench_update_request.workbench_resource_id,
+        user_email=workbench_update_request.user_email,
+    )
+
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench.sharing_bucket_identifiers,
+        workbench_update_request.user_email,
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    monitoring_services.check_workbench_update_quotas(
+        workbench_update_request.workspace_project_id,
+        workbench.region,
+        workbench_update_request.machine_type,
+    )
+    build = builds.update_collaborative_workbench_build(
+        workspace_project_id=workbench_update_request.workspace_project_id,
+        instance_name=workbench.id,
+        machine_type=workbench_update_request.machine_type,
+        dataset_identifier=workbench.dataset_identifier,
+        bucket_name=workbench.bucket_name,
+        zone=workbench.zone,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_update_request.workspace_project_id,
+                invoker_email=workbench_update_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_UPDATE,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.update_collaborative_workbench(
+                build=build,
+                workspace_project_id=workbench_update_request.workspace_project_id,
+                instance_zone=workbench.zone,
+                instance_name=workbench.id,
+                user_email=workbench_update_request.user_email,
+                workbench_activity_id=workbench_activity.id,
+            )()
+
+            return workbench_activity.id
+
+
+def destroy_collaborative_workbench(
+    workbench_destroy_request: entities.WorkbenchDestroy,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_destroy_request.workspace_project_id,
+        instance_name=workbench_destroy_request.workbench_resource_id,
+        user_email=workbench_destroy_request.user_email,
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_destroy_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    build = builds.destroy_collaborative_workbench_build(
+        workspace_project_id=workbench_destroy_request.workspace_project_id,
+        instance_name=workbench.id,
+        user_email=workbench_destroy_request.user_email,
+        region=workbench.region,
+        machine_type=workbench.machine_type,
+        disk_size=workbench.disk_size,
+        gpu_accelerator_type=workbench.gpu_accelerator_type,
+        dataset_identifier=workbench.dataset_identifier,
+        bucket_name=workbench.bucket_name,
+        zone=workbench.zone,
+        vm_image=workbench.vm_image,
+        service_account_name=workbench.service_account_name,
+        sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+    )
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_destroy_request.workspace_project_id,
+                invoker_email=workbench_destroy_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_DESTROY,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.destroy_collaborative_workbench(
+                build=build,
+                workbench_activity_id=workbench_activity.id,
+                user_email=workbench_destroy_request.user_email,
+            )()
+
+            return workbench_activity.id
+
+
 def create_rstudio_workbench(
     workbench_creation_request: entities.WorkbenchCreate,
 ) -> uuid.UUID:

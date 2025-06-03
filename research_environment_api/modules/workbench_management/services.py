@@ -130,6 +130,8 @@ def schedule_workbench_create(
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
     if workbench_stop_request.workbench_type == "jupyter":
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
+    elif workbench_stop_request.workbench_type == "collaborative":
+        return schedulers.stop_collaborative_workbench(workbench_stop_request)
     else:
         return schedulers.stop_compute_engine_workbench(workbench_stop_request)
 
@@ -137,6 +139,8 @@ def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleStat
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
     if workbench_start_request.workbench_type == "jupyter":
         return schedulers.start_jupyter_workbench(workbench_start_request)
+    elif workbench_start_request.workbench_type == "collaborative":
+        return schedulers.start_collaborative_workbench(workbench_start_request)
     else:
         return schedulers.start_rstudio_workbench(workbench_start_request)
 
@@ -146,6 +150,8 @@ def schedule_workbench_update(
 ):
     if workbench_update_request.workbench_type == "jupyter":
         return schedulers.update_jupyter_workbench(workbench_update_request)
+    elif workbench_update_request.workbench_type == "collaborative":
+        return schedulers.update_collaborative_workbench(workbench_update_request)
     else:
         return schedulers.update_rstudio_workbench(workbench_update_request)
 
@@ -155,6 +161,8 @@ def schedule_workbench_destroy(
 ):
     if workbench_destroy_request.workbench_type == "jupyter":
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
+    elif workbench_destroy_request.workbench_type == "collaborative":
+        return schedulers.destroy_collaborative_workbench(workbench_destroy_request)
     else:
         return schedulers.destroy_rstudio_workbench(workbench_destroy_request)
 
