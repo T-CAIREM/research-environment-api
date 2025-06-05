@@ -205,3 +205,10 @@ class WorkbenchToggleState:
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
+
+
+@dataclass
+class WorkbenchAddCollaborator:
+    service_account_name: str
+    project_id: str
+    user_email: str

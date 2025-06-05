@@ -214,3 +214,28 @@ def start_stopped_workbenches(folder_id: str):
         )
 
     return f"Started {len(instances_to_start)} instances."
+
+
+def add_collaborator_to_workbench(
+    add_collaborator_request: entities.WorkbenchAddCollaborator,
+):
+    project_id = add_collaborator_request.project_id
+    service_account_name = add_collaborator_request.service_account_name
+    user_email = add_collaborator_request.user_email
+
+    iam_client = app.config.google_iam_client
+
+    resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
+
+    policy = {
+        "bindings": [
+            {"role": "roles/iam.serviceAccountUser", "members": [f"user:{user_email}"]}
+        ]
+    }
+
+    try:
+        request = {"resource": resource, "policy": policy}
+        response = iam_client.set_iam_policy(request=request)
+        print("Policy updated successfully:", response)
+    except Exception as e:
+        raise ValueError(f"Failed to set IAM policy: {e}")

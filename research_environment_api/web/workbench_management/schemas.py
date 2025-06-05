@@ -59,3 +59,9 @@ class Workbench(Schema):
 
 class WorkbenchWorkflowIdentifier(Schema):
     workflow_id = fields.Str(required=True)
+
+
+class WorkbenchAddCollaboratorRequest(Schema):
+    service_account_name = fields.Str(required=True)
+    project_id = fields.Str(required=True)
+    user_email = fields.Email(required=True)
