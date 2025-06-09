@@ -217,7 +217,7 @@ def start_stopped_workbenches(folder_id: str):
 
 
 def add_collaborator_to_workbench(
-    add_collaborator_request: entities.WorkbenchAddCollaborator,
+    add_collaborator_request: entities.WorkbenchCollaborator,
 ):
     """Adds the `roles/iam.serviceAccountUser` role to the user for the service account."""
     project_id = add_collaborator_request.project_id

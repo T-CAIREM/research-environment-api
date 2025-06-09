@@ -213,8 +213,8 @@ def add_collaborator():
               schema:
     """
     body = request.get_json()
-    collaborator_data = schemas.WorkbenchAddCollaboratorRequest().load(body)
-    collaborator_entity = entities.WorkbenchAddCollaborator(**collaborator_data)
+    collaborator_data = schemas.WorkbenchCollaboratorRequest().load(body)
+    collaborator_entity = entities.WorkbenchCollaborator(**collaborator_data)
 
     services.add_collaborator_to_workbench(collaborator_entity)
     return {"message": "Collaborator added successfully."}, 200
