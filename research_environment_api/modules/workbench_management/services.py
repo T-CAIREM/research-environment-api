@@ -222,19 +222,25 @@ def add_collaborator_to_workbench(
     """Adds the `roles/iam.serviceAccountUser` role to the user for the service account."""
     project_id = add_collaborator_request.project_id
     service_account_name = add_collaborator_request.service_account_name
-    user_email = add_collaborator_request.user_email
+    user_member = f"user:{add_collaborator_request.user_email}"
+    role = "roles/iam.serviceAccountUser"
 
     iam_client = app.config.google_iam_client
     resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
 
-    policy = {
-        "bindings": [
-            {"role": "roles/iam.serviceAccountUser", "members": [f"user:{user_email}"]}
-        ]
-    }
+    policy = iam_client.get_iam_policy(request={"resource": resource})
+    bindings = policy.bindings
+    
+    role_binding = next((binding for binding in bindings if binding.role == role), None)
 
-    request = {"resource": resource, "policy": policy}
-    iam_client.set_iam_policy(request=request)
+    if role_binding:
+        if user_member not in role_binding.members:
+            role_binding.members.append(user_member)
+    else:
+        bindings.append({"role": role, "members": [user_member]})
+
+    updated_policy = {"bindings": bindings}
+    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
 
 
 def remove_collaborator_from_workbench(
@@ -243,7 +249,7 @@ def remove_collaborator_from_workbench(
     """Removes the `roles/iam.serviceAccountUser` role from the user for the service account."""
     project_id = remove_collaborator_request.project_id
     service_account_name = remove_collaborator_request.service_account_name
-    user_email = remove_collaborator_request.user_email
+    user_member = f"user:{remove_collaborator_request.user_email}"
 
     iam_client = app.config.google_iam_client
     resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
@@ -253,8 +259,9 @@ def remove_collaborator_from_workbench(
     for binding in policy.bindings:
         if binding.role == "roles/iam.serviceAccountUser":
             binding.members[:] = [
-                member for member in binding.members if member != f"user:{user_email}"
+                member for member in binding.members if member != user_member
             ]
 
     request = {"resource": resource, "policy": policy}
     iam_client.set_iam_policy(request=request)
+
