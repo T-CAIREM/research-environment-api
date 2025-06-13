@@ -192,9 +192,9 @@ def destroy_workbench():
     return workflow_identifier, 200
 
 
-@workbench_management_bp.post("/add-collaborator")
+@workbench_management_bp.post("/add-collaborators")
 @validate_token
-def add_collaborator():
+def add_collaborators():
     """Adds a collaborator to a workbench.
     ---
     post:
@@ -204,7 +204,7 @@ def add_collaborator():
       requestBody:
         content:
           application/json:
-            schema: WorkbenchAddCollaboratorRequest
+            schema: WorkbenchCollaboratorRequest
       responses:
         200:
           description: Collaborator added successfully.
@@ -216,8 +216,8 @@ def add_collaborator():
     collaborator_data = schemas.WorkbenchCollaboratorRequest().load(body)
     collaborator_entity = entities.WorkbenchCollaborator(**collaborator_data)
 
-    services.add_collaborator_to_workbench(collaborator_entity)
-    return {"message": "Collaborator added successfully."}, 200
+    services.add_collaborators_to_workbench(collaborator_entity)
+    return {"message": "Collaborators added successfully."}, 200
 
 
 @workbench_management_bp.post("/remove-collaborator")
@@ -246,3 +246,4 @@ def remove_collaborator():
 
     services.remove_collaborator_from_workbench(collaborator_entity)
     return {"message": "Collaborator removed successfully."}, 200
+

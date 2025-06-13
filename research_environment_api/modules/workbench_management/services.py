@@ -7,7 +7,7 @@ from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 import google.cloud.resourcemanager_v3
 import google.cloud.notebooks_v2
-
+from google.iam.v1 import policy_pb2
 
 from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
@@ -216,31 +216,40 @@ def start_stopped_workbenches(folder_id: str):
     return f"Started {len(instances_to_start)} instances."
 
 
-def add_collaborator_to_workbench(
+def add_collaborators_to_workbench(
     add_collaborator_request: entities.WorkbenchCollaborator,
 ):
-    """Adds the `roles/iam.serviceAccountUser` role to the user for the service account."""
+    """Adds the `roles/iam.serviceAccountUser` role to each user in the list"""
     project_id = add_collaborator_request.project_id
     service_account_name = add_collaborator_request.service_account_name
-    user_member = f"user:{add_collaborator_request.user_email}"
+    user_emails = add_collaborator_request.user_emails
     role = "roles/iam.serviceAccountUser"
 
     iam_client = app.config.google_iam_client
     resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
 
-    policy = iam_client.get_iam_policy(request={"resource": resource})
-    bindings = policy.bindings
-    
-    role_binding = next((binding for binding in bindings if binding.role == role), None)
+    for email in user_emails:
+        user_member = f"user:{email}"
 
-    if role_binding:
-        if user_member not in role_binding.members:
-            role_binding.members.append(user_member)
-    else:
-        bindings.append({"role": role, "members": [user_member]})
+        try:
+            policy = iam_client.get_iam_policy(request={"resource": resource})
+            bindings = policy.bindings
 
-    updated_policy = {"bindings": bindings}
-    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
+            role_binding = next((b for b in bindings if b.role == role), None)
+
+            if role_binding:
+                if user_member in role_binding.members:
+                    continue
+                role_binding.members.append(user_member)
+            else:
+                bindings.append(policy_pb2.Binding(role=role, members=[user_member]))
+            updated_policy = policy_pb2.Policy(bindings=bindings)
+            iam_client.set_iam_policy(
+                request={"resource": resource, "policy": updated_policy}
+            )
+
+        except Exception as e:
+            continue
 
 
 def remove_collaborator_from_workbench(
@@ -264,4 +273,3 @@ def remove_collaborator_from_workbench(
 
     request = {"resource": resource, "policy": policy}
     iam_client.set_iam_policy(request=request)
-
