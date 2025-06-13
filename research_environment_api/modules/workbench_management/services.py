@@ -255,21 +255,23 @@ def add_collaborators_to_workbench(
 def remove_collaborator_from_workbench(
     remove_collaborator_request: entities.WorkbenchCollaborator,
 ):
-    """Removes the `roles/iam.serviceAccountUser` role from the user for the service account."""
+    """Removes the `roles/iam.serviceAccountUser` role from multiple users for the service account."""
     project_id = remove_collaborator_request.project_id
     service_account_name = remove_collaborator_request.service_account_name
-    user_member = f"user:{remove_collaborator_request.user_email}"
+    user_emails = remove_collaborator_request.user_emails
+    members_to_remove = {f"user:{email}" for email in user_emails}
 
     iam_client = app.config.google_iam_client
     resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
 
     policy = iam_client.get_iam_policy(request={"resource": resource})
+    bindings = policy.bindings
 
-    for binding in policy.bindings:
-        if binding.role == "roles/iam.serviceAccountUser":
-            binding.members[:] = [
-                member for member in binding.members if member != user_member
-            ]
+    role_binding = next((b for b in bindings if b.role == "roles/iam.serviceAccountUser"), None)
 
-    request = {"resource": resource, "policy": policy}
-    iam_client.set_iam_policy(request=request)
+    role_binding.members[:] = [
+        member for member in role_binding.members if member not in members_to_remove
+    ]
+
+    updated_policy = policy_pb2.Policy(bindings=bindings)
+    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
