@@ -211,4 +211,4 @@ class WorkbenchToggleState:
 class WorkbenchCollaborator:
     service_account_name: str
     project_id: str
-    user_email: str
+    user_emails: list[str]
