@@ -252,17 +252,17 @@ def add_collaborators_to_workbench(
             continue
 
 
-def remove_collaborator_from_workbench(
+def remove_collaborators_from_workbench(
     remove_collaborator_request: entities.WorkbenchCollaborator,
 ):
     """Removes the `roles/iam.serviceAccountUser` role from multiple users for the service account."""
-    project_id = remove_collaborator_request.project_id
+    workspace_project_id = remove_collaborator_request.workspace_project_id
     service_account_name = remove_collaborator_request.service_account_name
-    user_emails = remove_collaborator_request.user_emails
-    members_to_remove = {f"user:{email}" for email in user_emails}
+    collaborators = remove_collaborator_request.collaborators
+    members_to_remove = {f"user:{email}" for email in collaborators}
 
     iam_client = app.config.google_iam_client
-    resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
+    resource = f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
 
     policy = iam_client.get_iam_policy(request={"resource": resource})
     bindings = policy.bindings

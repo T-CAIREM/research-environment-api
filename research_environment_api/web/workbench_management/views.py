@@ -220,15 +220,15 @@ def add_collaborators():
     return {"message": "Collaborators added successfully."}, 200
 
 
-@workbench_management_bp.post("/remove-collaborator")
+@workbench_management_bp.post("/remove-collaborators")
 @validate_token
-def remove_collaborator():
-    """Removes a collaborator from a workbench.
+def remove_collaborators():
+    """Removes collaborators from a workbench.
     ---
     post:
       tags:
         - workbench_management
-      description: Removes a collaborator from a workbench by revoking roles.
+      description: Removes collaborators from a workbench by revoking roles.
       requestBody:
         content:
           application/json:
@@ -244,6 +244,6 @@ def remove_collaborator():
     collaborator_data = schemas.WorkbenchCollaboratorRequest().load(body)
     collaborator_entity = entities.WorkbenchCollaborator(**collaborator_data)
 
-    services.remove_collaborator_from_workbench(collaborator_entity)
-    return {"message": "Collaborator removed successfully."}, 200
+    services.remove_collaborators_from_workbench(collaborator_entity)
+    return {"message": "Collaborators removed successfully."}, 200
 
