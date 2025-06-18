@@ -633,7 +633,3 @@ def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
         data,
         to=room,
     )
-
-
-def assign_initial_collaborators():
-    pass
