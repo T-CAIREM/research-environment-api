@@ -210,5 +210,5 @@ class WorkbenchToggleState:
 @dataclass
 class WorkbenchCollaborator:
     service_account_name: str
-    project_id: str
-    user_emails: list[str]
+    workspace_project_id: str
+    collaborators: list[str]

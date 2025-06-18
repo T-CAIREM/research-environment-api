@@ -63,5 +63,5 @@ class WorkbenchWorkflowIdentifier(Schema):
 
 class WorkbenchCollaboratorRequest(Schema):
     service_account_name = fields.Str(required=True)
-    project_id = fields.Str(required=True)
-    user_emails = fields.List(fields.Email(), required=True)
+    workspace_project_id = fields.Str(required=True)
+    collaborators = fields.List(fields.Email(), required=True)
