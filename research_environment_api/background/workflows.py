@@ -81,6 +81,11 @@ def create_collaborative_workbench(
             user_email=user_email,
         ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
+        tasks.assign_initial_collaborators.s(
+            collaborators=collaborators,
+            instance_name=instance_name,
+            workspace_project_id=workspace_project_id,
+        ),
     )
 
 
