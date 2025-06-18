@@ -194,13 +194,13 @@ def destroy_workbench():
 
 @workbench_management_bp.post("/add-collaborators")
 @validate_token
-def add_collaborator():
-    """Adds a collaborator to a workbench.
+def add_collaborators():
+    """Adds collaborators to a workbench.
     ---
     post:
       tags:
         - workbench_management
-      description: Adds a collaborator to a workbench by granting roles.
+      description: Adds collaborators to a workbench by granting roles.
       requestBody:
         content:
           application/json:
