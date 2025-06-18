@@ -220,15 +220,15 @@ def add_collaborators_to_workbench(
     add_collaborator_request: entities.WorkbenchCollaborator,
 ):
     """Adds the `roles/iam.serviceAccountUser` role to each user in the list"""
-    project_id = add_collaborator_request.project_id
+    workspace_project_id = add_collaborator_request.workspace_project_id
     service_account_name = add_collaborator_request.service_account_name
-    user_emails = add_collaborator_request.user_emails
+    collaborators = add_collaborator_request.collaborators
     role = "roles/iam.serviceAccountUser"
 
     iam_client = app.config.google_iam_client
-    resource = f"projects/{project_id}/serviceAccounts/{service_account_name}@{project_id}.iam.gserviceaccount.com"
+    resource = f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
 
-    for email in user_emails:
+    for email in collaborators:
         user_member = f"user:{email}"
 
         try:
