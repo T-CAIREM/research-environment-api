@@ -57,6 +57,7 @@ class Workbench(Schema):
     zone = fields.Str()
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
+    service_account_name = fields.Str(required=True)
 
 
 class WorkbenchWorkflowIdentifier(Schema):
