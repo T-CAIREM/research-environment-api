@@ -223,3 +223,9 @@ class WorkbenchCollaboratorModification:
     service_account_name: str
     workspace_project_id: str
     collaborators: list[str]
+
+
+@dataclass
+class WorkbenchGetCollaborators:
+    workspace_project_id: str
+    service_account_name: str

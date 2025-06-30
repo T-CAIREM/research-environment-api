@@ -250,3 +250,36 @@ def remove_collaborators():
 
     services.remove_collaborators_from_workbench(collaborator_entity)
     return {"message": "Collaborators removed successfully."}, 200
+
+
+@workbench_management_bp.get("/get-collaborators")
+@validate_token
+def get_collaborators():
+    """Retrieves the list of collaborators for a workbench.
+    ---
+    get:
+      tags:
+        - workbench_management
+      description: Retrieves the list of collaborators for a workbench.
+      parameters:
+        - in: query
+          name: workbench_id
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns the list of collaborators.
+          content:
+            application/json:
+              schema: WorkbenchCollaboratorList
+    """
+    body = request.get_json()
+    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(body)
+    get_collaborators_entity = entities.WorkbenchGetCollaborators(
+        **get_collaborators_request
+    )
+
+    collaborators = services.get_workbench_collaborators(get_collaborators_entity)
+    serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)
+
+    return serialized_collaborators, 200
