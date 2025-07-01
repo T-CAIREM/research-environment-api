@@ -81,6 +81,7 @@ class Workbench:
     url: Optional[str] = None
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[str] = None
+    workbench_owner_username: Optional[str] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
@@ -132,6 +133,7 @@ class Workbench:
             if sharing_bucket_identifiers_metadata
             else []
         )
+        workbench_owner_username = instance.labels.get("owner")
         return cls(
             id=name,
             resource_id=instance.id,
@@ -151,6 +153,7 @@ class Workbench:
             gpu_accelerator_type=gpu_accelerator_type,
             service_account_name=service_account_name,
             sharing_bucket_identifiers=sharing_bucket_identifiers,
+            workbench_owner_username=workbench_owner_username,
         )
 
 
