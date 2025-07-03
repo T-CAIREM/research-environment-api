@@ -351,27 +351,16 @@ def get_workbench_collaborators(
     workspace_project_id = get_collaborators_request.workspace_project_id
     service_account_name = get_collaborators_request.service_account_name
 
-    iam_client = app.config.google_iam_client
-    resource = f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
-
-    try:
-        policy = iam_client.get_iam_policy(request={"resource": resource})
-        bindings = policy.bindings
-
-        role_binding = next(
-            (b for b in bindings if b.role == "roles/iam.serviceAccountUser"), None
+    with app.database_session() as session:
+        collaborator_records = (
+            session.query(workbench_models.WorkbenchCollaboratorData)
+            .filter_by(
+                workspace_project_id=workspace_project_id,
+                service_account_name=service_account_name,
+                status=workbench_models.CollaboratorStatus.SUCCESS,
+            )
+            .all()
         )
 
-        if role_binding:
-            collaborators = [
-                member.split(":", 1)[1]
-                for member in role_binding.members
-                if member.startswith("user:")
-            ]
-            return {"collaborators": collaborators}
-        else:
-            return {"collaborators": []}
-
-    except Exception as e:
-        app.logger.error(f"Error retrieving collaborators: {e}")
-        return {"collaborators": []}
+        collaborators = [record.collaborator_email for record in collaborator_records]
+        return {"collaborators": collaborators}
