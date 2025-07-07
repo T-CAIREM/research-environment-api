@@ -78,3 +78,18 @@ class WorkbenchGetCollaboratorsRequest(Schema):
 
 class WorkbenchCollaboratorList(Schema):
     collaborators = fields.List(fields.Email(), required=True)
+
+
+class WorkbenchNotificationRequest(Schema):
+    service_account_name = fields.Str(required=True)
+    workspace_project_id = fields.Str(required=True)
+
+
+class WorkbenchNotification(Schema):
+    id = fields.UUID(required=True)
+    email = fields.Email(required=True)
+    timestamp = fields.Str(required=True)
+
+
+class WorkbenchNotificationList(Schema):
+    notifications = fields.List(fields.Nested(WorkbenchNotification), required=True)

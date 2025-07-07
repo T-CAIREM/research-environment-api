@@ -232,3 +232,15 @@ class WorkbenchCollaboratorModification:
 class WorkbenchGetCollaborators:
     workspace_project_id: str
     service_account_name: str
+
+
+@dataclass
+class WorkbenchGetNotifications:
+    workspace_project_id: str
+    service_account_name: str
+
+
+@dataclass
+class WorkbenchClearNotifications:
+    workspace_project_id: str
+    service_account_name: str

@@ -283,3 +283,91 @@ def get_collaborators():
     serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)
 
     return serialized_collaborators, 200
+
+
+@workbench_management_bp.get("/get-notifications")
+@validate_token
+def get_notifications():
+    """Retrieves the list of failed notifications for a workbench.
+    ---
+    get:
+      tags:
+        - workbench_management
+      description: Retrieves the list of unviewed failed notifications for a workbench.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkbenchNotificationRequest
+      responses:
+        200:
+          description: Returns the list of notifications.
+          content:
+            application/json:
+              schema: WorkbenchNotificationList
+    """
+    body = request.get_json()
+    get_notifications_request = schemas.WorkbenchNotificationRequest().load(body)
+    get_notifications_entity = entities.WorkbenchGetNotifications(
+        **get_notifications_request
+    )
+
+    notifications = services.get_workbench_notifications(get_notifications_entity)
+    serialized_notifications = schemas.WorkbenchNotificationList().dump(notifications)
+
+    return serialized_notifications, 200
+
+
+@workbench_management_bp.post("/mark-notification-viewed")
+@validate_token
+def mark_notification_viewed():
+    """Marks a notification as viewed.
+    ---
+    post:
+      tags:
+        - workbench_management
+      description: Marks a notification as viewed.
+      requestBody:
+        content:
+          application/json:
+            schema: NotificationMarkAsViewedRequest
+      responses:
+        200:
+          description: Notification marked as viewed.
+    """
+    body = request.get_json()
+    notification_id = body.get("notification_id")
+
+    result = services.mark_notification_as_viewed(notification_id)
+
+    if result:
+        return {"message": "Notification marked as viewed."}, 200
+    else:
+        return {"error": "Notification not found."}, 404
+
+
+@workbench_management_bp.post("/clear-all-notifications")
+@validate_token
+def clear_all_notifications():
+    """Marks all notifications for a workbench as viewed.
+    ---
+    post:
+      tags:
+        - workbench_management
+      description: Marks all unviewed notifications for a workbench as viewed.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkbenchNotificationRequest
+      responses:
+        200:
+          description: All notifications marked as viewed.
+    """
+    body = request.get_json()
+    clear_notifications_request = schemas.WorkbenchNotificationRequest().load(body)
+    clear_notifications_entity = entities.WorkbenchClearNotifications(
+        **clear_notifications_request
+    )
+
+    services.clear_all_notifications(clear_notifications_entity)
+
+    return {"message": "All notifications marked as viewed."}, 200
