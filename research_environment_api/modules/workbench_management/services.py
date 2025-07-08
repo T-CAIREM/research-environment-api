@@ -252,7 +252,10 @@ def list_shared_workbenches_for_user(email: str) -> list:
         with session.begin():
             collaborator_entries = (
                 session.query(workbench_models.WorkbenchCollaboratorData)
-                .filter_by(collaborator_email=email, status=workbench_models.CollaboratorStatus.SUCCESS)
+                .filter_by(
+                    collaborator_email=email,
+                    status=workbench_models.CollaboratorStatus.SUCCESS,
+                )
                 .all()
             )
             workbench_keys = set(
@@ -272,7 +275,6 @@ def list_shared_workbenches_for_user(email: str) -> list:
             ):
                 shared_workbenches.append((workspace_project_id, wb))
     return shared_workbenches
-
 
 
 def add_collaborators_to_workbench(

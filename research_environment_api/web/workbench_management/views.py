@@ -227,7 +227,6 @@ def get_shared_workbenches():
     return result, 200
 
 
-
 @workbench_management_bp.post("/collaborators")
 @validate_token
 def add_collaborators():
