@@ -81,3 +81,24 @@ def add_iam_binding(iam_client, resource: str, user_email: str, role: str):
     updated_policy = policy_pb2.Policy(bindings=bindings)
     iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
     return True
+
+
+def remove_iam_binding(iam_client, resource: str, user_email: str, role: str):
+    """
+    Removes IAM binding for a user from a resource with the specified role.
+    Returns True if binding was removed, False if user didn't have access.
+    """
+    user_member = f"user:{user_email}"
+
+    policy = iam_client.get_iam_policy(request={"resource": resource})
+    bindings = policy.bindings
+
+    role_binding = next((b for b in bindings if b.role == role), None)
+
+    if not role_binding or user_member not in role_binding.members:
+        return False
+
+    role_binding.members.remove(user_member)
+    updated_policy = policy_pb2.Policy(bindings=bindings)
+    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
+    return True
