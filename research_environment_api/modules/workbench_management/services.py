@@ -11,7 +11,10 @@ from google.iam.v1 import policy_pb2
 
 from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities
+from research_environment_api.modules.workbench_management import (
+    entities,
+    models as workbench_models,
+)
 from research_environment_api.modules.monitoring_management import (
     models,
     monitoring as monitoring_services,
@@ -21,6 +24,9 @@ from research_environment_api.modules.workspace_management.entities import (
 )
 from research_environment_api.modules.workbench_management.utils import (
     format_gpu_accelerator_type,
+    format_service_account_resource,
+    add_iam_binding,
+    remove_iam_binding,
 )
 from google.cloud.notebooks_v2.types import AcceleratorConfig
 
@@ -219,59 +225,116 @@ def start_stopped_workbenches(folder_id: str):
 def add_collaborators_to_workbench(
     add_collaborator_request: entities.WorkbenchCollaborator,
 ):
-    """Adds the `roles/iam.serviceAccountUser` role to each user in the list"""
     workspace_project_id = add_collaborator_request.workspace_project_id
     service_account_name = add_collaborator_request.service_account_name
     collaborators = add_collaborator_request.collaborators
     role = "roles/iam.serviceAccountUser"
 
     iam_client = app.config.google_iam_client
-    resource = f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
 
-    for email in collaborators:
-        user_member = f"user:{email}"
+    resource = format_service_account_resource(
+        workspace_project_id, service_account_name
+    )
 
-        try:
-            policy = iam_client.get_iam_policy(request={"resource": resource})
-            bindings = policy.bindings
+    with app.database_session() as session:
+        with session.begin():
+            for email in collaborators:
+                try:
+                    binding_added = add_iam_binding(iam_client, resource, email, role)
 
-            role_binding = next((b for b in bindings if b.role == role), None)
+                    existing_record = (
+                        session.query(workbench_models.WorkbenchCollaboratorData)
+                        .filter_by(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                        )
+                        .first()
+                    )
 
-            if role_binding:
-                if user_member in role_binding.members:
-                    continue
-                role_binding.members.append(user_member)
-            else:
-                bindings.append(policy_pb2.Binding(role=role, members=[user_member]))
-            updated_policy = policy_pb2.Policy(bindings=bindings)
-            iam_client.set_iam_policy(
-                request={"resource": resource, "policy": updated_policy}
-            )
+                    if existing_record:
+                        existing_record.status = (
+                            workbench_models.CollaboratorStatus.SUCCESS
+                        )
+                        existing_record.viewed = False
+                    else:
+                        collaborator_data = workbench_models.WorkbenchCollaboratorData(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                            viewed=False,
+                            status=workbench_models.CollaboratorStatus.SUCCESS,
+                        )
+                        session.add(collaborator_data)
 
-        except Exception as e:
-            continue
+                except Exception as e:
+                    collaborator_data = workbench_models.WorkbenchCollaboratorData(
+                        workspace_project_id=workspace_project_id,
+                        service_account_name=service_account_name,
+                        collaborator_email=email,
+                        viewed=False,
+                        status=workbench_models.CollaboratorStatus.FAILED,
+                    )
+                    session.add(collaborator_data)
 
 
 def remove_collaborators_from_workbench(
     remove_collaborator_request: entities.WorkbenchCollaborator,
 ):
-    """Removes the `roles/iam.serviceAccountUser` role from multiple users for the service account."""
     workspace_project_id = remove_collaborator_request.workspace_project_id
     service_account_name = remove_collaborator_request.service_account_name
     collaborators = remove_collaborator_request.collaborators
-    members_to_remove = {f"user:{email}" for email in collaborators}
+    role = "roles/iam.serviceAccountUser"
 
     iam_client = app.config.google_iam_client
-    resource = f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
 
-    policy = iam_client.get_iam_policy(request={"resource": resource})
-    bindings = policy.bindings
+    resource = format_service_account_resource(
+        workspace_project_id, service_account_name
+    )
 
-    role_binding = next((b for b in bindings if b.role == "roles/iam.serviceAccountUser"), None)
+    with app.database_session() as session:
+        with session.begin():
+            for email in collaborators:
+                try:
+                    binding_removed = remove_iam_binding(
+                        iam_client, resource, email, role
+                    )
 
-    role_binding.members[:] = [
-        member for member in role_binding.members if member not in members_to_remove
-    ]
+                    if binding_removed:
+                        existing_record = (
+                            session.query(workbench_models.WorkbenchCollaboratorData)
+                            .filter_by(
+                                workspace_project_id=workspace_project_id,
+                                service_account_name=service_account_name,
+                                collaborator_email=email,
+                            )
+                            .first()
+                        )
 
-    updated_policy = policy_pb2.Policy(bindings=bindings)
-    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
+                        if existing_record:
+                            session.delete(existing_record)
+
+                except Exception as e:
+                    existing_record = (
+                        session.query(workbench_models.WorkbenchCollaboratorData)
+                        .filter_by(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                        )
+                        .first()
+                    )
+
+                    if existing_record:
+                        existing_record.status = (
+                            workbench_models.CollaboratorStatus.FAILED
+                        )
+                    else:
+                        collaborator_data = workbench_models.WorkbenchCollaboratorData(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                            viewed=False,
+                            status=workbench_models.CollaboratorStatus.FAILED,
+                        )
+                        session.add(collaborator_data)
