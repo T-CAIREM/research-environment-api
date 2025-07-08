@@ -105,8 +105,8 @@ def create_collaborative_workbench(
         workbench_creation_request.user_email,
     )
     dataset_identifier = workbench_creation_request.dataset_identifier
-    workbench_id = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
-    service_account_name = f"jupyter-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    workbench_id = f"collaborative-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    service_account_name = f"collaborative-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
     user_permissions_list = user_group_services.get_user_permissions(
         workbench_creation_request.organization_id,
         workbench_creation_request.user_groups,
