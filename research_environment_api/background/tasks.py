@@ -121,6 +121,19 @@ def process_cloud_build_result(
                     dataset_identifier=dataset_identifier,
                 )()
                 self.kill_chain()
+            elif build.substitutions["_WORKBENCH_TYPE"] == WorkbenchType.COLLABORATIVE:
+                build.steps = build_templates.CREATE_COLLABORATIVE_WORKBENCH_STEPS
+                workflows.create_collaborative_workbench(
+                    build=build,
+                    workspace_project_id=build.substitutions["_PROJECT_ID"],
+                    instance_zone=new_zone,
+                    instance_name=build.substitutions["_INSTANCE_NAME"],
+                    fallback_zones=new_fallback_zones,
+                    user_email=user_email,
+                    workbench_activity_id=workbench_activity_id,
+                    dataset_identifier=dataset_identifier,
+                )()
+                self.kill_chain()
             else:
                 build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
                 workflows.create_rstudio_workbench(
