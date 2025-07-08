@@ -245,6 +245,36 @@ def start_stopped_workbenches(folder_id: str):
     return f"Started {len(instances_to_start)} instances."
 
 
+def list_shared_workbenches_for_user(email: str) -> list:
+    username = email.split("@")[0]
+
+    with app.database_session() as session:
+        with session.begin():
+            collaborator_entries = (
+                session.query(workbench_models.WorkbenchCollaboratorData)
+                .filter_by(collaborator_email=email, status=workbench_models.CollaboratorStatus.SUCCESS)
+                .all()
+            )
+            workbench_keys = set(
+                (entry.workspace_project_id, entry.service_account_name)
+                for entry in collaborator_entries
+            )
+
+    shared_workbenches = []
+    for workspace_project_id, service_account_name in workbench_keys:
+        workbenches = list_workbenches(
+            gcp_project_id=workspace_project_id, workflows_in_progress=[]
+        )
+        for wb in workbenches:
+            if (
+                wb.service_account_name == service_account_name
+                and wb.workbench_owner_username != username
+            ):
+                shared_workbenches.append((workspace_project_id, wb))
+    return shared_workbenches
+
+
+
 def add_collaborators_to_workbench(
     add_collaborator_request: entities.WorkbenchCollaboratorModification,
 ):
