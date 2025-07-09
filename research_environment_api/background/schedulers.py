@@ -158,6 +158,7 @@ def create_collaborative_workbench(
                 fallback_zones=fallback_zones,
                 workbench_activity_id=workbench_activity.id,
                 dataset_identifier=workbench_creation_request.dataset_identifier,
+                collaborators=workbench_creation_request.collaborators,
             )()
 
             return workbench_activity.id

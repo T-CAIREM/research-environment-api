@@ -26,6 +26,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     user_groups = fields.List(fields.Str(), required=True)
     gpu_accelerator_type = fields.Str(allow_none=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
+    collaborators = fields.List(fields.Str(), allow_none=True)
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):
@@ -55,6 +56,7 @@ class Workbench(Schema):
     )
     zone = fields.Str()
     sharing_bucket_identifiers = fields.List(fields.Str())
+    collaborators = fields.List(fields.Str(), allow_none=True)
 
 
 class WorkbenchWorkflowIdentifier(Schema):

@@ -26,6 +26,7 @@ import research_environment_api.modules.workbench_management.services as workben
 from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.helpers.exports import helpers as exports_helpers
 from research_environment_api.modules.app import app
+from research_environment_api.modules.workbench_management.entities import WorkbenchCollaborator
 from research_environment_api.modules.workbench_management.entities import (
     WorkbenchType,
     WorkbenchStatus,
@@ -75,6 +76,7 @@ def process_cloud_build_result(
     workbench_activity_id: str,
     fallback_zones: Optional[List[str]] = None,
     dataset_identifier: str = None,
+    collaborators: Optional[List[str]] = None,
 ) -> Optional[operations.BuildOperation]:
     operation, build_id = operation_context
     build = app.config.google_cloud_build_client.get_build(
@@ -132,6 +134,7 @@ def process_cloud_build_result(
                     user_email=user_email,
                     workbench_activity_id=workbench_activity_id,
                     dataset_identifier=dataset_identifier,
+                    collaborators=collaborators,
                 )()
                 self.kill_chain()
             else:
@@ -541,6 +544,25 @@ def check_and_process_cloud_build_operation(self, build_id, workbench_activity_i
             session.commit()
 
     return
+
+
+@shared_task
+def assign_initial_collaborators(
+collaborators: list, instance_name: str, workspace_project_id: str, user_email
+):
+    service_account_name = workbench_services.get_compute_engine_workbench(
+        gcp_project_id=workspace_project_id,
+        instance_name=instance_name,
+        user_email=user_email,
+    ).service_account_name
+
+    collaborators_entity = WorkbenchCollaborator(
+        service_account_name=service_account_name,
+        workspace_project_id=workspace_project_id,
+        collaborators=collaborators,
+    )
+    workbench_services.add_collaborators_to_workbench(collaborators_entity)
+
 
 
 def _get_activity_status(workbench_activity: models.WorkbenchActivity, instance):

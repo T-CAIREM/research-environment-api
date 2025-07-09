@@ -187,6 +187,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     organization_id: str = field(init=False)
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
+    collaborators: Optional[List[str]] = None
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
