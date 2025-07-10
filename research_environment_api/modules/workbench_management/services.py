@@ -323,19 +323,21 @@ def remove_collaborators_from_workbench(
                         iam_client, resource, email, role
                     )
 
-                    if binding_removed:
-                        existing_record = (
-                            session.query(workbench_models.WorkbenchCollaboratorData)
-                            .filter_by(
-                                workspace_project_id=workspace_project_id,
-                                service_account_name=service_account_name,
-                                collaborator_email=email,
-                            )
-                            .first()
+                    existing_record = (
+                        session.query(workbench_models.WorkbenchCollaboratorData)
+                        .filter_by(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
                         )
+                        .first()
+                    )
 
-                        if existing_record:
-                            session.delete(existing_record)
+                    if existing_record:
+                        existing_record.status = (
+                            workbench_models.CollaboratorStatus.REMOVED
+                        )
+                        existing_record.viewed = True
 
                 except Exception as e:
                     existing_record = (

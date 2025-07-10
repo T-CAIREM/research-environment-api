@@ -244,7 +244,9 @@ def remove_collaborators():
     """
     body = request.get_json()
     collaborator_data = schemas.WorkbenchCollaboratorModificationRequest().load(body)
-    collaborator_entity = entities.WorkbenchCollaboratorModification(**collaborator_data)
+    collaborator_entity = entities.WorkbenchCollaboratorModification(
+        **collaborator_data
+    )
 
     services.remove_collaborators_from_workbench(collaborator_entity)
     return {"message": "Collaborators removed successfully."}, 200
