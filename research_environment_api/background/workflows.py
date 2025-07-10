@@ -74,7 +74,7 @@ def create_collaborative_workbench(
             instance_type=enums.InstanceType.COLLABORATIVE,
             dataset_identifier=dataset_identifier,
         ),
-        tasks.assign_initial_collaborators.si(
+        tasks.assign_initial_collaborators.s(
             collaborators=collaborators,
             instance_name=instance_name,
             workspace_project_id=workspace_project_id,

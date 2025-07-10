@@ -26,7 +26,9 @@ import research_environment_api.modules.workbench_management.services as workben
 from research_environment_api.background.enums import OperationStatus
 from research_environment_api.modules.helpers.exports import helpers as exports_helpers
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management.entities import WorkbenchCollaborator
+from research_environment_api.modules.workbench_management.entities import (
+    WorkbenchCollaboratorModification,
+)
 from research_environment_api.modules.workbench_management.entities import (
     WorkbenchType,
     WorkbenchStatus,
@@ -44,7 +46,7 @@ class WorkflowTask(Task):
 
     def skip_to_last_step(self):
         # The first element of the list is the last task in the chain.
-        self.request.chain = self.request.chain[:1]
+        self.request.chain = self.request.chain[:2]
 
     def kill_chain(self):
         # Kills the existing chain without any cleanup.
@@ -548,21 +550,42 @@ def check_and_process_cloud_build_operation(self, build_id, workbench_activity_i
 
 @shared_task
 def assign_initial_collaborators(
-collaborators: list, instance_name: str, workspace_project_id: str, user_email
+    operation: operations.Operation,
+    collaborators: list,
+    instance_name: str,
+    workspace_project_id: str,
+    user_email: str,
 ):
-    service_account_name = workbench_services.get_compute_engine_workbench(
-        gcp_project_id=workspace_project_id,
-        instance_name=instance_name,
-        user_email=user_email,
-    ).service_account_name
 
-    collaborators_entity = WorkbenchCollaborator(
-        service_account_name=service_account_name,
-        workspace_project_id=workspace_project_id,
-        collaborators=collaborators,
-    )
-    workbench_services.add_collaborators_to_workbench(collaborators_entity)
+    # locally workbenches fail even if they are created, to test this feature please comment below condition
+    if operation.status() == OperationStatus.FAILURE:
+        logging.warning(
+            f"Skipping collaborator assignment for {instance_name} due to previous operation failure"
+        )
+        return operation
 
+    try:
+        service_account_name = workbench_services.get_compute_engine_workbench(
+            gcp_project_id=workspace_project_id,
+            instance_name=instance_name,
+            user_email=user_email,
+        ).service_account_name
+
+        collaborators_entity = WorkbenchCollaboratorModification(
+            service_account_name=service_account_name,
+            workspace_project_id=workspace_project_id,
+            collaborators=collaborators,
+        )
+        workbench_services.add_collaborators_to_workbench(collaborators_entity)
+        logging.info(
+            f"Successfully assigned collaborators for workbench {instance_name}"
+        )
+    except Exception as e:
+        logging.error(
+            f"Failed to assign collaborators for workbench {instance_name}: {str(e)}"
+        )
+
+    return operation
 
 
 def _get_activity_status(workbench_activity: models.WorkbenchActivity, instance):
