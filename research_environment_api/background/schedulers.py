@@ -60,6 +60,7 @@ def create_jupyter_workbench(
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -127,6 +128,7 @@ def create_collaborative_workbench(
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
     )
 
     monitoring_services.clear_quotas_cache(
