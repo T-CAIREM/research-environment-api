@@ -265,15 +265,20 @@ def list_shared_workbenches_for_user(email: str) -> list:
 
     shared_workbenches = []
     for workspace_project_id, service_account_name in workbench_keys:
-        workbenches = list_workbenches(
-            gcp_project_id=workspace_project_id, workflows_in_progress=[]
-        )
-        for wb in workbenches:
-            if (
-                wb.service_account_name == service_account_name
-                and wb.workbench_owner_username != username
-            ):
-                shared_workbenches.append((workspace_project_id, wb))
+        try:
+            workbenches = list_workbenches(
+                gcp_project_id=workspace_project_id, workflows_in_progress=[]
+            )
+            for wb in workbenches:
+                if (
+                    wb.service_account_name == service_account_name
+                    and wb.workbench_owner_username != username
+                ):
+                    shared_workbenches.append((workspace_project_id, wb))
+        except (api_core.exceptions.Forbidden, api_core.exceptions.NotFound) as e:
+            # Skip projects that no longer exist or are inaccessible (owner deleted the project)
+            continue
+
     return shared_workbenches
 
 
