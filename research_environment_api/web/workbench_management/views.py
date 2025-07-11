@@ -192,7 +192,7 @@ def destroy_workbench():
     return workflow_identifier, 200
 
 
-@workbench_management_bp.post("/add-collaborators")
+@workbench_management_bp.post("/collaborators")
 @validate_token
 def add_collaborators():
     """Adds collaborators to a workbench.
@@ -222,12 +222,12 @@ def add_collaborators():
     return {"message": "Collaborators added successfully."}, 200
 
 
-@workbench_management_bp.post("/remove-collaborators")
+@workbench_management_bp.delete("/collaborators")
 @validate_token
 def remove_collaborators():
     """Removes collaborators from a workbench.
     ---
-    post:
+    delete:
       tags:
         - workbench_management
       description: Removes collaborators from a workbench by revoking roles.
@@ -252,7 +252,7 @@ def remove_collaborators():
     return {"message": "Collaborators removed successfully."}, 200
 
 
-@workbench_management_bp.get("/get-collaborators")
+@workbench_management_bp.get("/collaborators")
 @validate_token
 def get_collaborators():
     """Retrieves the list of collaborators for a workbench.
@@ -285,7 +285,7 @@ def get_collaborators():
     return serialized_collaborators, 200
 
 
-@workbench_management_bp.get("/get-notifications")
+@workbench_management_bp.get("/notifications")
 @validate_token
 def get_notifications():
     """Retrieves the list of failed notifications for a workbench.
@@ -345,12 +345,12 @@ def mark_notification_viewed():
         return {"error": "Notification not found."}, 404
 
 
-@workbench_management_bp.post("/clear-all-notifications")
+@workbench_management_bp.delete("/notifications")
 @validate_token
 def clear_all_notifications():
     """Marks all notifications for a workbench as viewed.
     ---
-    post:
+    delete:
       tags:
         - workbench_management
       description: Marks all unviewed notifications for a workbench as viewed.
