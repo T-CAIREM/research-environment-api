@@ -160,6 +160,16 @@ class BaseWorkbenchEntity:
     workspace_project_id: str
     user_email: str
 
+    @property
+    def collaborative(self) -> str:
+        """Returns 'true' if workbench_type is collaborative, 'false' otherwise.
+        Used as a string value for Cloud Build substitutions."""
+        return (
+            "true"
+            if self.workbench_type == WorkbenchType.COLLABORATIVE.value
+            else "false"
+        )
+
 
 @dataclass
 class WorkbenchCreate(BaseWorkbenchEntity):

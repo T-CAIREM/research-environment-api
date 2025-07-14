@@ -124,52 +124,75 @@ def validate_gpu_accelerator(project_id: str, name: str, workbench_type: str) ->
 def schedule_workbench_create(
     workbench_creation: entities.WorkbenchCreate,
 ):
-    if workbench_creation.workbench_type == "jupyter":
+    workbench_type = WorkbenchType(workbench_creation.workbench_type)
+    if workbench_type == WorkbenchType.JUPYTER:
         return schedulers.create_jupyter_workbench(workbench_creation)
-    elif workbench_creation.workbench_type == "collaborative":
+    elif workbench_type == WorkbenchType.COLLABORATIVE:
         return schedulers.create_collaborative_workbench(workbench_creation)
-    else:
+    elif workbench_type == WorkbenchType.RSTUDIO:
         return schedulers.create_rstudio_workbench(workbench_creation)
+    else:
+        raise ValueError(f"Unknown workbench type: {workbench_creation.workbench_type}")
 
 
 def schedule_workbench_stop(workbench_stop_request: entities.WorkbenchToggleState):
-    if workbench_stop_request.workbench_type == "jupyter":
+    workbench_type = WorkbenchType(workbench_stop_request.workbench_type)
+    if workbench_type == WorkbenchType.JUPYTER:
         return schedulers.stop_jupyter_workbench(workbench_stop_request)
-    elif workbench_stop_request.workbench_type == "collaborative":
+    elif workbench_type == WorkbenchType.COLLABORATIVE:
         return schedulers.stop_collaborative_workbench(workbench_stop_request)
-    else:
+    elif workbench_type == WorkbenchType.RSTUDIO:
         return schedulers.stop_compute_engine_workbench(workbench_stop_request)
+    else:
+        raise ValueError(
+            f"Unknown workbench type: {workbench_stop_request.workbench_type}"
+        )
 
 
 def schedule_workbench_start(workbench_start_request: entities.WorkbenchToggleState):
-    if workbench_start_request.workbench_type == "jupyter":
+    workbench_type = WorkbenchType(workbench_start_request.workbench_type)
+    if workbench_type == WorkbenchType.JUPYTER:
         return schedulers.start_jupyter_workbench(workbench_start_request)
-    elif workbench_start_request.workbench_type == "collaborative":
+    elif workbench_type == WorkbenchType.COLLABORATIVE:
         return schedulers.start_collaborative_workbench(workbench_start_request)
-    else:
+    elif workbench_type == WorkbenchType.RSTUDIO:
         return schedulers.start_rstudio_workbench(workbench_start_request)
+    else:
+        raise ValueError(
+            f"Unknown workbench type: {workbench_start_request.workbench_type}"
+        )
 
 
 def schedule_workbench_update(
     workbench_update_request: entities.WorkbenchUpdate,
 ):
-    if workbench_update_request.workbench_type == "jupyter":
+    workbench_type = WorkbenchType(workbench_update_request.workbench_type)
+    if workbench_type == WorkbenchType.JUPYTER:
         return schedulers.update_jupyter_workbench(workbench_update_request)
-    elif workbench_update_request.workbench_type == "collaborative":
+    elif workbench_type == WorkbenchType.COLLABORATIVE:
         return schedulers.update_collaborative_workbench(workbench_update_request)
-    else:
+    elif workbench_type == WorkbenchType.RSTUDIO:
         return schedulers.update_rstudio_workbench(workbench_update_request)
+    else:
+        raise ValueError(
+            f"Unknown workbench type: {workbench_update_request.workbench_type}"
+        )
 
 
 def schedule_workbench_destroy(
     workbench_destroy_request: entities.WorkbenchDestroy,
 ):
-    if workbench_destroy_request.workbench_type == "jupyter":
+    workbench_type = WorkbenchType(workbench_destroy_request.workbench_type)
+    if workbench_type == WorkbenchType.JUPYTER:
         return schedulers.destroy_jupyter_workbench(workbench_destroy_request)
-    elif workbench_destroy_request.workbench_type == "collaborative":
+    elif workbench_type == WorkbenchType.COLLABORATIVE:
         return schedulers.destroy_collaborative_workbench(workbench_destroy_request)
-    else:
+    elif workbench_type == WorkbenchType.RSTUDIO:
         return schedulers.destroy_rstudio_workbench(workbench_destroy_request)
+    else:
+        raise ValueError(
+            f"Unknown workbench type: {workbench_destroy_request.workbench_type}"
+        )
 
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:

@@ -60,6 +60,7 @@ def create_jupyter_workbench(
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -127,6 +128,7 @@ def create_collaborative_workbench(
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -485,6 +487,7 @@ def destroy_jupyter_workbench(
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        collaborative=workbench_destroy_request.collaborative,
     )
     with app.database_session() as session:
         with session.begin():
@@ -670,6 +673,7 @@ def destroy_collaborative_workbench(
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        collaborative=workbench_destroy_request.collaborative,
     )
     with app.database_session() as session:
         with session.begin():
