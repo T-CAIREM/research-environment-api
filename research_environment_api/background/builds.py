@@ -120,6 +120,7 @@ def destroy_jupyter_workbench_build(
     instance_name: str,
     service_account_name: str,
     sharing_bucket_identifiers: list[str],
+    collaborative: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
@@ -141,7 +142,7 @@ def destroy_jupyter_workbench_build(
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
-        "_COLLABORATIVE": "false",
+        "_COLLABORATIVE": collaborative,
     }
 
     return cloud_build
@@ -282,6 +283,7 @@ def destroy_collaborative_workbench_build(
     instance_name: str,
     service_account_name: str,
     sharing_bucket_identifiers: list[str],
+    collaborative: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_COLLABORATIVE_WORKBENCH_STEPS
@@ -303,7 +305,7 @@ def destroy_collaborative_workbench_build(
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
-        "_COLLABORATIVE": "true",
+        "_COLLABORATIVE": collaborative,
     }
 
     return cloud_build

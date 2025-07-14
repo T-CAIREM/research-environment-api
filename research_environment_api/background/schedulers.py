@@ -487,6 +487,7 @@ def destroy_jupyter_workbench(
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        collaborative=workbench_destroy_request.collaborative,
     )
     with app.database_session() as session:
         with session.begin():
@@ -672,6 +673,7 @@ def destroy_collaborative_workbench(
         vm_image=workbench.vm_image,
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        collaborative=workbench_destroy_request.collaborative,
     )
     with app.database_session() as session:
         with session.begin():
