@@ -318,19 +318,18 @@ def remove_collaborators_from_workbench(
     with app.database_session() as session:
         with session.begin():
             for email in collaborators:
+                existing_record = (
+                    session.query(workbench_models.WorkbenchCollaboratorData)
+                    .filter_by(
+                        workspace_project_id=workspace_project_id,
+                        service_account_name=service_account_name,
+                        collaborator_email=email,
+                    )
+                    .first()
+                )
                 try:
                     binding_removed = remove_iam_binding(
                         iam_client, resource, email, role
-                    )
-
-                    existing_record = (
-                        session.query(workbench_models.WorkbenchCollaboratorData)
-                        .filter_by(
-                            workspace_project_id=workspace_project_id,
-                            service_account_name=service_account_name,
-                            collaborator_email=email,
-                        )
-                        .first()
                     )
 
                     if existing_record:
@@ -340,26 +339,7 @@ def remove_collaborators_from_workbench(
                         existing_record.viewed = True
 
                 except Exception as e:
-                    existing_record = (
-                        session.query(workbench_models.WorkbenchCollaboratorData)
-                        .filter_by(
-                            workspace_project_id=workspace_project_id,
-                            service_account_name=service_account_name,
-                            collaborator_email=email,
-                        )
-                        .first()
-                    )
-
                     if existing_record:
                         existing_record.status = (
                             workbench_models.CollaboratorStatus.FAILED
                         )
-                    else:
-                        collaborator_data = workbench_models.WorkbenchCollaboratorData(
-                            workspace_project_id=workspace_project_id,
-                            service_account_name=service_account_name,
-                            collaborator_email=email,
-                            viewed=False,
-                            status=workbench_models.CollaboratorStatus.FAILED,
-                        )
-                        session.add(collaborator_data)
