@@ -65,10 +65,14 @@ def list_active_workspaces(
         workspace_list_query.email
     )
     provisioned_workspaces = [
-        _build_workspace_entity(
-            project, workflows_in_progress, workspace_list_query.email
-        )
+        workspace
         for project in all_projects
+        if (
+            workspace := _build_workspace_entity(
+                project, workflows_in_progress, workspace_list_query.email
+            )
+        )
+        is not None
     ]
     provisioned_workspace_ids = [
         workspace.gcp_project_id for workspace in provisioned_workspaces
@@ -178,58 +182,25 @@ def get_active_shared_google_project(
     return _filter_google_projects(filtering_query)[0]
 
 
-def _is_collaborator_view(
-    user_email: str, workbenches: list, gcp_project_id: str
-) -> bool:
-    if not user_email or not workbenches:
-        return False
-
-    username = user_email.split("@")[0]
-
-    all_collaborative = all(
-        getattr(wb, "type", None) == "collaborative"
-        and getattr(wb, "workbench_owner_username", None) != username
-        for wb in workbenches
-    )
-
-    if all_collaborative:
-        is_collaborator = True
-        with app.database_session() as session:
-            for wb in workbenches:
-
-                collaborator_entry = (
-                    session.query(WorkbenchCollaboratorData)
-                    .filter_by(
-                        workspace_project_id=gcp_project_id,
-                        service_account_name=wb.service_account_name,
-                        collaborator_email=user_email,
-                        status=CollaboratorStatus.SUCCESS,
-                    )
-                    .first()
-                )
-
-                if not collaborator_entry:
-                    is_collaborator = False
-                    break
-
-        return is_collaborator
-
-    return False
-
-
 def _build_workspace_entity(
     gcp_project: GoogleProject,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
-    user_email: Optional[str] = None,
-) -> entities.Workspace:
+    user_email: str = None,
+) -> Optional[entities.Workspace]:
     gcp_project_id = gcp_project.project_id
     region = gcp_project.labels["region"]
     billing_info_entity = _build_billing_entity(gcp_project.name)
+    is_owner = gcp_project.labels["cloud_identity_username"] == user_email.split("@")[0]
     workbenches = list_workbenches(
         gcp_project_id=gcp_project_id,
         workflows_in_progress=workflows_in_progress,
         user_email=user_email,
+        is_owner=is_owner,
     )
+
+    if not is_owner and not workbenches:
+        return None
+
     workspace_workflow_in_progress = _match_workspace_workflow(
         gcp_project_id, workflows_in_progress
     )
@@ -239,17 +210,13 @@ def _build_workspace_entity(
         else entities.WorkspaceStatus.CREATED
     )
 
-    is_collaborator_view = _is_collaborator_view(
-        user_email, workbenches, gcp_project_id
-    )
-
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
         region=entities.Region(region),
         status=status,
-        is_collaborator_view=is_collaborator_view,
+        is_owner=is_owner,
     )
 
 

@@ -127,7 +127,7 @@ class Workspace:
     region: str
     workbenches: Iterable[Workbench]
     status: WorkspaceStatus
-    is_collaborator_view: bool
+    is_owner: bool
 
 
 @dataclass

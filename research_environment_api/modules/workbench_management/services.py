@@ -37,16 +37,19 @@ def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
     user_email: Optional[str] = None,
+    is_owner: bool = True,
 ) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
 
-    shared_workbench_entries = _get_shared_workbenches_for_project(
-        user_email, gcp_project_id, gce_instances
-    )
-    if shared_workbench_entries:
+    if not is_owner:
+        shared_workbench_entries = _get_shared_workbenches_for_project(
+            user_email, gcp_project_id, gce_instances
+        )
         shared_workbenches = []
-        for _, workbench in shared_workbench_entries:
-            shared_workbenches.append(workbench)
+        if shared_workbench_entries:
+            shared_workbenches = []
+            for _, workbench in shared_workbench_entries:
+                shared_workbenches.append(workbench)
 
         return shared_workbenches
 
@@ -478,7 +481,6 @@ def _get_shared_workbenches_for_project(
                 ):
                     shared_workbenches.append((gcp_project_id, wb))
         except Exception as e:
-            logger.error(f"Error processing shared workbench: {str(e)}")
             continue
 
     return shared_workbenches
