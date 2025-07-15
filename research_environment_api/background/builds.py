@@ -45,6 +45,7 @@ def create_jupyter_workbench_build(
     vm_image: str,
     sharing_bucket_permission_dict: dict[str, str],
     user_permissions_list: list[str],
+    collaborative: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -70,6 +71,7 @@ def create_jupyter_workbench_build(
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_COLLABORATIVE": collaborative,
     }
 
     return cloud_build
@@ -184,6 +186,53 @@ def create_shared_workspace_build(
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+    }
+
+    return cloud_build
+
+
+def create_collaborative_workbench_build(
+    workspace_project_id: str,
+    region: Region,
+    zone: str,
+    machine_type: MachineType,
+    disk_size: int,
+    instance_name: str,
+    service_account_name: str,
+    gpu_accelerator_type: Optional[str],
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+    vm_image: str,
+    sharing_bucket_permission_dict: dict[str, str],
+    user_permissions_list: list[str],
+    collaborative: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.CREATE_COLLABORATIVE_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_PROJECT_ID": workspace_project_id,
+        "_REGION": region.value,
+        "_ZONE": zone,
+        "_MACHINE_TYPE": machine_type.value,
+        "_DISK_SIZE": str(disk_size),
+        "_GPU_ACCELERATOR": format_gpu_accelerator_type(gpu_accelerator_type),
+        "_DATASET": dataset_identifier,
+        "_EMAIL_ID": user_email,
+        "_BUCKET_NAME": bucket_name,
+        "_VM_IMAGE": vm_image,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
+        "_INSTANCE_NAME": instance_name,
+        "_SERVICE_ACCOUNT_NAME": service_account_name,
+        "_WORKBENCH_TYPE": WorkbenchType.COLLABORATIVE,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
+        "_SHARING_BUCKET_PERMISSIONS": ",".join(
+            sharing_bucket_permission_dict.values()
+        ),
+        "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_COLLABORATIVE": collaborative,
     }
 
     return cloud_build

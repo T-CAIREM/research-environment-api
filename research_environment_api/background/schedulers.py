@@ -60,6 +60,7 @@ def create_jupyter_workbench(
         vm_image=workbench_creation_request.vm_image,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -81,6 +82,74 @@ def create_jupyter_workbench(
             session.add(workbench_activity)
 
             workflows.create_jupyter_workbench(
+                build=build,
+                user_email=workbench_creation_request.user_email,
+                workspace_project_id=workbench_creation_request.workspace_project_id,
+                instance_zone=zone,
+                instance_name=workbench_id,
+                fallback_zones=fallback_zones,
+                workbench_activity_id=workbench_activity.id,
+                dataset_identifier=workbench_creation_request.dataset_identifier,
+            )()
+
+            return workbench_activity.id
+
+
+def create_collaborative_workbench(
+    workbench_creation_request: entities.WorkbenchCreate,
+) -> uuid.UUID:
+    zone, *fallback_zones = services.get_available_zones(
+        workbench_creation_request.region
+    )
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench_creation_request.sharing_bucket_identifiers,
+        workbench_creation_request.user_email,
+    )
+    dataset_identifier = workbench_creation_request.dataset_identifier
+    workbench_id = f"collaborative-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    service_account_name = f"collaborative-{services.generate_resource_name_from_dataset_identifier(dataset_identifier)}"
+    user_permissions_list = user_group_services.get_user_permissions(
+        workbench_creation_request.organization_id,
+        workbench_creation_request.user_groups,
+    )
+
+    build = builds.create_collaborative_workbench_build(
+        instance_name=workbench_id,
+        workspace_project_id=workbench_creation_request.workspace_project_id,
+        service_account_name=service_account_name,
+        region=workbench_creation_request.region,
+        zone=zone,
+        machine_type=workbench_creation_request.machine_type,
+        disk_size=workbench_creation_request.disk_size,
+        gpu_accelerator_type=workbench_creation_request.gpu_accelerator_type,
+        dataset_identifier=workbench_creation_request.dataset_identifier,
+        user_email=workbench_creation_request.user_email,
+        bucket_name=workbench_creation_request.bucket_name,
+        vm_image=workbench_creation_request.vm_image,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
+        collaborative=workbench_creation_request.collaborative,
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
+        GeneralQuotaMetrics,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                build_type=enums.BuildType.WORKBENCH_CREATION,
+                invoker_email=workbench_creation_request.user_email,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+                workspace_id=workbench_creation_request.workspace_project_id,
+                workbench_id=workbench_id,
+            )
+            session.add(workbench_activity)
+
+            workflows.create_collaborative_workbench(
                 build=build,
                 user_email=workbench_creation_request.user_email,
                 workspace_project_id=workbench_creation_request.workspace_project_id,
