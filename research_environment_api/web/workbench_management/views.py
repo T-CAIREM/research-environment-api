@@ -192,41 +192,6 @@ def destroy_workbench():
     return workflow_identifier, 200
 
 
-@workbench_management_bp.get("/get_shared_workbenches")
-@validate_token
-def get_shared_workbenches():
-    """Lists workbenches shared with the user (collaborator).
-    ---
-    get:
-      tags:
-        - workbench_management
-      description: Lists workbenches shared with the user (collaborator).
-      parameters:
-      - in: query
-        name: email
-        schema:
-          type: string
-      responses:
-        200:
-          description: Returns a list of shared workbenches.
-          content:
-            application/json:
-              schema:
-    """
-    email = request.args.get("email")
-    if not email:
-        return {"error": "Missing email parameter"}, 400
-
-    shared_workbenches = services.list_shared_workbenches_for_user(email)
-    result = []
-
-    for ws_id, wb in shared_workbenches:
-        wb_dict = schemas.Workbench().dump(wb)
-        wb_dict["type"] = "Workbench"
-        result.append({"gcp_project_id": ws_id, "workbench": wb_dict})
-    return result, 200
-
-
 @workbench_management_bp.post("/collaborators")
 @validate_token
 def add_collaborators():
