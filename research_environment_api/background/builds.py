@@ -120,6 +120,7 @@ def destroy_jupyter_workbench_build(
     instance_name: str,
     service_account_name: str,
     sharing_bucket_identifiers: list[str],
+    collaborative: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
@@ -141,6 +142,7 @@ def destroy_jupyter_workbench_build(
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_COLLABORATIVE": collaborative,
     }
 
     return cloud_build
@@ -230,6 +232,77 @@ def create_collaborative_workbench_build(
             sharing_bucket_permission_dict.values()
         ),
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_COLLABORATIVE": collaborative,
+    }
+
+    return cloud_build
+
+
+def update_collaborative_workbench_build(
+    workspace_project_id: str,
+    zone: str,
+    machine_type: MachineType,
+    dataset_identifier: str,
+    bucket_name: str,
+    instance_name: str,
+    sharing_bucket_permission_dict: dict[str, str],
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.UPDATE_COLLABORATIVE_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type.value,
+        "_PROJECT_ID": workspace_project_id,
+        "_INSTANCE_NAME": instance_name,
+        "_BUCKET_NAME": bucket_name,
+        "_ZONE": zone,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
+        "_SHARING_BUCKET_PERMISSIONS": ",".join(
+            sharing_bucket_permission_dict.values()
+        ),
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET_NAME": f"gs://{app.config.jupyter_startup_script}/{workspace_project_id}-{instance_name}-{dataset_identifier}-startup-script.sh",
+        "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
+        "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+    }
+
+    return cloud_build
+
+
+def destroy_collaborative_workbench_build(
+    workspace_project_id: str,
+    region: Region,
+    zone: str,
+    machine_type: MachineType,
+    disk_size: int,
+    gpu_accelerator_type: Optional[str],
+    dataset_identifier: str,
+    user_email: str,
+    bucket_name: str,
+    vm_image: str,
+    instance_name: str,
+    service_account_name: str,
+    sharing_bucket_identifiers: list[str],
+    collaborative: str,
+) -> cloudbuild_v1.Build:
+    cloud_build = _base_build()
+    cloud_build.steps = build_templates.DESTROY_COLLABORATIVE_WORKBENCH_STEPS
+    cloud_build.substitutions = {
+        "_MACHINE_TYPE": machine_type.value,
+        "_PROJECT_ID": workspace_project_id,
+        "_REGION": region.value,
+        "_DATASET": dataset_identifier,
+        "_EMAIL_ID": user_email,
+        "_BUCKET_NAME": bucket_name,
+        "_DISK_SIZE": str(disk_size),
+        "_GPU_ACCELERATOR": format_gpu_accelerator_type(gpu_accelerator_type),
+        "_VM_IMAGE": vm_image,
+        "_INSTANCE_NAME": instance_name,
+        "_ZONE": zone,
+        "_JUPYTER_STARTUP_SCRIPT_BUCKET": app.config.jupyter_startup_script,
+        "_SERVICE_ACCOUNT_NAME": service_account_name,
+        "_WORKBENCH_TYPE": WorkbenchType.JUPYTER,
+        "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
         "_COLLABORATIVE": collaborative,
