@@ -660,6 +660,24 @@ def destroy_collaborative_workbench(
         GeneralQuotaMetrics,
     )
 
+    get_collaborators_request = entities.WorkbenchGetCollaborators(
+        workspace_project_id=workbench_destroy_request.workspace_project_id,
+        service_account_name=workbench.service_account_name,
+    )
+
+    collaborators_response = services.get_workbench_collaborators(
+        get_collaborators_request
+    )
+    collaborators = collaborators_response.get("collaborators", [])
+
+    if collaborators:
+        remove_collaborator_request = entities.WorkbenchCollaboratorModification(
+            workspace_project_id=workbench_destroy_request.workspace_project_id,
+            service_account_name=workbench.service_account_name,
+            collaborators=collaborators,
+        )
+        services.remove_collaborators_from_workbench(remove_collaborator_request)
+
     build = builds.destroy_collaborative_workbench_build(
         workspace_project_id=workbench_destroy_request.workspace_project_id,
         instance_name=workbench.id,
