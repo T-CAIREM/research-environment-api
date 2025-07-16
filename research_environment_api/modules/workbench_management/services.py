@@ -343,3 +343,93 @@ def remove_collaborators_from_workbench(
                         existing_record.status = (
                             workbench_models.CollaboratorStatus.FAILED
                         )
+
+
+def get_workbench_collaborators(
+    get_collaborators_request: entities.WorkbenchGetCollaborators,
+):
+    workspace_project_id = get_collaborators_request.workspace_project_id
+    service_account_name = get_collaborators_request.service_account_name
+
+    with app.database_session() as session:
+        collaborator_records = (
+            session.query(workbench_models.WorkbenchCollaboratorData)
+            .filter_by(
+                workspace_project_id=workspace_project_id,
+                service_account_name=service_account_name,
+                status=workbench_models.CollaboratorStatus.SUCCESS,
+            )
+            .all()
+        )
+
+        collaborators = [record.collaborator_email for record in collaborator_records]
+        return {"collaborators": collaborators}
+
+
+def get_workbench_notifications(
+    get_notifications_request: entities.WorkbenchGetNotifications,
+):
+    workspace_project_id = get_notifications_request.workspace_project_id
+    service_account_name = get_notifications_request.service_account_name
+
+    with app.database_session() as session:
+        notification_records = (
+            session.query(workbench_models.WorkbenchCollaboratorData)
+            .filter_by(
+                workspace_project_id=workspace_project_id,
+                service_account_name=service_account_name,
+                viewed=False,
+                status=workbench_models.CollaboratorStatus.FAILED,
+            )
+            .order_by(workbench_models.WorkbenchCollaboratorData.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
+        notifications = [
+            {
+                "id": record.id,
+                "email": record.collaborator_email,
+                "timestamp": record.created_at.isoformat(),
+            }
+            for record in notification_records
+        ]
+
+        return {"notifications": notifications}
+
+
+def mark_notification_as_viewed(notification_id: str):
+    with app.database_session() as session:
+        with session.begin():
+            notification = (
+                session.query(workbench_models.WorkbenchCollaboratorData)
+                .filter_by(id=notification_id)
+                .first()
+            )
+
+            if notification:
+                notification.viewed = True
+                return True
+            return False
+
+
+def clear_all_notifications(
+    clear_notifications_request: entities.WorkbenchClearNotifications,
+):
+    workspace_project_id = clear_notifications_request.workspace_project_id
+    service_account_name = clear_notifications_request.service_account_name
+
+    with app.database_session() as session:
+        with session.begin():
+            (
+                session.query(workbench_models.WorkbenchCollaboratorData)
+                .filter_by(
+                    workspace_project_id=workspace_project_id,
+                    service_account_name=service_account_name,
+                    viewed=False,
+                    status=workbench_models.CollaboratorStatus.FAILED,
+                )
+                .update({"viewed": True})
+            )
+
+        return True

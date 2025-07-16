@@ -57,6 +57,8 @@ class Workbench(Schema):
     zone = fields.Str()
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
+    service_account_name = fields.Str(required=True)
+    workbench_owner_username = fields.Str(required=False)
 
 
 class WorkbenchWorkflowIdentifier(Schema):
@@ -67,3 +69,27 @@ class WorkbenchCollaboratorModificationRequest(Schema):
     service_account_name = fields.Str(required=True)
     workspace_project_id = fields.Str(required=True)
     collaborators = fields.List(fields.Email(), required=True)
+
+
+class WorkbenchGetCollaboratorsRequest(Schema):
+    service_account_name = fields.Str(required=True)
+    workspace_project_id = fields.Str(required=True)
+
+
+class WorkbenchCollaboratorList(Schema):
+    collaborators = fields.List(fields.Email(), required=True)
+
+
+class WorkbenchNotificationRequest(Schema):
+    service_account_name = fields.Str(required=True)
+    workspace_project_id = fields.Str(required=True)
+
+
+class WorkbenchNotification(Schema):
+    id = fields.UUID(required=True)
+    email = fields.Email(required=True)
+    timestamp = fields.Str(required=True)
+
+
+class WorkbenchNotificationList(Schema):
+    notifications = fields.List(fields.Nested(WorkbenchNotification), required=True)
