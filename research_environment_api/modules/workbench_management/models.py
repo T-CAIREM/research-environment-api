@@ -10,6 +10,7 @@ from research_environment_api.modules.model import ScopedModel
 class CollaboratorStatus(PyEnum):
     SUCCESS = "success"
     FAILED = "failed"
+    REMOVED = "removed"
 
 
 class Base(ScopedModel):
