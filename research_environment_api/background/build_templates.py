@@ -597,6 +597,7 @@ DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_collaborative=${_COLLABORATIVE}",
+            "TF_VAR_organization_id=${_ORGANIZATION_ID}",
         ],
         "dir_": "terraform-workbench-creation",
     },
