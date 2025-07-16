@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from celery import chain
 from google.cloud.devtools import cloudbuild_v1
@@ -50,6 +50,7 @@ def create_collaborative_workbench(
     fallback_zones: List[str],
     workbench_activity_id: str,
     dataset_identifier: str,
+    collaborators: List[str],
 ):
     return chain(
         tasks.start_cloud_build.s(
@@ -61,6 +62,7 @@ def create_collaborative_workbench(
             user_email=user_email,
             workbench_activity_id=workbench_activity_id,
             dataset_identifier=dataset_identifier,
+            collaborators=collaborators,
         ),
         tasks.check_vertex_ai_setup_status.s(
             workspace_project_id=workspace_project_id,
@@ -71,6 +73,12 @@ def create_collaborative_workbench(
             workbench_activity_id=workbench_activity_id,
             instance_type=enums.InstanceType.COLLABORATIVE,
             dataset_identifier=dataset_identifier,
+        ),
+        tasks.assign_initial_collaborators.s(
+            collaborators=collaborators,
+            instance_name=instance_name,
+            workspace_project_id=workspace_project_id,
+            user_email=user_email,
         ),
         tasks.set_workflow_status.s(workbench_activity_id=workbench_activity_id),
     )
