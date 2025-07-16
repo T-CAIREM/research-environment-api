@@ -1,6 +1,7 @@
 from collections import namedtuple
 from enum import Enum as StrEnum
 
+from google.iam.v1 import policy_pb2
 from google.cloud.compute_v1.types.compute import AggregatedListMachineTypesRequest
 from google.cloud import compute_v1
 
@@ -50,3 +51,33 @@ def format_gpu_accelerator_type(gpu_accelerator_type: str) -> str:
     if not gpu_accelerator_type:
         return ""
     return gpu_accelerator_type.upper().replace("-", "_")
+
+
+def format_service_account_resource(
+    workspace_project_id: str, service_account_name: str
+) -> str:
+    """Format the service account resource string for IAM operations."""
+    return f"projects/{workspace_project_id}/serviceAccounts/{service_account_name}@{workspace_project_id}.iam.gserviceaccount.com"
+
+
+def add_iam_binding(iam_client, resource: str, user_email: str, role: str):
+    """
+    Adds IAM binding for a user to a resource with the specified role.
+    Returns True if binding was added, False if user already had access.
+    """
+    user_member = f"user:{user_email}"
+    policy = iam_client.get_iam_policy(request={"resource": resource})
+    bindings = policy.bindings
+
+    role_binding = next((b for b in bindings if b.role == role), None)
+
+    if role_binding:
+        if user_member in role_binding.members:
+            return False
+        role_binding.members.append(user_member)
+    else:
+        bindings.append(policy_pb2.Binding(role=role, members=[user_member]))
+
+    updated_policy = policy_pb2.Policy(bindings=bindings)
+    iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
+    return True

@@ -7,11 +7,14 @@ from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 import google.cloud.resourcemanager_v3
 import google.cloud.notebooks_v2
-
+from google.iam.v1 import policy_pb2
 
 from research_environment_api.background import enums, schedulers, constants
 from research_environment_api.modules.app import app
-from research_environment_api.modules.workbench_management import entities
+from research_environment_api.modules.workbench_management import (
+    entities,
+    models as workbench_models,
+)
 from research_environment_api.modules.monitoring_management import (
     models,
     monitoring as monitoring_services,
@@ -21,6 +24,8 @@ from research_environment_api.modules.workspace_management.entities import (
 )
 from research_environment_api.modules.workbench_management.utils import (
     format_gpu_accelerator_type,
+    format_service_account_resource,
+    add_iam_binding,
 )
 from google.cloud.notebooks_v2.types import AcceleratorConfig
 
@@ -237,3 +242,60 @@ def start_stopped_workbenches(folder_id: str):
         )
 
     return f"Started {len(instances_to_start)} instances."
+
+
+def add_collaborators_to_workbench(
+    add_collaborator_request: entities.WorkbenchCollaboratorModification,
+):
+    """Adds the `roles/iam.serviceAccountUser` role to each user in the list"""
+    workspace_project_id = add_collaborator_request.workspace_project_id
+    service_account_name = add_collaborator_request.service_account_name
+    collaborators = add_collaborator_request.collaborators
+    role = "roles/iam.serviceAccountUser"
+
+    iam_client = app.config.google_iam_client
+
+    resource = format_service_account_resource(
+        workspace_project_id, service_account_name
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            for email in collaborators:
+                try:
+                    binding_added = add_iam_binding(iam_client, resource, email, role)
+
+                    existing_record = (
+                        session.query(workbench_models.WorkbenchCollaboratorData)
+                        .filter_by(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                        )
+                        .first()
+                    )
+
+                    if existing_record:
+                        existing_record.status = (
+                            workbench_models.CollaboratorStatus.SUCCESS
+                        )
+                        existing_record.viewed = False
+                    else:
+                        collaborator_data = workbench_models.WorkbenchCollaboratorData(
+                            workspace_project_id=workspace_project_id,
+                            service_account_name=service_account_name,
+                            collaborator_email=email,
+                            viewed=False,
+                            status=workbench_models.CollaboratorStatus.SUCCESS,
+                        )
+                        session.add(collaborator_data)
+
+                except Exception as e:
+                    collaborator_data = workbench_models.WorkbenchCollaboratorData(
+                        workspace_project_id=workspace_project_id,
+                        service_account_name=service_account_name,
+                        collaborator_email=email,
+                        viewed=False,
+                        status=workbench_models.CollaboratorStatus.FAILED,
+                    )
+                    session.add(collaborator_data)

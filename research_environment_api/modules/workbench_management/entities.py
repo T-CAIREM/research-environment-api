@@ -215,3 +215,10 @@ class WorkbenchToggleState:
     workspace_project_id: str
     workbench_resource_id: str
     user_email: str
+
+
+@dataclass
+class WorkbenchCollaboratorModification:
+    service_account_name: str
+    workspace_project_id: str
+    collaborators: list[str]

@@ -190,3 +190,33 @@ def destroy_workbench():
     )
 
     return workflow_identifier, 200
+
+
+@workbench_management_bp.post("/add-collaborators")
+@validate_token
+def add_collaborators():
+    """Adds collaborators to a workbench.
+    ---
+    post:
+      tags:
+        - workbench_management
+      description: Adds collaborators to a workbench by granting roles.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkbenchCollaboratorModificationRequest
+      responses:
+        200:
+          description: Collaborator added successfully.
+          content:
+            application/json:
+              schema:
+    """
+    body = request.get_json()
+    collaborator_data = schemas.WorkbenchCollaboratorModificationRequest().load(body)
+    collaborator_entity = entities.WorkbenchCollaboratorModification(
+        **collaborator_data
+    )
+
+    services.add_collaborators_to_workbench(collaborator_entity)
+    return {"message": "Collaborators added successfully."}, 200
