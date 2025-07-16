@@ -2,7 +2,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Iterable, Union
+from typing import Iterable, Union, Optional
 
 from research_environment_api.modules.workbench_management.entities import (
     Workbench,
@@ -143,9 +143,9 @@ class Workspace:
 @dataclass
 class SimplifiedWorkspace:
     gcp_project_id: str
-    region: str
     status: WorkspaceStatus
     owner: str
+    region: Optional[str] = None
 
 
 @dataclass

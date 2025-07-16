@@ -347,15 +347,9 @@ def get_project(gcp_project_id: str, email: str):
         if workspace_workflow_in_progress
         else entities.WorkspaceStatus.CREATED
     )
-    status = (
-        entities.WORKSPACE_ACTIVITY_TYPE_MAP[workspace_workflow_in_progress.build_type]
-        if workspace_workflow_in_progress
-        else entities.WorkspaceStatus.CREATED
-    )
-
     return entities.SimplifiedWorkspace(
         gcp_project_id=gcp_project_id,
-        region=entities.Region(region),
         status=status,
         owner=owner,
+        **({"region": entities.Region(region)} if region else {})
     )
