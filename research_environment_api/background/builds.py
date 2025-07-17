@@ -235,6 +235,7 @@ def create_collaborative_workbench_build(
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
         "_COLLABORATIVE": collaborative,
+        "_ORGANIZATION_ID": app.config.organization_id,
     }
 
     return cloud_build
@@ -306,6 +307,7 @@ def destroy_collaborative_workbench_build(
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
         "_COLLABORATIVE": collaborative,
+        "_ORGANIZATION_ID": app.config.organization_id,
     }
 
     return cloud_build

@@ -157,6 +157,7 @@ CREATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_user_permissions_list=${_USER_PERMISSIONS_LIST}",
             "TF_VAR_collaborative=${_COLLABORATIVE}",
+            "TF_VAR_organization_id=${_ORGANIZATION_ID}",
         ],
         "dir_": "terraform-workbench-creation",
     },
@@ -500,6 +501,7 @@ UPDATE_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
         "id": "collaborative_workbench_gcloud_start_instance",
         "name": "gcr.io/cloud-builders/gcloud",
         "args": [
+            "workbench",
             "instances",
             "start",
             "${_INSTANCE_NAME}",
@@ -596,6 +598,7 @@ DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_workbench_type=${_WORKBENCH_TYPE}",
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_collaborative=${_COLLABORATIVE}",
+            "TF_VAR_organization_id=${_ORGANIZATION_ID}",
         ],
         "dir_": "terraform-workbench-creation",
     },
