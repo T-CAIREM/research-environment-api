@@ -36,8 +36,22 @@ DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
+    user_email: Optional[str] = None,
+    is_owner: bool = True,
 ) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
     gce_instances = _fetch_gce_instances(gcp_project_id)
+
+    if not is_owner:
+        shared_workbench_entries = _get_shared_workbenches_for_project(
+            user_email, gcp_project_id, gce_instances
+        )
+        shared_workbenches = []
+        if shared_workbench_entries:
+            shared_workbenches = []
+            for _, workbench in shared_workbench_entries:
+                shared_workbenches.append(workbench)
+
+        return shared_workbenches
 
     provisioned_workbenches = [
         entities.Workbench.from_gce_instance(instance, workflows_in_progress)
@@ -433,3 +447,40 @@ def clear_all_notifications(
             )
 
         return True
+
+
+def _get_shared_workbenches_for_project(
+    email: str, gcp_project_id: str, gce_instances: Iterable[ComputeEngineInstance]
+) -> list:
+    username = email.split("@")[0]
+
+    with app.database_session() as session:
+        with session.begin():
+            collaborator_entries = (
+                session.query(workbench_models.WorkbenchCollaboratorData)
+                .filter_by(
+                    collaborator_email=email,
+                    status=workbench_models.CollaboratorStatus.SUCCESS,
+                    workspace_project_id=gcp_project_id,
+                )
+                .all()
+            )
+            workbench_keys = set(
+                (entry.workspace_project_id, entry.service_account_name)
+                for entry in collaborator_entries
+            )
+
+    shared_workbenches = []
+    for _, service_account_name in workbench_keys:
+        try:
+            for instance in gce_instances:
+                wb = entities.Workbench.from_gce_instance(instance, [])
+                if (
+                    wb.service_account_name == service_account_name
+                    and wb.workbench_owner_username != username
+                ):
+                    shared_workbenches.append((gcp_project_id, wb))
+        except Exception as e:
+            continue
+
+    return shared_workbenches

@@ -57,6 +57,7 @@ class Workspace(Schema):
     billing_info = fields.Nested(BillingInfo, required=True)
     workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+    is_owner = fields.Bool(required=True)
 
 
 class SharedWorkspaceCreationRequest(Schema):

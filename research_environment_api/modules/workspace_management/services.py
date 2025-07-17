@@ -10,6 +10,10 @@ from research_environment_api.modules.app import app
 from research_environment_api.modules.workbench_management.services import (
     list_workbenches,
 )
+from research_environment_api.modules.workbench_management.models import (
+    WorkbenchCollaboratorData,
+    CollaboratorStatus,
+)
 from research_environment_api.modules.sharing_management.models import (
     SharingData,
     SharingState,
@@ -48,12 +52,27 @@ def list_active_workspaces(
     workspace_list_query: entities.WorkspaceListQuery,
 ) -> Iterable[Union[entities.Workspace, entities.EntityScaffolding]]:
     gcp_projects = _list_active_google_projects(workspace_list_query.username)
+    collaborative_projects = _get_collaborative_workspaces(workspace_list_query.email)
+
+    all_projects = list(gcp_projects)
+    owned_project_ids = {project.project_id for project in gcp_projects}
+
+    for collab_project in collaborative_projects:
+        if collab_project.project_id not in owned_project_ids:
+            all_projects.append(collab_project)
+
     workflows_in_progress = monitoring_services.list_active_workflows(
         workspace_list_query.email
     )
     provisioned_workspaces = [
-        _build_workspace_entity(project, workflows_in_progress)
-        for project in gcp_projects
+        workspace
+        for project in all_projects
+        if (
+            workspace := _build_workspace_entity(
+                project, workflows_in_progress, workspace_list_query.email
+            )
+        )
+        is not None
     ]
     provisioned_workspace_ids = [
         workspace.gcp_project_id for workspace in provisioned_workspaces
@@ -166,13 +185,22 @@ def get_active_shared_google_project(
 def _build_workspace_entity(
     gcp_project: GoogleProject,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
-) -> entities.Workspace:
+    user_email: str = None,
+) -> Optional[entities.Workspace]:
     gcp_project_id = gcp_project.project_id
     region = gcp_project.labels["region"]
     billing_info_entity = _build_billing_entity(gcp_project.name)
+    is_owner = gcp_project.labels["cloud_identity_username"] == user_email.split("@")[0]
     workbenches = list_workbenches(
-        gcp_project_id=gcp_project_id, workflows_in_progress=workflows_in_progress
+        gcp_project_id=gcp_project_id,
+        workflows_in_progress=workflows_in_progress,
+        user_email=user_email,
+        is_owner=is_owner,
     )
+
+    if not is_owner and not workbenches:
+        return None
+
     workspace_workflow_in_progress = _match_workspace_workflow(
         gcp_project_id, workflows_in_progress
     )
@@ -181,12 +209,14 @@ def _build_workspace_entity(
         if workspace_workflow_in_progress
         else entities.WorkspaceStatus.CREATED
     )
+
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
         region=entities.Region(region),
         status=status,
+        is_owner=is_owner,
     )
 
 
@@ -254,6 +284,35 @@ def _match_workspace_workflow(
         ),
         None,
     )
+
+
+def _get_collaborative_workspaces(email: str) -> list:
+    collaborative_workspace_ids = set()
+
+    with app.database_session() as session:
+        with session.begin():
+            collaborator_entries = (
+                session.query(WorkbenchCollaboratorData)
+                .filter_by(
+                    collaborator_email=email,
+                    status=CollaboratorStatus.SUCCESS,
+                )
+                .all()
+            )
+            for entry in collaborator_entries:
+                collaborative_workspace_ids.add(entry.workspace_project_id)
+
+    collaborative_projects = []
+    for workspace_id in collaborative_workspace_ids:
+        try:
+            project_filter = f"id:{workspace_id} lifecycleState:ACTIVE"
+            projects = _filter_google_projects(project_filter)
+            if projects:
+                collaborative_projects.extend(projects)
+        except Exception:
+            continue
+
+    return collaborative_projects
 
 
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
