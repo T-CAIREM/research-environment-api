@@ -51,6 +51,7 @@ def upgrade() -> None:
         "workbench_collaborators",
         ["collaborator_email"],
     )
+    op.execute("ALTER TYPE instancetype ADD VALUE IF NOT EXISTS 'COLLABORATIVE'")
 
 
 def downgrade() -> None:
