@@ -263,7 +263,12 @@ def get_collaborators():
       description: Retrieves the list of collaborators for a workbench.
       parameters:
         - in: query
-          name: workbench_id
+          name: workspace_project_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: service_account_name
           schema:
             type: string
       responses:
@@ -273,10 +278,15 @@ def get_collaborators():
             application/json:
               schema: WorkbenchCollaboratorList
     """
-    body = request.get_json()
-    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(body)
+    workspace_project_id = request.args.get("workspace_project_id")
+    service_account_name = request.args.get("service_account_name")
+
+    if not workspace_project_id or not service_account_name:
+        return {"error": "Missing required parameters"}, 400
+
     get_collaborators_entity = entities.WorkbenchGetCollaborators(
-        **get_collaborators_request
+        workspace_project_id=workspace_project_id,
+        service_account_name=service_account_name,
     )
 
     collaborators = services.get_workbench_collaborators(get_collaborators_entity)
@@ -294,10 +304,17 @@ def get_notifications():
       tags:
         - workbench_management
       description: Retrieves the list of unviewed failed notifications for a workbench.
-      requestBody:
-        content:
-          application/json:
-            schema: WorkbenchNotificationRequest
+      parameters:
+        - in: query
+          name: workspace_project_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: service_account_name
+          schema:
+            type: string
+          required: true
       responses:
         200:
           description: Returns the list of notifications.
@@ -305,10 +322,15 @@ def get_notifications():
             application/json:
               schema: WorkbenchNotificationList
     """
-    body = request.get_json()
-    get_notifications_request = schemas.WorkbenchNotificationRequest().load(body)
+    workspace_project_id = request.args.get("workspace_project_id")
+    service_account_name = request.args.get("service_account_name")
+
+    if not workspace_project_id or not service_account_name:
+        return {"error": "Missing required parameters"}, 400
+
     get_notifications_entity = entities.WorkbenchGetNotifications(
-        **get_notifications_request
+        workspace_project_id=workspace_project_id,
+        service_account_name=service_account_name,
     )
 
     notifications = services.get_workbench_notifications(get_notifications_entity)
