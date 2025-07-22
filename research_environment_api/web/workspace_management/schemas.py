@@ -16,7 +16,6 @@ from research_environment_api.web.sharing_management.schemas import SharedBucket
 
 
 class BaseWorkspaceSchema(Schema):
-    region = fields.Enum(Region, by_value=True, required=True)
     user_email = fields.Str(required=True, validate=validate.Email())
     billing_account_id = fields.Str(required=True)
 
@@ -53,7 +52,6 @@ class BillingInfo(Schema):
 
 class Workspace(Schema):
     gcp_project_id = fields.Str(required=True)
-    region = fields.Enum(Region, by_value=True, required=True)
     billing_info = fields.Nested(BillingInfo, required=True)
     workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)

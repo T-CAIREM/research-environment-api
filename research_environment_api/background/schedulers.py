@@ -176,7 +176,6 @@ def create_workspace(
         billing_account_id=workspace_creation_request.billing_account_id,
         workspace_project_id=workspace_creation_request.workspace_project_id,
         user_email=workspace_creation_request.user_email,
-        region=workspace_creation_request.region,
         user_permissions_list=user_permissions_list,
     )
 
@@ -236,7 +235,6 @@ def destroy_workspace(
         billing_account_id=workspace_deletion_request.billing_account_id,
         workspace_project_id=workspace_deletion_request.workspace_project_id,
         user_email=workspace_deletion_request.user_email,
-        region=workspace_deletion_request.region,
     )
 
     with app.database_session() as session:
