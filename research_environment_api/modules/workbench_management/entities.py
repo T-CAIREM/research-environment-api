@@ -181,6 +181,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     memory: float
     cpu: int
     disk_size: int
+    region: Region
     dataset_identifier: str
     bucket_name: str
     region: Region
