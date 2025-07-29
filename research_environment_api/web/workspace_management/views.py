@@ -228,9 +228,9 @@ def list_active_shared_workspaces(email: str):
     return serialized_shared_workspaces, 200
 
 
-@workspace_management_bp.get("/quotas/<region>/<workspace_project_id>")
+@workspace_management_bp.get("/quotas/<workspace_project_id>")
 @validate_token
-def list_workspace_quotas(region: str, workspace_project_id: str):
+def list_workspace_quotas(workspace_project_id: str):
     """Lists limits and current usage for entities.QUOTAS_TO_LIST quotas.
     ---
     post:
@@ -251,7 +251,7 @@ def list_workspace_quotas(region: str, workspace_project_id: str):
                 items: dict
     """
     list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load(
-        {"workspace_project_id": workspace_project_id, "region": region}
+        {"workspace_project_id": workspace_project_id}
     )
     workspace_list_quotas_query_entity = monitoring_entities.BaseQuotaMetricsEntity(
         **list_workspace_quotas_request

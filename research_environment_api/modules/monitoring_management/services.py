@@ -121,7 +121,7 @@ def check_google_quotas(
             metric_name=limit.display_name,
             limit=limit.values["DEFAULT"],
             usage=_get_current_metric_usage(
-                project_id, base_quota_entity.region, limit.metric
+                project_id, limit.metric
             ),
         )
         for limit in service_info.config.quota.limits
@@ -139,7 +139,7 @@ def _get_service_info(project_id: str) -> resources.Service:
 
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
-def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
+def _get_current_metric_usage(project_id: str, metric: str) -> int:
     client = app.config.google_metric_service_client
 
     # Query current usage for the given metric
@@ -157,7 +157,7 @@ def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
     )
     request = monitoring_v3.ListTimeSeriesRequest(
         name=project_name,
-        filter=_build_filter(project_id, region, metric),
+        filter=_build_filter(project_id, metric),
         interval=interval,
         aggregation=aggregation,
         view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
@@ -169,30 +169,29 @@ def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
     return 0 if len(results) == 0 else results[0].points[0].value.int64_value
 
 
-def _build_filter(project_id: str, region: str, metric: str) -> str:
+def _build_filter(project_id: str, metric: str) -> str:
     return (
         'resource.type="consumer_quota" AND '
         'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
         f'resource.label.project_id="{project_id}" AND '
         'resource.label.service="compute.googleapis.com" AND '
-        f'metric.label.quota_metric="{metric}" AND '
-        f'resource.label.location="{region}"'
+        f'metric.label.quota_metric="{metric}"'
     )
 
 
-def clear_quotas_cache(project_id: str, region: str, quota_metrics_entity) -> None:
+def clear_quotas_cache(project_id: str, quota_metrics_entity) -> None:
     for metric in quota_metrics_entity:
         cache.delete_memoized(
-            _get_current_metric_usage, project_id, region, metric.value
+            _get_current_metric_usage, project_id, metric.value
         )
     cache.delete_memoized(_get_service_info, project_id)
 
 
 def check_workbench_update_quotas(
-    workspace_project_id: str, region: str, machine_type: MachineType
+    workspace_project_id: str, machine_type: MachineType
 ):
     base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
-        workspace_project_id=workspace_project_id, region=region
+        workspace_project_id=workspace_project_id
     )
     quotas = check_google_quotas(
         base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity

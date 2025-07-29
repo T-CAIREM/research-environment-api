@@ -57,6 +57,7 @@ class Workbench(Schema):
         WorkbenchType, by_value=True, required=True, attribute="type"
     )
     zone = fields.Str()
+    region = fields.Enum(Region, by_value=True, required=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)

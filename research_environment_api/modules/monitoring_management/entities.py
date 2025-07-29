@@ -53,7 +53,6 @@ class GeneralQuotaMetrics(StrEnum):
 @dataclass
 class BaseQuotaMetricsEntity:
     workspace_project_id: str
-    region: str
 
 
 @dataclass

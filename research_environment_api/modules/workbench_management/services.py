@@ -223,6 +223,7 @@ def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
 def start_stopped_workbenches(folder_id: str):
     projects_client = app.config.google_cloud_resource_client
 
+    #TODO: change to workbench region :)
     project_ids = []
     for project in projects_client.list_projects(parent=f"folders/{folder_id}"):
         if project.state == google.cloud.resourcemanager.Project.State.ACTIVE:
