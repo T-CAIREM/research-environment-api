@@ -120,9 +120,7 @@ def check_google_quotas(
         entities.QuotaInfo(
             metric_name=limit.display_name,
             limit=limit.values["DEFAULT"],
-            usage=_get_current_metric_usage(
-                project_id, limit.metric
-            ),
+            usage=_get_current_metric_usage(project_id, limit.metric),
         )
         for limit in service_info.config.quota.limits
         if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
@@ -181,15 +179,11 @@ def _build_filter(project_id: str, metric: str) -> str:
 
 def clear_quotas_cache(project_id: str, quota_metrics_entity) -> None:
     for metric in quota_metrics_entity:
-        cache.delete_memoized(
-            _get_current_metric_usage, project_id, metric.value
-        )
+        cache.delete_memoized(_get_current_metric_usage, project_id, metric.value)
     cache.delete_memoized(_get_service_info, project_id)
 
 
-def check_workbench_update_quotas(
-    workspace_project_id: str, machine_type: MachineType
-):
+def check_workbench_update_quotas(workspace_project_id: str, machine_type: MachineType):
     base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
         workspace_project_id=workspace_project_id
     )

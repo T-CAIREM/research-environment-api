@@ -42,9 +42,8 @@ class WorkspaceCreation:
         self.organization_id = app.config.organization_id
 
     def _workspace_project_id(self):
-        workspace_project_id = (
-            f"{self.username[:15]}-"
-            + "".join(random.choices(string.ascii_lowercase, k=5))
+        workspace_project_id = f"{self.username[:15]}-" + "".join(
+            random.choices(string.ascii_lowercase, k=5)
         )
         return workspace_project_id
 
