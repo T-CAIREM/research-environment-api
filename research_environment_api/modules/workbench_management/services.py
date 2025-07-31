@@ -41,21 +41,16 @@ def list_workbenches(
     workflows_in_progress: Iterable[models.WorkbenchActivity],
     user_email: Optional[str] = None,
     is_owner: bool = True,
-) -> Tuple[Iterable[Union[entities.Workbench, EntityScaffolding]], Optional[ServiceError]]:
+) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
     """
-    List workbenches for a project with comprehensive error handling.
+    List workbenches for a project.
     
-    Returns:
-        Tuple of (workbenches, service_error) where service_error is None on success
+    Note: This function maintains its original signature for API compatibility.
+    Google Cloud service errors will bubble up to be handled by the caller.
     """
-    # Safely fetch GCE instances with centralized error handling
-    gce_instances, fetch_error = safe_google_service_call(
-        func=lambda: _fetch_gce_instances_raw(gcp_project_id),
-        resource_id=gcp_project_id,
-        service_name="Compute Engine",
-        operation="list_instances",
-        default_return=[]
-    )
+    # Fetch GCE instances - let any Google Cloud errors bubble up
+    # The caller (workspace management) will handle them with safe_google_service_call
+    gce_instances = _fetch_gce_instances_raw(gcp_project_id)
 
     if not is_owner:
         shared_workbench_entries = _get_shared_workbenches_for_project(
@@ -67,7 +62,7 @@ def list_workbenches(
             for _, workbench in shared_workbench_entries:
                 shared_workbenches.append(workbench)
 
-        return shared_workbenches, fetch_error
+        return shared_workbenches
 
     provisioned_workbenches = [
         entities.Workbench.from_gce_instance(instance, workflows_in_progress)
@@ -88,7 +83,7 @@ def list_workbenches(
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
     
-    return provisioned_workbenches + workbench_scaffoldings, fetch_error
+    return provisioned_workbenches + workbench_scaffoldings
 
 
 def get_compute_engine_workbench(
@@ -97,6 +92,7 @@ def get_compute_engine_workbench(
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
+    # Use safe_google_service_call to handle any Google Cloud errors
     gce_instances, _ = safe_google_service_call(
         func=lambda: _fetch_gce_instances_raw(gcp_project_id),
         resource_id=gcp_project_id,

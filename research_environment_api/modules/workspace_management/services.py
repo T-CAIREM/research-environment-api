@@ -196,11 +196,17 @@ def _build_workspace_entity(
     service_errors = []
     
     # Safely fetch workbenches with error handling
-    workbenches, workbench_error = list_workbenches(
-        gcp_project_id=gcp_project_id,
-        workflows_in_progress=workflows_in_progress,
-        user_email=user_email,
-        is_owner=is_owner,
+    workbenches, workbench_error = safe_google_service_call(
+        func=lambda: list_workbenches(
+            gcp_project_id=gcp_project_id,
+            workflows_in_progress=workflows_in_progress,
+            user_email=user_email,
+            is_owner=is_owner,
+        ),
+        resource_id=gcp_project_id,
+        service_name="Workbench Management",
+        operation="list_workbenches",
+        default_return=[]
     )
     
     if workbench_error:
