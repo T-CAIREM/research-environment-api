@@ -41,8 +41,13 @@ class GoogleServiceErrorHandler:
     # Error message patterns and their corresponding error types
     ERROR_PATTERNS = {
         "This API method requires billing to be enabled": GoogleServiceErrorType.BILLING_DISABLED,
+        "billing is disabled": GoogleServiceErrorType.BILLING_DISABLED,
+        "Cloud billing is not enabled": GoogleServiceErrorType.BILLING_DISABLED,
+        "billing account": GoogleServiceErrorType.BILLING_DISABLED,
         "has not been used in project": GoogleServiceErrorType.API_NOT_ENABLED,
+        "API has not been used": GoogleServiceErrorType.API_NOT_ENABLED,
         "Permission denied": GoogleServiceErrorType.PERMISSION_DENIED,
+        "Access denied": GoogleServiceErrorType.PERMISSION_DENIED,
         "not found": GoogleServiceErrorType.NOT_FOUND,
         "Quota exceeded": GoogleServiceErrorType.QUOTA_EXCEEDED,
     }

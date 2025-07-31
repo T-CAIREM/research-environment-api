@@ -3,7 +3,6 @@ import string
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional, Tuple, Union
 
-from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 import google.cloud.resourcemanager_v3
 import google.cloud.notebooks_v2
@@ -28,6 +27,10 @@ from research_environment_api.modules.workbench_management.utils import (
     add_iam_binding,
     remove_iam_binding,
 )
+from research_environment_api.modules.common.error_handlers import (
+    safe_google_service_call,
+    ServiceError,
+)
 from google.cloud.notebooks_v2.types import AcceleratorConfig
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
@@ -38,8 +41,21 @@ def list_workbenches(
     workflows_in_progress: Iterable[models.WorkbenchActivity],
     user_email: Optional[str] = None,
     is_owner: bool = True,
-) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
-    gce_instances = _fetch_gce_instances(gcp_project_id)
+) -> Tuple[Iterable[Union[entities.Workbench, EntityScaffolding]], Optional[ServiceError]]:
+    """
+    List workbenches for a project with comprehensive error handling.
+    
+    Returns:
+        Tuple of (workbenches, service_error) where service_error is None on success
+    """
+    # Safely fetch GCE instances with centralized error handling
+    gce_instances, fetch_error = safe_google_service_call(
+        func=lambda: _fetch_gce_instances_raw(gcp_project_id),
+        resource_id=gcp_project_id,
+        service_name="Compute Engine",
+        operation="list_instances",
+        default_return=[]
+    )
 
     if not is_owner:
         shared_workbench_entries = _get_shared_workbenches_for_project(
@@ -51,7 +67,7 @@ def list_workbenches(
             for _, workbench in shared_workbench_entries:
                 shared_workbenches.append(workbench)
 
-        return shared_workbenches
+        return shared_workbenches, fetch_error
 
     provisioned_workbenches = [
         entities.Workbench.from_gce_instance(instance, workflows_in_progress)
@@ -71,7 +87,8 @@ def list_workbenches(
         and workflow.build_type == enums.BuildType.WORKBENCH_CREATION
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
-    return provisioned_workbenches + workbench_scaffoldings
+    
+    return provisioned_workbenches + workbench_scaffoldings, fetch_error
 
 
 def get_compute_engine_workbench(
@@ -80,7 +97,13 @@ def get_compute_engine_workbench(
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
-    gce_instances = _fetch_gce_instances(gcp_project_id)
+    gce_instances, _ = safe_google_service_call(
+        func=lambda: _fetch_gce_instances_raw(gcp_project_id),
+        resource_id=gcp_project_id,
+        service_name="Compute Engine",
+        operation="get_instance",
+        default_return=[]
+    )
     gce_instance = next(
         filter(lambda instance: instance.name == instance_name, gce_instances)
     )
@@ -88,19 +111,19 @@ def get_compute_engine_workbench(
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
 
-def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
-    try:
-        gce_instances_per_zone = (
-            app.config.google_compute_engine_instances_client.aggregated_list(
-                project=gcp_project_id
-            )
+def _fetch_gce_instances_raw(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
+    """
+    Fetch GCE instances from Google Cloud without error handling.
+    
+    This function is called by the centralized error handling framework.
+    All Google Cloud service errors (billing, API not enabled, permissions, etc.)
+    are handled by the safe_google_service_call wrapper.
+    """
+    gce_instances_per_zone = (
+        app.config.google_compute_engine_instances_client.aggregated_list(
+            project=gcp_project_id
         )
-    except api_core.exceptions.Forbidden as e:
-        # HACK: Workspaces in the middle of provisioning are visible but do not have the required APIs enabled yet.
-        if "Compute Engine API has not been used in project" in e.message:
-            return []
-        else:
-            raise e
+    )
 
     return [
         instance
