@@ -190,10 +190,24 @@ def _build_workspace_entity(
 ) -> Optional[entities.Workspace]:
     gcp_project_id = gcp_project.project_id
     region = gcp_project.labels["region"]
-    billing_info_entity = _build_billing_entity(gcp_project.name)
     is_owner = gcp_project.labels["cloud_identity_username"] == user_email.split("@")[0]
     
     service_errors = []
+    
+    # Safely fetch billing info with error handling
+    billing_info_entity, billing_error = safe_google_service_call(
+        func=lambda: _build_billing_entity(gcp_project.name),
+        resource_id=gcp_project_id,
+        service_name="Billing Management",
+        operation="get_project_billing_info",
+        default_return=entities.BillingInfo(
+            billing_account_id=None,
+            billing_enabled=False,
+        )
+    )
+    
+    if billing_error:
+        service_errors.append(billing_error)
     
     # Safely fetch workbenches with error handling
     workbenches, workbench_error = safe_google_service_call(
@@ -244,9 +258,23 @@ def _build_shared_workspace_entity(
     caller_username: str,
 ) -> entities.SharedWorkspace:
     gcp_project_id = gcp_project.project_id
-    billing_info_entity = _build_billing_entity(gcp_project.name)
     
     service_errors = []
+    
+    # Safely fetch billing info with error handling
+    billing_info_entity, billing_error = safe_google_service_call(
+        func=lambda: _build_billing_entity(gcp_project.name),
+        resource_id=gcp_project_id,
+        service_name="Billing Management",
+        operation="get_project_billing_info",
+        default_return=entities.BillingInfo(
+            billing_account_id=None,
+            billing_enabled=False,
+        )
+    )
+    
+    if billing_error:
+        service_errors.append(billing_error)
     
     # Safely fetch buckets with error handling
     buckets, bucket_error = safe_google_service_call(
