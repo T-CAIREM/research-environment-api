@@ -8,6 +8,7 @@ from research_environment_api.modules.workbench_management.entities import (
 
 from research_environment_api.modules.workspace_management.entities import (
     WorkspaceStatus,
+    EntityScaffolding as EntityScaffoldingEntity,
 )
 from research_environment_api.web.workbench_management.schemas import (
     Workbench as WorkbenchSchema,
@@ -60,7 +61,6 @@ class EntityScaffoldingWorkbenchSchema(OneOfSchema):
 
     def get_obj_type(self, obj):
         """Determine which schema to use based on object type."""
-        from research_environment_api.modules.workspace_management.entities import EntityScaffolding as EntityScaffoldingEntity
         
         if isinstance(obj, Workbench):
             return "Workbench"
