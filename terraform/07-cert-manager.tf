@@ -105,6 +105,12 @@ resource "kubernetes_manifest" "certificate" {
   }
 }
 
+resource "google_project_iam_member" "terraform_worker_secretmanager_admin" {
+  project = var.project_id
+  role    = "roles/secretmanager.admin"
+  member  = "serviceAccount:terraform-worker@${var.project_id}.iam.gserviceaccount.com"
+}
+
 resource "google_service_account" "secret-sync-service-account" {
   account_id  = "cert-manager-secret-sync"
   description = "Service Account for syncing K8s secrets to Secret Manager"
@@ -118,6 +124,14 @@ resource "google_project_iam_member" "secret-sync-secretmanager-admin" {
 
 resource "google_secret_manager_secret" "rstudio-certificate-secret" {
   secret_id = "${var.name}-rstudio-certificate"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret" "rstudio-certificate-private-key" {
+  secret_id = "${var.name}-rstudio-private-key"
 
   replication {
     auto {}
@@ -197,15 +211,8 @@ resource "kubernetes_config_map" "secret-sync-script" {
         CERT_DECODED=$(echo "$CERT" | base64 -d)
         KEY_DECODED=$(echo "$KEY" | base64 -d)
 
-        SECRET_PAYLOAD=$(cat <<EOF
-      {
-        "certificate": $(echo "$CERT_DECODED" | jq -Rs .),
-        "private_key": $(echo "$KEY_DECODED" | jq -Rs .)
-      }
-      EOF
-        )
-
-        echo "$SECRET_PAYLOAD" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
+        echo "$CERT_DECODED" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
+        echo "$KEY_DECODED" | gcloud secrets versions add "${var.name}-rstudio-private-key" --data-file=-
 
         if [ -n "$STORED_CHECKSUM" ]; then
           kubectl patch secret "${var.name}-cert-checksum" -p="{\"data\":{\"checksum\":\"$(echo -n "$CHECKSUM" | base64 -w0)\"}}"
@@ -245,7 +252,7 @@ resource "kubernetes_cron_job_v1" "secret-sync" {
               name  = "secret-sync"
               image = "google/cloud-sdk:slim"
 
-              command = ["/bin/bash", "-c", "apt-get update && apt-get install -y kubectl jq && /scripts/sync-script.sh"]
+              command = ["/bin/bash", "-c", "apt-get update && apt-get install -y kubectl && /scripts/sync-script.sh"]
               volume_mount {
                 name       = "sync-script"
                 mount_path = "/scripts"
