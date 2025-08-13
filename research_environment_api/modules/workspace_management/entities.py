@@ -130,6 +130,8 @@ class Workspace:
     status: WorkspaceStatus
     is_owner: bool
     service_errors: list[ServiceError] = field(default_factory=list)
+    is_accessible: bool = True
+    access_denial_reason: str | None = None
 
 
 @dataclass
@@ -140,6 +142,8 @@ class SharedWorkspace:
     buckets: Iterable[SharedBucket]
     status: WorkspaceStatus
     service_errors: list[ServiceError] = field(default_factory=list)
+    is_accessible: bool = True
+    access_denial_reason: str | None = None
 
 
 @dataclass

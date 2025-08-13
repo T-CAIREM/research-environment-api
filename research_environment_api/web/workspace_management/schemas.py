@@ -96,6 +96,8 @@ class Workspace(Schema):
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     is_owner = fields.Bool(required=True)
     service_errors = fields.Nested(ServiceErrorSchema, many=True, missing=[])
+    is_accessible = fields.Boolean(required=True)
+    access_denial_reason = fields.Str(allow_none=True, missing=None)
 
 
 class SharedWorkspaceCreationRequest(Schema):
@@ -118,6 +120,8 @@ class SharedWorkspace(Schema):
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     is_owner = fields.Boolean(required=True)
     service_errors = fields.Nested(ServiceErrorSchema, many=True, missing=[])
+    is_accessible = fields.Boolean(required=True)
+    access_denial_reason = fields.Str(allow_none=True, missing=None)
 
 
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):

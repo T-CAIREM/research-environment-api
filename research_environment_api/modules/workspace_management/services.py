@@ -29,6 +29,37 @@ from research_environment_api.modules.monitoring_management import (
 from research_environment_api.modules.common.error_handlers import safe_google_service_call
 
 
+def _compute_accessibility(billing_info: entities.BillingInfo, service_errors: list) -> tuple[bool, Optional[str]]:
+    """Derive accessibility based on billing and critical service errors.
+    Rules (minimal to avoid over-engineering):
+      - Inaccessible if billing_account_id missing OR billing disabled.
+      - Inaccessible if any service_error of type billing_disabled or permission_denied.
+    Returns (is_accessible, reason_or_none).
+    """
+    reasons: list[str] = []
+    if not billing_info.billing_account_id:
+        reasons.append("No billing account connected")
+    elif not billing_info.billing_enabled:
+        reasons.append("Billing account inactive or closed")
+
+    for err in service_errors:
+        et = getattr(err, "error_type", "")
+        if et in ("billing_disabled", "permission_denied"):
+            # Prefer user-friendly message if available
+            reasons.append(err.message or et.replace("_", " "))
+
+    if reasons:
+        # Deduplicate while preserving order
+        seen = set()
+        deduped = []
+        for r in reasons:
+            if r not in seen:
+                deduped.append(r)
+                seen.add(r)
+        return False, "; ".join(deduped)
+    return True, None
+
+
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
     return schedulers.create_workspace(workspace_creation)
 
@@ -240,6 +271,7 @@ def _build_workspace_entity(
         else entities.WorkspaceStatus.CREATED
     )
 
+    is_accessible, denial_reason = _compute_accessibility(billing_info_entity, service_errors)
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
@@ -248,6 +280,8 @@ def _build_workspace_entity(
         status=status,
         is_owner=is_owner,
         service_errors=service_errors,
+        is_accessible=is_accessible,
+        access_denial_reason=denial_reason,
     )
 
 
@@ -301,6 +335,7 @@ def _build_shared_workspace_entity(
         else entities.WorkspaceStatus.CREATED
     )
     is_owner = gcp_project.labels["cloud_identity_username"] == caller_username
+    is_accessible, denial_reason = _compute_accessibility(billing_info_entity, service_errors)
     return entities.SharedWorkspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
@@ -308,6 +343,8 @@ def _build_shared_workspace_entity(
         status=status,
         is_owner=is_owner,
         service_errors=service_errors,
+        is_accessible=is_accessible,
+        access_denial_reason=denial_reason,
     )
 
 
