@@ -6,6 +6,7 @@ import google.cloud.billing
 import google.cloud.compute
 import google.cloud.devtools.cloudbuild
 import google.cloud.resourcemanager
+import google.cloud.secretmanager
 import google.cloud.storage
 import google.cloud.notebooks_v2
 import google.cloud.resourcemanager_v3
@@ -61,8 +62,8 @@ class Config:
         self.rstudio_dns_project = environ["RSTUDIO_DNS_PROJECT"]
         self.rstudio_dns_zone = environ["RSTUDIO_DNS_ZONE"]
         self.rstudio_domain_name = environ["RSTUDIO_DOMAIN_NAME"]
-        self.rstudio_ssl_private_key = environ["RSTUDIO_SSL_PRIVATE_KEY"]
-        self.rstudio_ssl_certificate = environ["RSTUDIO_SSL_CERTIFICATE"]
+        self.rstudio_certificate_secret_id = environ["RSTUDIO_CERTIFICATE_SECRET_ID"]
+        self.rstudio_private_key_secret_id = environ["RSTUDIO_PRIVATE_KEY_SECRET_ID"]
         self.sharing_folder_id = environ["SHARING_FOLDER_ID"]
         self.workbenches_parent_project_id = environ["WORKBENCHES_PARENT_PROJECT_ID"]
         self.gcp_signed_url_expiration_time = environ["GCP_SIGNED_URL_EXPIRATION_TIME"]
@@ -151,6 +152,11 @@ class Config:
         )
         self.google_iam_client = google.cloud.iam_admin_v1.IAMClient(
             credentials=self.service_account_credentials
+        )
+        self.google_secret_manager_client = (
+            google.cloud.secretmanager.SecretManagerServiceClient(
+                credentials=self.service_account_credentials
+            )
         )
 
 

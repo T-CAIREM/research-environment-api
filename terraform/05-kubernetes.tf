@@ -144,8 +144,8 @@ locals {
     RSTUDIO_DNS_PROJECT                 = var.rstudio_dns_project
     RSTUDIO_DNS_ZONE                    = var.dns_zone
     RSTUDIO_DOMAIN_NAME                 = var.rstudio_domain_name
-    RSTUDIO_SSL_PRIVATE_KEY             = var.rstudio_ssl_private_key
-    RSTUDIO_SSL_CERTIFICATE             = var.rstudio_ssl_certificate
+    RSTUDIO_PRIVATE_KEY_SECRET_ID       = var.rstudio_private_key_secret_id
+    RSTUDIO_CERTIFICATE_SECRET_ID       = var.rstudio_certificate_secret_id
     SHARING_FOLDER_ID                   = var.sharing_folder_id
     WORKBENCHES_PARENT_PROJECT_ID       = var.workbenches_parent_project_id
     GCP_SIGNED_URL_EXPIRATION_TIME      = var.gcp_signed_url_expiration_time

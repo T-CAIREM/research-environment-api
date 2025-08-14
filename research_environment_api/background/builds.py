@@ -359,6 +359,13 @@ def _normalize_gpu_accelerator_type(gpu_accelerator_type: Optional[str]) -> str:
     return gpu_accelerator_type or ""
 
 
+def _fetch_secret_value(secret_resource_name: str) -> str:
+    response = app.config.google_secret_manager_client.access_secret_version(
+        request={"name": secret_resource_name}
+    )
+    return response.payload.data.decode("UTF-8")
+
+
 def create_rstudio_workbench_build(
     workspace_project_id: str,
     workspace_numeric_id: str,
@@ -396,8 +403,12 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_private_key_secret_id
+        ),
+        "_RSTUDIO_SSL_CERTIFICATE": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_certificate_secret_id
+        ),
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -449,8 +460,12 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_private_key_secret_id
+        ),
+        "_RSTUDIO_SSL_CERTIFICATE": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_certificate_secret_id
+        ),
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -501,8 +516,12 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_private_key_secret_id
+        ),
+        "_RSTUDIO_SSL_CERTIFICATE": _fetch_secret_value(
+            secret_resource_name=app.config.rstudio_certificate_secret_id
+        ),
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
