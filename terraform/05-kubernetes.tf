@@ -144,7 +144,6 @@ locals {
     RSTUDIO_DNS_PROJECT                 = var.rstudio_dns_project
     RSTUDIO_DNS_ZONE                    = var.dns_zone
     RSTUDIO_DOMAIN_NAME                 = var.rstudio_domain_name
-    RSTUDIO_PRIVATE_KEY_SECRET_ID       = var.rstudio_private_key_secret_id
     RSTUDIO_CERTIFICATE_SECRET_ID       = var.rstudio_certificate_secret_id
     SHARING_FOLDER_ID                   = var.sharing_folder_id
     WORKBENCHES_PARENT_PROJECT_ID       = var.workbenches_parent_project_id

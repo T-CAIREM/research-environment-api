@@ -199,11 +199,6 @@ variable "root_postgres_password" {
   type = string
 }
 
-variable "rstudio_private_key_secret_id" {
-  default = "projects/1094753623932/secrets/research-environment-api-rstudio-private-key/versions/latest"
-  type    = string
-}
-
 variable "rstudio_certificate_secret_id" {
   default = "projects/1094753623932/secrets/research-environment-api-rstudio-certificate/versions/latest"
   type    = string
