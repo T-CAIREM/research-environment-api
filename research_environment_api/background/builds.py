@@ -410,6 +410,7 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
         "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_RENEW_DATE": rstudio_certificate_data["renew_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -466,6 +467,7 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
         "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_RENEW_DATE": rstudio_certificate_data["renew_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -521,6 +523,7 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
         "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_RENEW_DATE": rstudio_certificate_data["renew_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
