@@ -130,14 +130,6 @@ resource "google_secret_manager_secret" "rstudio-certificate-secret" {
   }
 }
 
-resource "google_secret_manager_secret" "rstudio-certificate-private-key" {
-  secret_id = "${var.name}-rstudio-private-key"
-
-  replication {
-    auto {}
-  }
-}
-
 resource "google_service_account_iam_binding" "secret-sync-workload-identity" {
   service_account_id = google_service_account.secret-sync-service-account.id
   role               = "roles/iam.workloadIdentityUser"
@@ -165,6 +157,11 @@ resource "kubernetes_role" "secret_sync_role" {
     resources  = ["secrets"]
     verbs      = ["get", "create", "update", "patch"]
   }
+    rule {
+        api_groups = ["cert-manager.io"]
+        resources  = ["certificates"]
+        verbs      = ["get"]
+    }
 }
 
 resource "kubernetes_role_binding" "secret_sync_role_binding" {
@@ -197,6 +194,7 @@ resource "kubernetes_config_map" "secret-sync-script" {
 
       CERT=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.crt}')
       KEY=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.key}')
+      RENEW_DATE=$(kubectl get certificate "${var.name}-rstudio-certificate" -o jsonpath='{.status.notAfter}')
 
       COMBINED="CERT:$CERT\nKEY:$KEY"
       CHECKSUM=$(echo -n "$COMBINED" | sha256sum | awk '{print $1}')
@@ -211,8 +209,13 @@ resource "kubernetes_config_map" "secret-sync-script" {
         CERT_DECODED=$(echo "$CERT" | base64 -d)
         KEY_DECODED=$(echo "$KEY" | base64 -d)
 
-        echo "$CERT_DECODED" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
-        echo "$KEY_DECODED" | gcloud secrets versions add "${var.name}-rstudio-private-key" --data-file=-
+        JSON_PAYLOAD=$(jq -n \
+          --arg crt "$CERT_DECODED" \
+          --arg key "$KEY_DECODED" \
+          --arg renew "$RENEW_DATE" \
+          '{tls_crt: $crt, tls_key: $key, renew_date: $renew}')
+
+        echo "$JSON_PAYLOAD" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
 
         if [ -n "$STORED_CHECKSUM" ]; then
           kubectl patch secret "${var.name}-cert-checksum" -p="{\"data\":{\"checksum\":\"$(echo -n "$CHECKSUM" | base64 -w0)\"}}"
@@ -252,7 +255,7 @@ resource "kubernetes_cron_job_v1" "secret-sync" {
               name  = "secret-sync"
               image = "google/cloud-sdk:slim"
 
-              command = ["/bin/bash", "-c", "apt-get update && apt-get install -y kubectl && /scripts/sync-script.sh"]
+              command = ["/bin/bash", "-c", "apt-get update && apt-get install -y kubectl jq && /scripts/sync-script.sh"]
               volume_mount {
                 name       = "sync-script"
                 mount_path = "/scripts"
