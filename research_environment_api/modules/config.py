@@ -63,7 +63,6 @@ class Config:
         self.rstudio_dns_zone = environ["RSTUDIO_DNS_ZONE"]
         self.rstudio_domain_name = environ["RSTUDIO_DOMAIN_NAME"]
         self.rstudio_certificate_secret_id = environ["RSTUDIO_CERTIFICATE_SECRET_ID"]
-        self.rstudio_private_key_secret_id = environ["RSTUDIO_PRIVATE_KEY_SECRET_ID"]
         self.sharing_folder_id = environ["SHARING_FOLDER_ID"]
         self.workbenches_parent_project_id = environ["WORKBENCHES_PARENT_PROJECT_ID"]
         self.gcp_signed_url_expiration_time = environ["GCP_SIGNED_URL_EXPIRATION_TIME"]
