@@ -42,6 +42,10 @@ class WorkbenchDestroyRequest(WorkbenchBase):
     workbench_resource_id = fields.Str(required=True)
 
 
+class WorkbenchRenewSSLCertificateRequest(WorkbenchBase):
+    workbench_resource_id = fields.Str(required=True)
+
+
 class Workbench(Schema):
     gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
@@ -59,6 +63,7 @@ class Workbench(Schema):
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)
     workbench_owner_username = fields.Str(required=False)
+    rstudio_ssl_certificate_expiration_date = fields.Str(required=False, allow_none=True)
 
 
 class WorkbenchWorkflowIdentifier(Schema):

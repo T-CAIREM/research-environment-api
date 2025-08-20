@@ -209,6 +209,12 @@ def schedule_workbench_destroy(
         )
 
 
+def schedule_workbench_ssl_certificate_renewal(
+    workbench_renewal_request: entities.WorkbenchRenewSSLCertificate,
+):
+    return schedulers.renew_rstudio_ssl_certificate(workbench_renewal_request)
+
+
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
     return f"{dataset_identifier[:10]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
 

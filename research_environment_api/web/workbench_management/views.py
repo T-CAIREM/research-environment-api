@@ -371,3 +371,33 @@ def clear_all_notifications():
     services.clear_all_notifications(clear_notifications_entity)
 
     return {"message": "All notifications marked as viewed."}, 200
+
+
+@workbench_management_bp.put("/renew-ssl-certificate")
+@validate_token
+def renew_rstudio_ssl_certificate():
+    """Renews SSL certificate for the Rstudio workbench.
+    ---
+    put:
+      tags:
+        - workbench_management
+      description: Renews SSL certificate for the Rstudio workbench.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkbenchRenewSSLCertificateRequest
+      responses:
+        200:
+          description: Returns the ID of the workflow.
+          content:
+            application/json:
+              schema: WorkbenchWorkflowIdentifier
+    """
+    body = request.get_json()
+    workbench_renewal_request = schemas.WorkbenchRenewSSLCertificateRequest().load(body)
+    workbench_renewal_entity = entities.WorkbenchRenewSSLCertificate(**workbench_renewal_request)
+    workbench_activity_id = services.schedule_workbench_ssl_certificate_renewal(workbench_renewal_entity)
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
+        dict(workflow_id=workbench_activity_id)
+    )
+    return workflow_identifier, 200
