@@ -194,7 +194,7 @@ resource "kubernetes_config_map" "secret-sync-script" {
 
       CERT=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.crt}')
       KEY=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.key}')
-      RENEW_DATE=$(kubectl get certificate "${var.name}-rstudio-certificate" -o jsonpath='{.status.notAfter}')
+      EXPIRATION_DATE=$(kubectl get certificate "${var.name}-rstudio-certificate" -o jsonpath='{.status.notAfter}')
 
       COMBINED="CERT:$CERT\nKEY:$KEY"
       CHECKSUM=$(echo -n "$COMBINED" | sha256sum | awk '{print $1}')
@@ -212,8 +212,8 @@ resource "kubernetes_config_map" "secret-sync-script" {
         JSON_PAYLOAD=$(jq -n \
           --arg crt "$CERT_DECODED" \
           --arg key "$KEY_DECODED" \
-          --arg renew "$RENEW_DATE" \
-          '{tls_crt: $crt, tls_key: $key, renew_date: $renew}')
+          --arg expiration "$EXPIRATION_DATE" \
+          '{tls_crt: $crt, tls_key: $key, expiration_date: $expiration}')
 
         echo "$JSON_PAYLOAD" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
 
