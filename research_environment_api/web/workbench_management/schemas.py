@@ -63,7 +63,9 @@ class Workbench(Schema):
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)
     workbench_owner_username = fields.Str(required=False)
-    rstudio_ssl_certificate_expiration_date = fields.Str(required=False, allow_none=True)
+    rstudio_ssl_certificate_expiration_date = fields.Str(
+        required=False, allow_none=True
+    )
 
 
 class WorkbenchWorkflowIdentifier(Schema):

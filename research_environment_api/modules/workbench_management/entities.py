@@ -102,7 +102,9 @@ class Workbench:
         bucket_name = metadata["bucket_name"]
         vm_image = metadata["vm_image"]
         service_account_name = metadata["service_account_name"]
-        rstudio_ssl_certificate_expiration_date = metadata.get("certificate_expiration_date")
+        rstudio_ssl_certificate_expiration_date = metadata.get(
+            "certificate_expiration_date"
+        )
         machine_type_name = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
         gpu_accelerator_type = (
@@ -156,7 +158,7 @@ class Workbench:
             service_account_name=service_account_name,
             sharing_bucket_identifiers=sharing_bucket_identifiers,
             workbench_owner_username=workbench_owner_username,
-            rstudio_ssl_certificate_expiration_date=rstudio_ssl_certificate_expiration_date
+            rstudio_ssl_certificate_expiration_date=rstudio_ssl_certificate_expiration_date,
         )
 
 

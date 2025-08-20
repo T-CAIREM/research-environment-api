@@ -395,8 +395,12 @@ def renew_rstudio_ssl_certificate():
     """
     body = request.get_json()
     workbench_renewal_request = schemas.WorkbenchRenewSSLCertificateRequest().load(body)
-    workbench_renewal_entity = entities.WorkbenchRenewSSLCertificate(**workbench_renewal_request)
-    workbench_activity_id = services.schedule_workbench_ssl_certificate_renewal(workbench_renewal_entity)
+    workbench_renewal_entity = entities.WorkbenchRenewSSLCertificate(
+        **workbench_renewal_request
+    )
+    workbench_activity_id = services.schedule_workbench_ssl_certificate_renewal(
+        workbench_renewal_entity
+    )
     workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
         dict(workflow_id=workbench_activity_id)
     )
