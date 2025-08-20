@@ -123,6 +123,7 @@ resource "google_project_iam_member" "secret-sync-secretmanager-admin" {
 }
 
 resource "google_secret_manager_secret" "rstudio-certificate-secret" {
+  depends_on = [google_project_iam_member.secret-sync-secretmanager-admin]
   secret_id = "${var.name}-rstudio-certificate"
 
   replication {
