@@ -278,17 +278,8 @@ def get_collaborators():
             application/json:
               schema: WorkbenchCollaboratorList
     """
-    workspace_project_id = request.args.get("workspace_project_id")
-    service_account_name = request.args.get("service_account_name")
-
-    if not workspace_project_id or not service_account_name:
-        return {"error": "Missing required parameters"}, 400
-
-    get_collaborators_entity = entities.WorkbenchGetCollaborators(
-        workspace_project_id=workspace_project_id,
-        service_account_name=service_account_name,
-    )
-
+    get_collaborators_request = schemas.WorkbenchCollaboratorGetRequest().load(request.args)
+    get_collaborators_entity = entities.WorkbenchGetCollaborators(**get_collaborators_request)
     collaborators = services.get_workbench_collaborators(get_collaborators_entity)
     serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)
 
@@ -322,17 +313,8 @@ def get_notifications():
             application/json:
               schema: WorkbenchNotificationList
     """
-    workspace_project_id = request.args.get("workspace_project_id")
-    service_account_name = request.args.get("service_account_name")
-
-    if not workspace_project_id or not service_account_name:
-        return {"error": "Missing required parameters"}, 400
-
-    get_notifications_entity = entities.WorkbenchGetNotifications(
-        workspace_project_id=workspace_project_id,
-        service_account_name=service_account_name,
-    )
-
+    get_notifications_request = schemas.WorkbenchNotificationRequest().load(request.args)
+    get_notifications_entity = entities.WorkbenchGetNotifications(**get_notifications_request)
     notifications = services.get_workbench_notifications(get_notifications_entity)
     serialized_notifications = schemas.WorkbenchNotificationList().dump(notifications)
 
