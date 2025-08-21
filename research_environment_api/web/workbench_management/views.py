@@ -278,7 +278,7 @@ def get_collaborators():
             application/json:
               schema: WorkbenchCollaboratorList
     """
-    get_collaborators_request = schemas.WorkbenchCollaboratorGetRequest().load(request.args)
+    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(request.args)
     get_collaborators_entity = entities.WorkbenchGetCollaborators(**get_collaborators_request)
     collaborators = services.get_workbench_collaborators(get_collaborators_entity)
     serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)

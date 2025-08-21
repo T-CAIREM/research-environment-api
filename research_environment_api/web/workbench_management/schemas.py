@@ -71,13 +71,13 @@ class WorkbenchCollaboratorModificationRequest(Schema):
     collaborators = fields.List(fields.Email(), required=True)
 
 
-class WorkbenchCollaboratorList(Schema):
-    collaborators = fields.List(fields.Email(), required=True)
-
-
-class WorkbenchCollaboratorGetRequest(Schema):
+class WorkbenchGetCollaboratorsRequest(Schema):
     service_account_name = fields.Str(required=True)
     workspace_project_id = fields.Str(required=True)
+
+
+class WorkbenchCollaboratorList(Schema):
+    collaborators = fields.List(fields.Email(), required=True)
 
 
 class WorkbenchNotificationRequest(Schema):
