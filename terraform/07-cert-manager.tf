@@ -189,42 +189,7 @@ resource "kubernetes_config_map" "secret-sync-script" {
   }
 
   data = {
-    "sync-script.sh" = <<-EOT
-      #!/bin/bash
-      set -e
-
-      CERT=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.crt}')
-      KEY=$(kubectl get secret "${var.name}-rstudio-certificate" -o jsonpath='{.data.tls\.key}')
-      EXPIRATION_DATE=$(kubectl get certificate "${var.name}-rstudio-certificate" -o jsonpath='{.status.notAfter}')
-
-      COMBINED="CERT:$CERT\nKEY:$KEY"
-      CHECKSUM=$(echo -n "$COMBINED" | sha256sum | awk '{print $1}')
-
-      STORED_CHECKSUM=""
-      if kubectl get secret "${var.name}-cert-checksum" 2>/dev/null; then
-        STORED_CHECKSUM=$(kubectl get secret "${var.name}-cert-checksum" -o jsonpath='{.data.checksum}' | base64 --decode)
-      fi
-
-      if [ "$CHECKSUM" != "$STORED_CHECKSUM" ]; then
-
-        CERT_DECODED=$(echo "$CERT" | base64 -d)
-        KEY_DECODED=$(echo "$KEY" | base64 -d)
-
-        JSON_PAYLOAD=$(jq -n \
-          --arg crt "$CERT_DECODED" \
-          --arg key "$KEY_DECODED" \
-          --arg expiration "$EXPIRATION_DATE" \
-          '{tls_crt: $crt, tls_key: $key, expiration_date: $expiration}')
-
-        echo "$JSON_PAYLOAD" | gcloud secrets versions add "${var.name}-rstudio-certificate" --data-file=-
-
-        if [ -n "$STORED_CHECKSUM" ]; then
-          kubectl patch secret "${var.name}-cert-checksum" -p="{\"data\":{\"checksum\":\"$(echo -n "$CHECKSUM" | base64 -w0)\"}}"
-        else
-          kubectl create secret generic "${var.name}-cert-checksum" --from-literal=checksum="$CHECKSUM"
-        fi
-      fi
-    EOT
+    "sync-script.sh" = file("${path.module}/sync-script.sh")
   }
 }
 
