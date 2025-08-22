@@ -124,7 +124,7 @@ resource "google_project_iam_member" "secret-sync-secretmanager-admin" {
 
 resource "google_secret_manager_secret" "rstudio-certificate-secret" {
   depends_on = [google_project_iam_member.secret-sync-secretmanager-admin]
-  secret_id = "${var.name}-rstudio-certificate"
+  secret_id  = "${var.name}-rstudio-certificate"
 
   replication {
     auto {}
@@ -158,11 +158,11 @@ resource "kubernetes_role" "secret_sync_role" {
     resources  = ["secrets"]
     verbs      = ["get", "create", "update", "patch"]
   }
-    rule {
-        api_groups = ["cert-manager.io"]
-        resources  = ["certificates"]
-        verbs      = ["get"]
-    }
+  rule {
+    api_groups = ["cert-manager.io"]
+    resources  = ["certificates"]
+    verbs      = ["get"]
+  }
 }
 
 resource "kubernetes_role_binding" "secret_sync_role_binding" {
