@@ -42,10 +42,6 @@ class WorkbenchDestroyRequest(WorkbenchBase):
     workbench_resource_id = fields.Str(required=True)
 
 
-class WorkbenchRenewSSLCertificateRequest(WorkbenchBase):
-    workbench_resource_id = fields.Str(required=True)
-
-
 class Workbench(Schema):
     gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Enum(WorkbenchStatus, by_value=True, required=True)
@@ -100,3 +96,9 @@ class WorkbenchNotification(Schema):
 
 class WorkbenchNotificationList(Schema):
     notifications = fields.List(fields.Nested(WorkbenchNotification), required=True)
+
+
+class WorkbenchRenewSSLCertificateRequest(Schema):
+    workspace_project_id = fields.Str(required=True)
+    user_email = fields.Str(required=True)
+    workbench_resource_id = fields.Str(required=True)
