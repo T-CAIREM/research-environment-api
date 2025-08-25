@@ -110,7 +110,9 @@ def _display_time(seconds: float) -> str:
 
 
 def check_google_quotas(
-    base_quota_entity: entities.BaseQuotaMetricsEntity, quota_metrics_entity
+    base_quota_entity: entities.BaseQuotaMetricsEntity,
+    quota_metrics_entity,
+    region: str,
 ) -> List[entities.QuotaInfo]:
     project_id = base_quota_entity.workspace_project_id
     service_info = _get_service_info(project_id)
@@ -120,7 +122,8 @@ def check_google_quotas(
         entities.QuotaInfo(
             metric_name=limit.display_name,
             limit=limit.values["DEFAULT"],
-            usage=_get_current_metric_usage(project_id, limit.metric),
+            usage=_get_current_metric_usage(project_id, limit.metric, region),
+            region=region,
         )
         for limit in service_info.config.quota.limits
         if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
@@ -137,7 +140,7 @@ def _get_service_info(project_id: str) -> resources.Service:
 
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
-def _get_current_metric_usage(project_id: str, metric: str) -> int:
+def _get_current_metric_usage(project_id: str, metric: str, region: str) -> int:
     client = app.config.google_metric_service_client
 
     # Query current usage for the given metric
@@ -155,7 +158,7 @@ def _get_current_metric_usage(project_id: str, metric: str) -> int:
     )
     request = monitoring_v3.ListTimeSeriesRequest(
         name=project_name,
-        filter=_build_filter(project_id, metric),
+        filter=_build_filter(project_id, metric, region),
         interval=interval,
         aggregation=aggregation,
         view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
@@ -167,13 +170,14 @@ def _get_current_metric_usage(project_id: str, metric: str) -> int:
     return 0 if len(results) == 0 else results[0].points[0].value.int64_value
 
 
-def _build_filter(project_id: str, metric: str) -> str:
+def _build_filter(project_id: str, metric: str, region: str) -> str:
     return (
         'resource.type="consumer_quota" AND '
         'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
         f'resource.label.project_id="{project_id}" AND '
         'resource.label.service="compute.googleapis.com" AND '
-        f'metric.label.quota_metric="{metric}"'
+        f'metric.label.quota_metric="{metric}" AND '
+        f'resource.label.location="{region}"'
     )
 
 

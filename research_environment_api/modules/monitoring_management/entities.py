@@ -39,6 +39,7 @@ class QuotaInfo:
     metric_name: str
     limit: int
     usage: int
+    region: str
 
 
 @dataclass

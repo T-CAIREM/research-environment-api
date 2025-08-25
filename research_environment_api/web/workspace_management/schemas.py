@@ -98,3 +98,10 @@ class ListWorkspaceQuotasRequest(Schema):
 class UpdateWorkspaceBillingAccountRequest(Schema):
     workspace_project_id = fields.Str(required=True)
     billing_account_id = fields.Str(required=True)
+
+
+class QuotaInfoSchema(Schema):
+    metric_name = fields.Str(required=True)
+    limit = fields.Int(required=True)
+    usage = fields.Int(required=True)
+    region = fields.Str(required=True)
