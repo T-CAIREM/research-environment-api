@@ -111,7 +111,6 @@ def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]
 
 def validate_gpu_accelerator(project_id: str, name: str, workbench_type: str) -> bool:
     if workbench_type in ["jupyter", "collaborative"]:
-
         valid_accelerators = {
             key
             for key in AcceleratorConfig.AcceleratorType.__members__.keys()
@@ -233,12 +232,8 @@ def start_stopped_workbenches(folder_id: str):
     instances_to_start = []
 
     for project_id in active_project_ids:
-        gce_instances = _fetch_gce_instances(project_id)
-        for instance in gce_instances:
-            zone = instance.zone.split("/")[-1]
-            region = zone.rsplit("-", 1)[0]
-
-            for zone in constants.AVAILABLE_ZONES.get(region, []):
+        for region, zones in constants.AVAILABLE_ZONES.items():
+            for zone in zones:
                 for nb_instance in notebooks_client.list_instances(
                     parent=f"projects/{project_id}/locations/{zone}"
                 ):
