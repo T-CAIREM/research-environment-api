@@ -158,7 +158,7 @@ def _get_current_metric_usage(project_id: str, metric: str, region: str) -> int:
     )
     request = monitoring_v3.ListTimeSeriesRequest(
         name=project_name,
-        filter=_build_filter(project_id, metric, region),
+        filter=_build_filter(project_id, region, metric),
         interval=interval,
         aggregation=aggregation,
         view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
@@ -170,7 +170,7 @@ def _get_current_metric_usage(project_id: str, metric: str, region: str) -> int:
     return 0 if len(results) == 0 else results[0].points[0].value.int64_value
 
 
-def _build_filter(project_id: str, metric: str, region: str) -> str:
+def _build_filter(project_id: str, region: str, metric: str) -> str:
     return (
         'resource.type="consumer_quota" AND '
         'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
