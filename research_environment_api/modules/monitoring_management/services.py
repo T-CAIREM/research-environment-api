@@ -122,7 +122,7 @@ def check_google_quotas(
         entities.QuotaInfo(
             metric_name=limit.display_name,
             limit=limit.values["DEFAULT"],
-            usage=_get_current_metric_usage(project_id, limit.metric, region),
+            usage=_get_current_metric_usage(project_id, region, limit.metric),
             region=region,
         )
         for limit in service_info.config.quota.limits
@@ -140,7 +140,7 @@ def _get_service_info(project_id: str) -> resources.Service:
 
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
-def _get_current_metric_usage(project_id: str, metric: str, region: str) -> int:
+def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
     client = app.config.google_metric_service_client
 
     # Query current usage for the given metric
@@ -181,18 +181,22 @@ def _build_filter(project_id: str, region: str, metric: str) -> str:
     )
 
 
-def clear_quotas_cache(project_id: str, quota_metrics_entity) -> None:
+def clear_quotas_cache(project_id: str, region: str, quota_metrics_entity) -> None:
     for metric in quota_metrics_entity:
-        cache.delete_memoized(_get_current_metric_usage, project_id, metric.value)
+        cache.delete_memoized(
+            _get_current_metric_usage, project_id, region, metric.value
+        )
     cache.delete_memoized(_get_service_info, project_id)
 
 
-def check_workbench_update_quotas(workspace_project_id: str, machine_type: MachineType):
+def check_workbench_update_quotas(
+    workspace_project_id: str, region: str, machine_type: MachineType
+):
     base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
         workspace_project_id=workspace_project_id
     )
     quotas = check_google_quotas(
-        base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity
+        base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity, region
     )
     machine_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type.value)
     additional_quotas_dict = {"CPUs": machine_resources.cpu}

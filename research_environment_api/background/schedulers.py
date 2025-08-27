@@ -65,6 +65,7 @@ def create_jupyter_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
         GeneralQuotaMetrics,
     )
 
@@ -132,6 +133,7 @@ def create_collaborative_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
         GeneralQuotaMetrics,
     )
 
@@ -295,6 +297,7 @@ def stop_compute_engine_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_stop_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -331,6 +334,7 @@ def stop_jupyter_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_stop_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -367,6 +371,7 @@ def start_jupyter_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_start_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -409,11 +414,13 @@ def update_jupyter_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
     monitoring_services.check_workbench_update_quotas(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         workbench_update_request.machine_type,
     )
     build = builds.update_jupyter_workbench_build(
@@ -461,6 +468,7 @@ def destroy_jupyter_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -512,6 +520,7 @@ def stop_collaborative_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_stop_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -548,6 +557,7 @@ def start_collaborative_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_start_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -590,11 +600,13 @@ def update_collaborative_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
     monitoring_services.check_workbench_update_quotas(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         workbench_update_request.machine_type,
     )
     build = builds.update_collaborative_workbench_build(
@@ -642,6 +654,7 @@ def destroy_collaborative_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -720,6 +733,7 @@ def create_rstudio_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_creation_request.workspace_project_id,
+        workbench_creation_request.region,
         GeneralQuotaMetrics,
     )
 
@@ -777,6 +791,7 @@ def start_rstudio_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_start_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
@@ -826,11 +841,13 @@ def update_rstudio_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
     monitoring_services.check_workbench_update_quotas(
         workbench_update_request.workspace_project_id,
+        workbench.region,
         workbench_update_request.machine_type,
     )
 
@@ -884,6 +901,7 @@ def destroy_rstudio_workbench(
 
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
+        workbench.region,
         GeneralQuotaMetrics,
     )
 
