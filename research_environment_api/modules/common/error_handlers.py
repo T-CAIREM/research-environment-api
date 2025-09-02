@@ -69,19 +69,35 @@ def safe_google_service_call(
 def _classify_and_generate_message(error_str: str, resource_id: str) -> tuple[str, str]:
     """Classify error and generate user-friendly message in one step."""
     
-    if any(pattern in error_str for pattern in ["billing", "Cloud billing is not enabled", "This API method requires billing"]):
-        return "billing_disabled", (
-            f"Billing is disabled for {resource_id}. "
-            f"Please enable billing at "
-            f"https://console.developers.google.com/billing/enable?project={resource_id}"
-        )
-    elif "API has not been used" in error_str or "has not been used in project" in error_str:
-        return "api_not_enabled", f"Required APIs are not enabled for {resource_id}. The resource may still be provisioning."
-    elif "Permission denied" in error_str or "Access denied" in error_str:
-        return "permission_denied", f"Access denied to {resource_id}. Check your permissions."
-    elif "not found" in error_str:
-        return "not_found", f"Resource {resource_id} not found or has been deleted."
-    elif "Quota exceeded" in error_str:
-        return "quota_exceeded", f"Quota exceeded for {resource_id}. Please try again later."
-    else:
-        return "unknown", f"Service error for {resource_id}: {error_str}"
+    error_patterns = {
+        "billing_disabled": {
+            "patterns": ["billing", "Cloud billing is not enabled", "This API method requires billing"],
+            "message": (
+                f"Billing is disabled for {resource_id}. "
+                f"Please enable billing at "
+                f"https://console.developers.google.com/billing/enable?project={resource_id}"
+            )
+        },
+        "api_not_enabled": {
+            "patterns": ["API has not been used", "has not been used in project"],
+            "message": f"Required APIs are not enabled for {resource_id}. The resource may still be provisioning."
+        },
+        "permission_denied": {
+            "patterns": ["Permission denied", "Access denied"],
+            "message": f"Access denied to {resource_id}. Check your permissions."
+        },
+        "not_found": {
+            "patterns": ["not found"],
+            "message": f"Resource {resource_id} not found or has been deleted."
+        },
+        "quota_exceeded": {
+            "patterns": ["Quota exceeded"],
+            "message": f"Quota exceeded for {resource_id}. Please try again later."
+        }
+    }
+    
+    for error_type, config in error_patterns.items():
+        if any(pattern in error_str for pattern in config["patterns"]):
+            return error_type, config["message"]
+    
+    return "unknown", f"Service error for {resource_id}: {error_str}"
