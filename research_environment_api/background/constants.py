@@ -16,6 +16,7 @@ AVAILABLE_ZONES = {
 CLOUD_BUILD_ERROR_MESSAGE = {
     14: "Insufficient resources in the selected region. Please try again later.",
     7: "Exceeded quota limits. Please check your quota and try again.",
+    3: "The selected machine type and GPU are not compatible. Please choose a compatible combination.",
     43: "Permission denied. Please check IAM permissions.",
     44: "Resource not found. Please verify resource names or configurations.",
     40: "Client-side HTTP error. Review permissions or request format.",
