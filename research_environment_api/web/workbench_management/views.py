@@ -263,7 +263,12 @@ def get_collaborators():
       description: Retrieves the list of collaborators for a workbench.
       parameters:
         - in: query
-          name: workbench_id
+          name: workspace_project_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: service_account_name
           schema:
             type: string
       responses:
@@ -273,12 +278,8 @@ def get_collaborators():
             application/json:
               schema: WorkbenchCollaboratorList
     """
-    body = request.get_json()
-    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(body)
-    get_collaborators_entity = entities.WorkbenchGetCollaborators(
-        **get_collaborators_request
-    )
-
+    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(request.args)
+    get_collaborators_entity = entities.WorkbenchGetCollaborators(**get_collaborators_request)
     collaborators = services.get_workbench_collaborators(get_collaborators_entity)
     serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)
 
@@ -294,10 +295,17 @@ def get_notifications():
       tags:
         - workbench_management
       description: Retrieves the list of unviewed failed notifications for a workbench.
-      requestBody:
-        content:
-          application/json:
-            schema: WorkbenchNotificationRequest
+      parameters:
+        - in: query
+          name: workspace_project_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: service_account_name
+          schema:
+            type: string
+          required: true
       responses:
         200:
           description: Returns the list of notifications.
@@ -305,12 +313,8 @@ def get_notifications():
             application/json:
               schema: WorkbenchNotificationList
     """
-    body = request.get_json()
-    get_notifications_request = schemas.WorkbenchNotificationRequest().load(body)
-    get_notifications_entity = entities.WorkbenchGetNotifications(
-        **get_notifications_request
-    )
-
+    get_notifications_request = schemas.WorkbenchNotificationRequest().load(request.args)
+    get_notifications_entity = entities.WorkbenchGetNotifications(**get_notifications_request)
     notifications = services.get_workbench_notifications(get_notifications_entity)
     serialized_notifications = schemas.WorkbenchNotificationList().dump(notifications)
 
