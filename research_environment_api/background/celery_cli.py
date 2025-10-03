@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# helper command line to test celery tasks management
 """
 Command-line interface for Celery management operations.
 """
@@ -184,7 +185,7 @@ def main():
         parents=[format_parser]
     )
     delete_id_parser.add_argument("task_id", help="ID of the task to delete")
-    delete_id_parser.set_defaults(func=delete_task_id)
+    delete_id_parser.set_defaults(func=delete_task_id_new)
 
 
     # Delete tasks by pattern
