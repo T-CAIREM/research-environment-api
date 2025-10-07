@@ -10,24 +10,44 @@ import sys
 from typing import List, Dict, Any, Optional
 
 from research_environment_api.background import celery_management
+from research_environment_api.modules.celery_management import services
+from dataclasses import is_dataclass, asdict
 
+
+def _to_serializable(obj):
+    if is_dataclass(obj):
+        return asdict(obj)
+    if isinstance(obj, dict):
+        return obj
+    if hasattr(obj, "__dict__"):
+        return {k: v for k, v in obj.__dict__.items()}
+    return str(obj)
 
 def format_output(data: Any, output_format: str = 'json') -> str:
     """Format the output data according to the specified format."""
     if output_format.lower() == 'json':
-        return json.dumps(data, indent=2, default=str)
+        return json.dumps(data, indent=2, default=_to_serializable)
     elif output_format.lower() == 'pretty':
         if isinstance(data, list):
             result = []
             for item in data:
-                result.append("\n".join([f"{k}: {v}" for k, v in item.items()]))
+                # normalize item to dict if it's a dataclass or object
+                if not isinstance(item, dict):
+                    item = _to_serializable(item)
+                if isinstance(item, dict):
+                    result.append("\n".join([f"{k}: {v}" for k, v in item.items()]))
+                else:
+                    result.append(str(item))
                 result.append("-" * 50)
             return "\n".join(result)
         elif isinstance(data, dict):
-            return "\n".join([f"{k}: {v}" for k, v in data.items()])
+            # convert nested dataclasses/objects if present
+            normalized = {k: _to_serializable(v) for k, v in data.items()}
+            return "\n".join([f"{k}: {v}" for k, v in normalized.items()])
         else:
-            return str(data)
-    return str(data)
+            return str(_to_serializable(data))
+    return str(_to_serializable(data))
+
 
 
 def search_tasks(args):
@@ -89,7 +109,8 @@ def delete_task_id(args):
 
 def delete_task_id_new(args):
     """Permanently delete a task by ID from broker + backend."""
-    result = celery_management.delete_task_completely(args.task_id)
+    task_ids = args.task_ids if isinstance(args.task_ids, list) else [args.task_ids]
+    result = services.delete_tasks_completely(task_ids)
     print(format_output(result, args.format))
 
 def delete_tasks_pattern(args):
@@ -184,7 +205,11 @@ def main():
         "delete", help="Permanently delete a task by ID from broker and backend",
         parents=[format_parser]
     )
-    delete_id_parser.add_argument("task_id", help="ID of the task to delete")
+    delete_id_parser.add_argument(
+        "task_ids",
+        nargs="+",
+        help="ID(s) of the task(s) to delete (provide one or more)"
+    )
     delete_id_parser.set_defaults(func=delete_task_id_new)
 
 

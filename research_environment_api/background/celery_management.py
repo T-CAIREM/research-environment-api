@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from celery.result import AsyncResult
 from research_environment_api.worker import app as celery_app
+from research_environment_api.background.constants import REDIS_PATTERNS
 
 
 def get_task_state(task_id: str) -> str:
@@ -180,69 +181,6 @@ def list_backend_tasks(limit: int = 100, pattern: str = None) -> List[Dict[str, 
     return tasks
 
 
-def delete_task_by_id(task_id: str) -> Dict[str, Any]:
-    """
-    Permanently delete a task by ID from both broker (Redis) and backend.
-
-    Args:
-        task_id: The ID of the task to delete
-
-    Returns:
-        Dict with operation results
-    """
-    result = {"task_id": task_id, "operations": {}}
-
-    # Step 1: Revoke task
-    try:
-        celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
-        result["operations"]["revoke"] = "success"
-    except Exception as e:
-        result["operations"]["revoke"] = f"failed: {str(e)}"
-
-    backend = celery_app.backend
-    broker = celery_app.broker_connection().channel().client
-
-    # Step 2: Remove task metadata from result backend
-    if hasattr(backend, "client"):
-        try:
-            backend_key = f"celery-task-meta-{task_id}"
-            backend.client.delete(backend_key)
-        except Exception as e:
-            result["operations"]["backend_removal"] = f"failed: {str(e)}"
-
-    # Step 3: Remove task from broker (pending/retry/scheduled)
-    try:
-        removed = 0
-
-        default_queue = celery_app.conf.task_default_queue or "celery"
-        queue_names = [default_queue]
-
-        if hasattr(celery_app.conf, 'task_routes') and celery_app.conf.task_routes:
-            for route in celery_app.conf.task_routes.values():
-                if isinstance(route, dict) and 'queue' in route:
-                    queue_names.append(route['queue'])
-
-        for queue_name in set(queue_names):
-            key_type = broker.type(queue_name).decode('utf-8')
-            if key_type == 'list':
-                removed += broker.lrem(queue_name, 0, task_id)
-
-        for key in ["unacked", "unacked_index", "scheduled"]:
-            if broker.exists(key) and broker.type(key).decode() == "zset":
-                for item in broker.zrange(key, 0, -1):
-                    if task_id.encode() in item:
-                        broker.zrem(key, item)
-
-        result["operations"]["broker_removal"] = "success" if removed else "not found"
-    except Exception as e:
-        result["operations"]["broker_removal"] = f"failed: {str(e)}"
-
-    result = AsyncResult(task_id, app=celery_app)
-    result.forget()
-
-    return True
-
-
 def delete_task_completely(task_id: str) -> Dict[str, Any]:
     """
     Completely and definitively remove a task from all possible storage locations.
@@ -360,19 +298,9 @@ def delete_task_completely(task_id: str) -> Dict[str, Any]:
 
         tid_bytes = _to_bytes(task_id)
 
-        # Set of Redis key patterns to scan
-        patterns = [
-            "celery*",           # Default queue and related keys
-            "*_kombu*",          # Kombu binding keys
-            "unacked*",          # Unacknowledged tasks
-            "scheduled*",        # Delayed/scheduled tasks
-            "_kombu.delay.*",    # Delay queues
-            "retry*",            # Retry queues
-        ]
-
         # Scan Redis for all relevant keys
         seen_keys = set()
-        for pattern in patterns:
+        for pattern in REDIS_PATTERNS:
             try:
                 for raw_key in broker_client.scan_iter(match=pattern):
                     # Normalize key to string
@@ -483,7 +411,6 @@ def delete_task_completely(task_id: str) -> Dict[str, Any]:
     except Exception as e:
         result["operations"]["broker_removal"] = f"failed: {str(e)}"
 
-    # Step 4: Forget task (client-side removal)
     try:
         task_result = AsyncResult(task_id, app=celery_app)
         task_result.forget()

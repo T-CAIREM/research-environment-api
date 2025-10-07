@@ -16,3 +16,12 @@ AVAILABLE_ZONES = {
 CLOUD_BUILD_ERROR_MESSAGE = {
     14: "Insufficient resources in the selected region. Please try again later."
 }
+
+REDIS_PATTERNS = [
+    "celery*",
+    "*_kombu*",
+    "unacked*",
+    "scheduled*",
+    "_kombu.delay.*",
+    "retry*",
+]
