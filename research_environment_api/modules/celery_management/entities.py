@@ -42,8 +42,6 @@ class Task:
 class TaskOperationResult:
     task_id: str
     is_successful: bool
-    task_type: Optional[str] = None
-    worker: Optional[str] = None
 
 
 @dataclass

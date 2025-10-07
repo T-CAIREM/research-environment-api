@@ -110,7 +110,7 @@ def delete_task_id(args):
 def delete_task_id_new(args):
     """Permanently delete a task by ID from broker + backend."""
     task_ids = args.task_ids if isinstance(args.task_ids, list) else [args.task_ids]
-    result = services.delete_tasks_completely(task_ids)
+    result = services.delete_tasks(task_ids)
     print(format_output(result, args.format))
 
 def delete_tasks_pattern(args):
