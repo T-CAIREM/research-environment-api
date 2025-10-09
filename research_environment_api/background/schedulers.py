@@ -61,6 +61,7 @@ def create_jupyter_workbench(
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
         collaborative=workbench_creation_request.collaborative,
+        associated_event=workbench_creation_request.associated_event
     )
 
     monitoring_services.clear_quotas_cache(
@@ -129,6 +130,7 @@ def create_collaborative_workbench(
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
         collaborative=workbench_creation_request.collaborative,
+        associated_event=workbench_creation_request.associated_event
     )
 
     monitoring_services.clear_quotas_cache(
@@ -754,6 +756,7 @@ def create_rstudio_workbench(
         bucket_name=workbench_creation_request.bucket_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        associated_event=workbench_creation_request.associated_event
     )
 
     with app.database_session() as session:
