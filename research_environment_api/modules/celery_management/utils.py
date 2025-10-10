@@ -1,10 +1,6 @@
-import logging
-from typing import Dict, Any, Optional
-import time
+from celery.result import AsyncResult
 
 from research_environment_api.worker import app as celery_app
-from research_environment_api.background.constants import REDIS_PATTERNS
-from celery.result import AsyncResult
 
 
 def get_task_state(task_id: str) -> str:
