@@ -4,7 +4,10 @@ from typing import List, Optional
 from celery.result import AsyncResult
 
 from research_environment_api.modules.celery_management.entities import (
-    Task, TaskResult, TaskOperationResult, WorkerStats
+    Task,
+    TaskResult,
+    TaskOperationResult,
+    WorkerStats,
 )
 from research_environment_api.modules.celery_management.utils import (
     get_task_state,
@@ -27,44 +30,53 @@ def search_tasks_by_name(name_fragment: str) -> List[Task]:
         for task in tasks:
             if name_fragment.lower() in task.get("name", "").lower():
                 state = get_task_state(task["id"])
-                all_tasks.append(Task(
-                    id=task["id"],
-                    name=task.get("name"),
-                    args=task.get("args"),
-                    kwargs=task.get("kwargs"),
-                    status=state,
-                    worker=worker
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task["id"],
+                        name=task.get("name"),
+                        args=task.get("args"),
+                        kwargs=task.get("kwargs"),
+                        status=state,
+                        worker=worker,
+                    )
+                )
 
     # Reserved tasks
     for worker, tasks in reserved_tasks.items():
         for task in tasks:
             if name_fragment.lower() in task.get("name", "").lower():
                 state = get_task_state(task["id"])
-                all_tasks.append(Task(
-                    id=task["id"],
-                    name=task.get("name"),
-                    args=task.get("args"),
-                    kwargs=task.get("kwargs"),
-                    status=state,
-                    worker=worker
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task["id"],
+                        name=task.get("name"),
+                        args=task.get("args"),
+                        kwargs=task.get("kwargs"),
+                        status=state,
+                        worker=worker,
+                    )
+                )
 
     # Scheduled tasks
     for worker, tasks in scheduled_tasks.items():
         for task in tasks:
-            if "request" in task and name_fragment.lower() in task["request"].get("name", "").lower():
+            if (
+                "request" in task
+                and name_fragment.lower() in task["request"].get("name", "").lower()
+            ):
                 task_data = task["request"]
                 state = get_task_state(task_data["id"])
-                all_tasks.append(Task(
-                    id=task_data["id"],
-                    name=task_data.get("name"),
-                    args=task_data.get("args"),
-                    kwargs=task_data.get("kwargs"),
-                    status=state,
-                    worker=worker,
-                    eta=task.get("eta")
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task_data["id"],
+                        name=task_data.get("name"),
+                        args=task_data.get("args"),
+                        kwargs=task_data.get("kwargs"),
+                        status=state,
+                        worker=worker,
+                        eta=task.get("eta"),
+                    )
+                )
 
     return all_tasks
 
@@ -91,14 +103,16 @@ def filter_tasks(
 
             state = get_task_state(task["id"])
             if not status or status.upper() == state.upper():
-                all_tasks.append(Task(
-                    id=task["id"],
-                    name=task.get("name"),
-                    args=task.get("args"),
-                    kwargs=task.get("kwargs"),
-                    status=state,
-                    worker=worker_name
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task["id"],
+                        name=task.get("name"),
+                        args=task.get("args"),
+                        kwargs=task.get("kwargs"),
+                        status=state,
+                        worker=worker_name,
+                    )
+                )
 
     # Process reserved tasks
     for worker_name, tasks in reserved_tasks.items():
@@ -110,14 +124,16 @@ def filter_tasks(
 
             state = get_task_state(task["id"])
             if not status or status.upper() == state.upper():
-                all_tasks.append(Task(
-                    id=task["id"],
-                    name=task.get("name"),
-                    args=task.get("args"),
-                    kwargs=task.get("kwargs"),
-                    status=state,
-                    worker=worker_name
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task["id"],
+                        name=task.get("name"),
+                        args=task.get("args"),
+                        kwargs=task.get("kwargs"),
+                        status=state,
+                        worker=worker_name,
+                    )
+                )
 
     # Process scheduled tasks
     for worker_name, tasks in scheduled_tasks.items():
@@ -133,15 +149,17 @@ def filter_tasks(
 
             state = get_task_state(task_req["id"])
             if not status or status.upper() == state.upper():
-                all_tasks.append(Task(
-                    id=task_req["id"],
-                    name=task_req.get("name"),
-                    args=task_req.get("args"),
-                    kwargs=task_req.get("kwargs"),
-                    status=state,
-                    worker=worker_name,
-                    eta=task.get("eta")
-                ))
+                all_tasks.append(
+                    Task(
+                        id=task_req["id"],
+                        name=task_req.get("name"),
+                        args=task_req.get("args"),
+                        kwargs=task_req.get("kwargs"),
+                        status=state,
+                        worker=worker_name,
+                        eta=task.get("eta"),
+                    )
+                )
 
     return all_tasks
 
@@ -159,7 +177,9 @@ def get_task_details(task_id: str) -> Task:
             if not result.failed():
                 task_result = TaskResult(value=result.get(timeout=1))
             else:
-                task_result = TaskResult(error=str(result.result), traceback=result.traceback)
+                task_result = TaskResult(
+                    error=str(result.result), traceback=result.traceback
+                )
         except Exception as e:
             task_result = TaskResult(error=f"Error retrieving result: {str(e)}")
 
@@ -170,7 +190,7 @@ def get_task_details(task_id: str) -> Task:
         successful=result.successful(),
         failed=result.failed(),
         date_done=result.date_done,
-        result=task_result
+        result=task_result,
     )
 
 
@@ -180,7 +200,7 @@ def list_backend_tasks(limit: int = 100, pattern: str = None) -> List[Task]:
     count = 0
     logger = logging.getLogger(__name__)
 
-    if backend_client and hasattr(backend_client, 'scan_iter'):
+    if backend_client and hasattr(backend_client, "scan_iter"):
         redis_pattern = "celery-task-meta-*"
 
         for key in backend_client.scan_iter(match=redis_pattern):
@@ -189,23 +209,25 @@ def list_backend_tasks(limit: int = 100, pattern: str = None) -> List[Task]:
 
             try:
                 task_data = backend_client.get(key)
-                task_id = key.decode('utf-8').replace('celery-task-meta-', '')
+                task_id = key.decode("utf-8").replace("celery-task-meta-", "")
 
                 if task_data:
                     task = get_task_details(task_id)
 
                     if not pattern or (
-                        (task.name and pattern.lower() in task.name.lower()) or
-                        pattern.lower() in task_id.lower()
+                        (task.name and pattern.lower() in task.name.lower())
+                        or pattern.lower() in task_id.lower()
                     ):
                         tasks.append(task)
                         count += 1
             except Exception as e:
                 logger.error(f"Error processing task key {key}: {str(e)}")
-                tasks.append(Task(
-                    id=key.decode('utf-8').replace('celery-task-meta-', ''),
-                    result=TaskResult(error=f"Error processing task: {str(e)}")
-                ))
+                tasks.append(
+                    Task(
+                        id=key.decode("utf-8").replace("celery-task-meta-", ""),
+                        result=TaskResult(error=f"Error processing task: {str(e)}"),
+                    )
+                )
     else:
         logger.warning("Direct result backend access not supported")
 
@@ -220,12 +242,14 @@ def get_worker_stats() -> List[WorkerStats]:
 
     result = []
     for worker, worker_stats in stats.items():
-        result.append(WorkerStats(
-            name=worker,
-            stats=worker_stats,
-            active_tasks=len(active.get(worker, [])),
-            registered_tasks=registered_tasks.get(worker, [])
-        ))
+        result.append(
+            WorkerStats(
+                name=worker,
+                stats=worker_stats,
+                active_tasks=len(active.get(worker, [])),
+                registered_tasks=registered_tasks.get(worker, []),
+            )
+        )
 
     return result
 
