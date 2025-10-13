@@ -17,7 +17,15 @@ from research_environment_api.modules.admin_panel_management.utils import (
     force_task_state,
     sort_tasks_by_date,
 )
+from research_environment_api.modules.app import app
 from research_environment_api.worker import app as celery_app
+
+
+def authenticate_admin(username: str, password: str) -> bool:
+    return (
+        username == app.config.admin_panel_username
+        and password == app.config.admin_panel_password
+    )
 
 
 def search_tasks_by_name(name_fragment: str) -> List[Task]:
