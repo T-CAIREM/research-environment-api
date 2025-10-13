@@ -154,6 +154,8 @@ locals {
     CUSTOMER_ID                         = var.gcp_customer_id
     GITHUB_SSH_KEY_KSM_ID               = var.github_ssh_key_ksm_id
     MONITORING_CSV_EXPORTS_ROOT_BUCKET  = var.monitoring_csv_exports_root_bucket
+    ADMIN_PANEL_USERNAME                = var.admin_panel_username
+    ADMIN_PANEL_PASSWORD                = var.admin_panel_password
   }
 
   _backend_volumes = {

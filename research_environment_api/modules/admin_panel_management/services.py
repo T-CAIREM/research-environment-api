@@ -12,7 +12,15 @@ from research_environment_api.modules.admin_panel_management.entities import (
     WorkerStats,
 )
 from research_environment_api.modules.admin_panel_management import utils
+from research_environment_api.modules.app import app
 from research_environment_api.worker import app as celery_app
+
+
+def authenticate_admin(username: str, password: str) -> bool:
+    return (
+        username == app.config.admin_panel_username
+        and password == app.config.admin_panel_password
+    )
 
 
 def _process_tasks(
