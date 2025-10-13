@@ -135,6 +135,14 @@ variable "github_ssh_key_ksm_id" {
   type = string
 }
 
+variable "admin_panel_username" {
+  type = string
+}
+
+variable "admin_panel_password" {
+  type = string
+}
+
 variable "gcs_project_id" {
   default = "data-project-333710"
   type    = string
