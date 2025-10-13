@@ -3,13 +3,13 @@ from typing import List, Optional
 
 from celery.result import AsyncResult
 
-from research_environment_api.modules.celery_management.entities import (
+from research_environment_api.modules.admin_panel_management.entities import (
     Task,
     TaskResult,
     TaskOperationResult,
     WorkerStats,
 )
-from research_environment_api.modules.celery_management.utils import (
+from research_environment_api.modules.admin_panel_management.utils import (
     get_task_state,
     get_backend_client,
     force_task_state,
