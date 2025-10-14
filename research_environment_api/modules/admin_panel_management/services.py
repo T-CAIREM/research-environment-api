@@ -1,4 +1,6 @@
 import logging
+import secrets
+
 from typing import List, Optional
 
 from celery.result import AsyncResult
@@ -23,8 +25,8 @@ from research_environment_api.worker import app as celery_app
 
 def authenticate_admin(username: str, password: str) -> bool:
     return (
-        username == app.config.admin_panel_username
-        and password == app.config.admin_panel_password
+        secrets.compare_digest(username, app.config.admin_panel_username)
+        and secrets.compare_digest(password, app.config.admin_panel_password)
     )
 
 
