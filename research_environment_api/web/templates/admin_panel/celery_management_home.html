@@ -80,16 +80,14 @@
                     </button>
                 </div>
                 <div>
-                    <form id="search-form" class="form-inline" method="get" action="{{ url_for('admin_panel_management.celery_management') }}">
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control" id="task-search" name="q" placeholder="Search tasks..." value="{{ search_query }}">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="submit" id="search-button">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="task-search" name="q" placeholder="Search tasks..." value="{{ search_query }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="search-button">
+                                <i class="fas fa-search"></i>
+                            </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
 
@@ -285,9 +283,7 @@
                     row.append($('<td></td>').html(statusBadge));
                     row.append($('<td></td>').text(task.worker || 'N/A'));
 
-                    // Add action buttons
                     const actionsCell = $('<td></td>');
-                    const viewButton = $('<button class="btn btn-sm btn-info task-detail-btn mr-2" data-task-id="' + task.id + '"><i class="fas fa-eye"></i></button>');
                     const deleteButton = $('<button class="btn btn-sm btn-danger task-delete-btn" data-task-id="' + task.id + '"><i class="fas fa-trash"></i></button>');
 
                     actionsCell.append(viewButton);
@@ -374,9 +370,54 @@
         // Handle search form submission
         $('#task-search').keypress(function(e) {
             if (e.which === 13) {
-                $('#search-form').submit();
-                return false;
+                e.preventDefault();
+                const searchQuery = $(this).val();
+
+                // AJAX search request
+                $.ajax({
+                    url: '{{ url_for("admin_panel_management.get_celery_tasks_api") }}',
+                    type: 'GET',
+                    data: {
+                        q: searchQuery,
+                        limit: 20 // Limit to 20 tasks by default
+                    },
+                    success: function(data) {
+                        // Update task counts
+                        updateTaskCounts(data.task_counts);
+
+                        // Update task table
+                        updateTaskTable(data.tasks);
+                    },
+                    error: function() {
+                        alert('Error searching tasks');
+                    }
+                });
             }
+        });
+
+        // Search button click
+        $('#search-button').click(function() {
+            const searchQuery = $('#task-search').val();
+
+            // AJAX search request
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_celery_tasks_api") }}',
+                type: 'GET',
+                data: {
+                    q: searchQuery,
+                    limit: 20 // Limit to 20 tasks by default
+                },
+                success: function(data) {
+                    // Update task counts
+                    updateTaskCounts(data.task_counts);
+
+                    // Update task table
+                    updateTaskTable(data.tasks);
+                },
+                error: function() {
+                    alert('Error searching tasks');
+                }
+            });
         });
     });
 </script>
