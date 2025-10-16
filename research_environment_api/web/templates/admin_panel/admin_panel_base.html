@@ -6,6 +6,10 @@
     <title>{% block title %}Admin Panel{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    {% block extra_head %}
+      <link rel="stylesheet" href="{{ url_for('static', filename='admin_panel/css/admin-panel.css') }}">
+      {% block admin_head %}{% endblock %}
+    {% endblock %}
     <style>
         body {
             font-size: .875rem;
