@@ -50,6 +50,77 @@
     border-bottom: 1px solid #e3e6f0;
 }
 
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+  height: 1.2em;
+  width: 100%;
+}
+
+.skeleton-count {
+  height: 1.5em;
+  width: 40%;
+  margin: 0 auto;
+}
+
+.skeleton-text-sm {
+  height: 1em;
+  width: 60%;
+}
+
+.skeleton-text-md {
+  height: 1em;
+  width: 80%;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+}
+
+.skeleton-table-row td {
+  padding: 1rem 0.75rem !important;
+}
+
+.skeleton-cell {
+  height: 1.2em;
+  width: 80%;
+}
+
+.skeleton-cell-sm {
+  width: 40%;
+}
+
+.skeleton-cell-lg {
+  width: 100%;
+}
+
+.skeleton-badge {
+  display: inline-block;
+  width: 60px;
+  height: 18px;
+  border-radius: 10px;
+}
+
+.skeleton-action {
+  height: 30px;
+  width: 30px;
+  border-radius: 4px;
+}
+
 @media (max-width: 768px) {
     .card-body {
         padding: 0.75rem;

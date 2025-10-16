@@ -163,7 +163,6 @@ $(document).ready(function() {
 
     function loadTaskTable(showLoading = true) {
         if (showLoading) {
-            $('#tasks-table-body').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span></td></tr>');
             $('#search-button').prop('disabled', true);
             $('#search-icon').hide();
             $('#search-spinner').show();
@@ -174,7 +173,7 @@ $(document).ready(function() {
             status: activeFilters.status,
             worker: activeFilters.worker,
             task_type: activeFilters.task_type,
-            limit: 20
+            limit: 50 // Increased limit to show more tasks
         };
 
         $.ajax({
@@ -213,9 +212,6 @@ $(document).ready(function() {
     }
 
     function loadWorkerStatus(showLoading = true) {
-        if (showLoading) {
-            $('#workers-table-body').html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i><span class="ml-2">Loading workers...</span></td></tr>');
-        }
 
         $.ajax({
             url: URLS.workers,
@@ -223,6 +219,7 @@ $(document).ready(function() {
             success: function(data) {
                 updateWorkerStats(data);
 
+                // Update worker filter options
                 if (data.length > 0) {
                     availableWorkers = data.map(worker => worker.name);
                     updateWorkerFilterOptions();
