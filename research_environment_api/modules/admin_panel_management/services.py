@@ -263,3 +263,4 @@ def get_tasks(
         tasks = sort_tasks_by_date(tasks, reverse=reverse)
 
     return tasks
+
