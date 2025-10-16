@@ -17,7 +17,9 @@ Celery Management
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Active Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 active-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 active-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
                     </div>
                     <div class="col-auto"><i class="fas fa-running fa-2x text-gray-300"></i></div>
                 </div>
@@ -31,7 +33,9 @@ Celery Management
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Reserved Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 reserved-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 reserved-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
                     </div>
                     <div class="col-auto"><i class="fas fa-pause-circle fa-2x text-gray-300"></i></div>
                 </div>
@@ -44,7 +48,9 @@ Celery Management
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Scheduled Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 scheduled-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 scheduled-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
                     </div>
                     <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
                 </div>
@@ -149,10 +155,29 @@ Celery Management
                     </tr>
                 </thead>
                 <tbody id="tasks-table-body">
-                    <tr>
-                        <td colspan="6" class="text-center">
-                            <i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span>
-                        </td>
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
+                    </tr>
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
+                    </tr>
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
                     </tr>
                 </tbody>
             </table>
@@ -177,10 +202,15 @@ Celery Management
                             </tr>
                         </thead>
                         <tbody id="workers-table-body">
-                            <tr>
-                                <td colspan="3" class="text-center">
-                                    <i class="fas fa-spinner fa-spin"></i><span class="ml-2">Loading workers...</span>
-                                </td>
+                            <tr class="skeleton-table-row">
+                                <td><div class="skeleton skeleton-cell"></div></td>
+                                <td><div class="skeleton skeleton-badge"></div></td>
+                                <td><div class="skeleton skeleton-cell-sm"></div></td>
+                            </tr>
+                            <tr class="skeleton-table-row">
+                                <td><div class="skeleton skeleton-cell"></div></td>
+                                <td><div class="skeleton skeleton-badge"></div></td>
+                                <td><div class="skeleton skeleton-cell-sm"></div></td>
                             </tr>
                         </tbody>
                     </table>
