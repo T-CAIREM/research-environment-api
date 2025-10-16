@@ -6,14 +6,13 @@
 
 {% block content %}
 <div class="row" id="task-counts-row">
-    <!-- Skeleton Loaders for Task Counts -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Active Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 active-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
                     </div>
                     <div class="col-auto"><i class="fas fa-running fa-2x text-gray-300"></i></div>
                 </div>
@@ -27,7 +26,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Reserved Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 reserved-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
                     </div>
                     <div class="col-auto"><i class="fas fa-pause-circle fa-2x text-gray-300"></i></div>
                 </div>
@@ -40,7 +39,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Scheduled Tasks</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 scheduled-tasks-count"><i class="fas fa-spinner fa-spin"></i></div>
                     </div>
                     <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
                 </div>
@@ -90,7 +89,6 @@
                     </tr>
                 </thead>
                 <tbody id="tasks-table-body">
-                    <!-- Skeleton Loader for Task Table -->
                     <tr>
                         <td colspan="5" class="text-center">
                             <i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span>
@@ -119,7 +117,6 @@
                             </tr>
                         </thead>
                         <tbody id="workers-table-body">
-                            <!-- Skeleton Loader for Worker Table -->
                             <tr>
                                 <td colspan="3" class="text-center">
                                     <i class="fas fa-spinner fa-spin"></i><span class="ml-2">Loading workers...</span>
@@ -133,7 +130,6 @@
     </div>
 </div>
 
-<!-- Confirm Delete Modal -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -161,10 +157,57 @@
     $(document).ready(function() {
         let searchTimeout;
 
-        // --- Central Data Loading Function ---
-        function loadAllData(showLoading = true) {
+        function loadTaskCounters() {
+            loadActiveTasksCount();
+            loadReservedTasksCount();
+            loadScheduledTasksCount();
+        }
+
+        function loadActiveTasksCount() {
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_celery_dashboard_data") }}',
+                type: 'GET',
+                data: { counter_type: 'active' },
+                success: function(data) {
+                    $('.active-tasks-count').text(data.task_counts.active || 0);
+                },
+                error: function() {
+                    $('.active-tasks-count').html('<span class="text-danger">Error</span>');
+                }
+            });
+        }
+
+        function loadReservedTasksCount() {
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_celery_dashboard_data") }}',
+                type: 'GET',
+                data: { counter_type: 'reserved' },
+                success: function(data) {
+                    $('.reserved-tasks-count').text(data.task_counts.reserved || 0);
+                },
+                error: function() {
+                    $('.reserved-tasks-count').html('<span class="text-danger">Error</span>');
+                }
+            });
+        }
+
+        function loadScheduledTasksCount() {
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_celery_dashboard_data") }}',
+                type: 'GET',
+                data: { counter_type: 'scheduled' },
+                success: function(data) {
+                    $('.scheduled-tasks-count').text(data.task_counts.scheduled || 0);
+                },
+                error: function() {
+                    $('.scheduled-tasks-count').html('<span class="text-danger">Error</span>');
+                }
+            });
+        }
+
+        function loadTaskTable(showLoading = true) {
             if (showLoading) {
-                $('#tasks-table-body').html('<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading...</span></td></tr>');
+                $('#tasks-table-body').html('<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span></td></tr>');
                 $('#search-button').prop('disabled', true).find('#search-spinner').show();
                 $('#search-button').find('#search-icon').hide();
             }
@@ -182,13 +225,10 @@
                 type: 'GET',
                 data: params,
                 success: function(data) {
-                    updateTaskCounts(data.task_counts);
                     updateTaskTable(data.tasks);
-                    updateWorkerStats(data.worker_stats);
                 },
                 error: function() {
-                    $('#tasks-table-body').html('<tr><td colspan="5" class="text-center text-danger">Error loading data.</td></tr>');
-                    alert('Could not load dashboard data.');
+                    $('#tasks-table-body').html('<tr><td colspan="5" class="text-center text-danger">Error loading tasks.</td></tr>');
                 },
                 complete: function() {
                     if (showLoading) {
@@ -199,11 +239,21 @@
             });
         }
 
-        // --- UI Update Functions ---
-        function updateTaskCounts(counts) {
-            $('#task-counts-row').find('.active-tasks-count').text(counts.active || 0);
-            $('#task-counts-row').find('.reserved-tasks-count').text(counts.reserved || 0);
-            $('#task-counts-row').find('.scheduled-tasks-count').text(counts.scheduled || 0);
+        function loadWorkerStatus(showLoading = true) {
+            if (showLoading) {
+                $('#workers-table-body').html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i><span class="ml-2">Loading workers...</span></td></tr>');
+            }
+
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_workers") }}',
+                type: 'GET',
+                success: function(data) {
+                    updateWorkerStats(data);
+                },
+                error: function() {
+                    $('#workers-table-body').html('<tr><td colspan="3" class="text-center text-danger">Error loading worker data.</td></tr>');
+                }
+            });
         }
 
         function updateTaskTable(tasks) {
@@ -261,10 +311,8 @@
             return '<span class="badge badge-info">' + status + '</span>';
         }
 
-        // --- Event Handlers ---
         function attachActionHandlers() {
             $('.task-detail-btn').off('click').on('click', function() {
-                // Your existing showTaskDetails logic here
             });
             $('.task-delete-btn').off('click').on('click', function() {
                 const taskId = $(this).data('task-id');
@@ -273,36 +321,34 @@
             });
         }
 
-        // Search (live with debounce)
         $('#task-search').on('keyup', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function() {
-                loadAllData();
+                loadTaskTable();
             }, 300);
         });
         $('#search-button').on('click', function() {
             clearTimeout(searchTimeout);
-            loadAllData();
+            loadTaskTable();
         });
 
-        // Filters
         $('#apply-filters').on('click', function() {
-            loadAllData();
+            loadTaskTable();
             $('.dropdown-menu').removeClass('show');
         });
         $('#reset-filters').on('click', function() {
             $('#status-filter, #worker-filter, #task-type-filter').val('');
-            loadAllData();
+            loadTaskTable();
             $('.dropdown-menu').removeClass('show');
         });
 
-        // Purge and Delete
         $('#purge-tasks').on('click', function() {
             if (confirm('Are you sure you want to purge all tasks?')) {
                 $.post('{{ url_for("admin_panel_management.purge_tasks") }}')
                     .done(function(response) {
                         alert(response.purged_count + ' tasks purged.');
-                        loadAllData();
+                        loadTaskTable();
+                        loadTaskCounters(); // Refresh counters after purge
                     }).fail(function() {
                         alert('Error purging tasks.');
                     });
@@ -317,14 +363,22 @@
                 data: JSON.stringify({ task_ids: [taskId] }),
                 success: function() {
                     $('#confirmDeleteModal').modal('hide');
-                    loadAllData();
+                    loadTaskTable();
+                    loadTaskCounters();
                 },
                 error: function() { alert('Error deleting task.'); }
             });
         });
 
-        // Initial Load
-        loadAllData();
+        $('#refresh-counters').on('click', function() {
+            loadTaskCounters();
+        });
+
+        loadTaskCounters();
+        loadTaskTable();
+        loadWorkerStatus();
+
+        setInterval(loadTaskCounters, 10000);
     });
 </script>
 {% endblock %}
