@@ -7,6 +7,7 @@ $(document).ready(function() {
     };
     let availableWorkers = [];
     let availableTaskTypes = [];
+    let selectedTasks = [];
 
     function loadTaskCounters() {
         loadActiveTasksCount();
@@ -147,9 +148,22 @@ $(document).ready(function() {
         }
     }
 
+    function updateSelectedTasksCount() {
+        const count = selectedTasks.length;
+        $('#selected-count').text(count);
+        $('#delete-selected-tasks').prop('disabled', count === 0);
+    }
+
+    function clearSelectedTasks() {
+        selectedTasks = [];
+        $('.task-checkbox').prop('checked', false);
+        $('#select-all-tasks').prop('checked', false);
+        updateSelectedTasksCount();
+    }
+
     function loadTaskTable(showLoading = true) {
         if (showLoading) {
-            $('#tasks-table-body').html('<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span></td></tr>');
+            $('#tasks-table-body').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span></td></tr>');
             $('#search-button').prop('disabled', true);
             $('#search-icon').hide();
             $('#search-spinner').show();
@@ -186,7 +200,7 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                $('#tasks-table-body').html('<tr><td colspan="5" class="text-center text-danger">Error loading tasks.</td></tr>');
+                $('#tasks-table-body').html('<tr><td colspan="6" class="text-center text-danger">Error loading tasks.</td></tr>');
             },
             complete: function() {
                 if (showLoading) {
@@ -227,21 +241,39 @@ $(document).ready(function() {
             tasks.forEach(function(task) {
                 const statusBadge = getStatusBadge(task.status);
                 const truncatedId = task.id.length > 12 ? task.id.substring(0, 12) + '...' : task.id;
+                const isChecked = selectedTasks.includes(task.id);
+                const checkboxId = `task-${task.id.substring(0, 8)}`;
+
                 const row = `
                     <tr>
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input task-checkbox" id="${checkboxId}" 
+                                    data-task-id="${task.id}" ${isChecked ? 'checked' : ''}>
+                                <label class="custom-control-label" for="${checkboxId}"></label>
+                            </div>
+                        </td>
                         <td title="${task.id}">${truncatedId}</td>
                         <td>${task.name || 'N/A'}</td>
                         <td>${statusBadge}</td>
                         <td>${task.worker || 'N/A'}</td>
                         <td>
-                            <button class="btn btn-sm btn-danger task-delete-btn" data-task-id="${task.id}"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-sm btn-danger task-delete-btn" data-task-id="${task.id}" title="Delete Task">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 `;
                 tableBody.append(row);
             });
+
+            const visibleTaskIds = tasks.map(task => task.id);
+            const allVisible = visibleTaskIds.length > 0 &&
+                              visibleTaskIds.every(id => selectedTasks.includes(id));
+            $('#select-all-tasks').prop('checked', allVisible);
+
         } else {
-            tableBody.append('<tr><td colspan="5" class="text-center">No tasks found.</td></tr>');
+            tableBody.append('<tr><td colspan="6" class="text-center">No tasks found.</td></tr>');
         }
         attachActionHandlers();
     }
@@ -275,12 +307,44 @@ $(document).ready(function() {
     }
 
     function attachActionHandlers() {
-
         $('.task-delete-btn').off('click').on('click', function() {
             const taskId = $(this).data('task-id');
-            $('#delete-task-id').text(taskId);
-            $('#confirmDeleteModal').modal('show');
+            showDeleteConfirmation([taskId]);
         });
+
+        $('.task-checkbox').off('click').on('click', function() {
+            const taskId = $(this).data('task-id');
+
+            if ($(this).is(':checked')) {
+                if (!selectedTasks.includes(taskId)) {
+                    selectedTasks.push(taskId);
+                }
+            } else {
+                const index = selectedTasks.indexOf(taskId);
+                if (index > -1) {
+                    selectedTasks.splice(index, 1);
+                }
+                $('#select-all-tasks').prop('checked', false);
+            }
+
+            updateSelectedTasksCount();
+        });
+    }
+
+    function showDeleteConfirmation(taskIds) {
+        if (taskIds.length === 1) {
+            $('#confirmDeleteModalLabel').text('Confirm Delete');
+            $('#confirmDeleteModal .modal-body p:first').text('Are you sure you want to delete this task?');
+            $('#delete-task-ids').text(taskIds[0]).show();
+        } else {
+            $('#confirmDeleteModalLabel').text('Confirm Bulk Delete');
+            $('#confirmDeleteModal .modal-body p:first').text(`Are you sure you want to delete ${taskIds.length} selected tasks?`);
+            $('#delete-task-ids').hide();
+        }
+
+        $('#confirm-delete-btn').data('task-ids', taskIds);
+
+        $('#confirmDeleteModal').modal('show');
     }
 
     function initEventListeners() {
@@ -359,20 +423,73 @@ $(document).ready(function() {
             }
         });
 
+        $('#delete-selected-tasks').on('click', function() {
+            if (selectedTasks.length > 0) {
+                showDeleteConfirmation(selectedTasks);
+            }
+        });
+
         $('#confirm-delete-btn').on('click', function() {
-            const taskId = $('#delete-task-id').text();
+            const taskIds = $(this).data('task-ids');
+
+            if (!taskIds || taskIds.length === 0) {
+                return;
+            }
+
             $.ajax({
                 url: URLS.deleteTasks,
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ task_ids: [taskId] }),
-                success: function() {
+                data: JSON.stringify({ task_ids: taskIds }),
+                success: function(response) {
                     $('#confirmDeleteModal').modal('hide');
+
+                    for (const id of taskIds) {
+                        const index = selectedTasks.indexOf(id);
+                        if (index > -1) {
+                            selectedTasks.splice(index, 1);
+                        }
+                    }
+
+                    updateSelectedTasksCount();
                     loadTaskTable();
                     loadTaskCounters();
+
+                    const message = taskIds.length > 1
+                        ? `Successfully deleted ${taskIds.length} tasks.`
+                        : 'Task deleted successfully.';
+
+                    alert(message);
                 },
-                error: function() { alert('Error deleting task.'); }
+                error: function() {
+                    alert('Error deleting task(s).');
+                }
             });
+        });
+
+        $('#select-all-tasks').on('click', function() {
+            const isChecked = $(this).is(':checked');
+
+            $('.task-checkbox').prop('checked', isChecked);
+
+            if (isChecked) {
+                $('.task-checkbox').each(function() {
+                    const taskId = $(this).data('task-id');
+                    if (!selectedTasks.includes(taskId)) {
+                        selectedTasks.push(taskId);
+                    }
+                });
+            } else {
+                $('.task-checkbox').each(function() {
+                    const taskId = $(this).data('task-id');
+                    const index = selectedTasks.indexOf(taskId);
+                    if (index > -1) {
+                        selectedTasks.splice(index, 1);
+                    }
+                });
+            }
+
+            updateSelectedTasksCount();
         });
 
         $('#refresh-counters').on('click', function() {
@@ -387,8 +504,6 @@ $(document).ready(function() {
         loadTaskTable();
         loadWorkerStatus();
         loadFilterOptions();
-
-        setInterval(loadTaskCounters, 120000);
     }
 
     init();
