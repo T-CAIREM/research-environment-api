@@ -72,9 +72,6 @@
         <div class="table-responsive">
             <div class="d-flex justify-content-between mb-3">
                 <div>
-                    <button type="button" class="btn btn-primary btn-sm" id="refresh-tasks">
-                        <i class="fas fa-sync-alt mr-1"></i> Refresh
-                    </button>
                     <button type="button" class="btn btn-danger btn-sm ml-2" id="purge-tasks">
                         <i class="fas fa-trash mr-1"></i> Purge Tasks
                     </button>
@@ -205,45 +202,6 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // Task refresh loading indicator
-        let isRefreshing = false;
-
-        // AJAX-based task refresh function
-        function refreshTasksAjax() {
-            if (isRefreshing) return;
-
-            isRefreshing = true;
-            $('#refresh-tasks').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Loading...');
-
-            // Get current search query if any
-            const searchQuery = $('#task-search').val();
-
-            // AJAX call to get updated task data
-            $.ajax({
-                url: '{{ url_for("admin_panel_management.get_celery_tasks_api") }}',
-                type: 'GET',
-                data: {
-                    q: searchQuery,
-                    limit: 20 // Limit to 20 tasks by default
-                },
-                success: function(data) {
-                    // Update task counts
-                    updateTaskCounts(data.task_counts);
-
-                    // Update task table
-                    updateTaskTable(data.tasks);
-
-                    // Re-enable refresh button
-                    $('#refresh-tasks').prop('disabled', false).html('<i class="fas fa-sync-alt mr-1"></i> Refresh');
-                    isRefreshing = false;
-                },
-                error: function() {
-                    alert('Error refreshing tasks');
-                    $('#refresh-tasks').prop('disabled', false).html('<i class="fas fa-sync-alt mr-1"></i> Refresh');
-                    isRefreshing = false;
-                }
-            });
-        }
 
         // Function to update task counts in the UI
         function updateTaskCounts(counts) {
@@ -316,11 +274,6 @@
             });
         }
 
-        // Refresh tasks button - use AJAX instead of page reload
-        $('#refresh-tasks').click(function() {
-            refreshTasksAjax();
-        });
-
         // Purge tasks button
         $('#purge-tasks').click(function() {
             if(confirm('Are you sure you want to purge all tasks? This cannot be undone.')) {
@@ -328,9 +281,7 @@
                     url: '{{ url_for("admin_panel_management.purge_tasks") }}',
                     type: 'POST',
                     success: function(response) {
-                        alert('Tasks purged successfully: ' + response.purged_count + ' tasks removed.');
-                        // Use AJAX refresh instead of page reload
-                        refreshTasksAjax();
+                        alert('Tasks purged successfully: ' + response.purged_count + ' tasks removed. Refresh to see results');
                     },
                     error: function() {
                         alert('Error purging tasks.');
