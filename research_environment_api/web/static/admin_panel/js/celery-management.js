@@ -1,5 +1,12 @@
 $(document).ready(function() {
     let searchTimeout;
+    let activeFilters = {
+        status: '',
+        worker: '',
+        task_type: ''
+    };
+    let availableWorkers = [];
+    let availableTaskTypes = [];
 
     function loadTaskCounters() {
         loadActiveTasksCount();
@@ -49,18 +56,110 @@ $(document).ready(function() {
         });
     }
 
+    function updateFilterDisplay() {
+        const activeFilterCount = Object.values(activeFilters).filter(val => val !== '').length;
+
+        if (activeFilterCount > 0) {
+            $('#filter-badge').text(activeFilterCount).show();
+
+            $('#active-filters').show();
+            $('#filter-tags').empty();
+
+            if (activeFilters.status) {
+                addFilterTag('Status', activeFilters.status, 'status');
+            }
+            if (activeFilters.worker) {
+                addFilterTag('Worker', activeFilters.worker, 'worker');
+            }
+            if (activeFilters.task_type) {
+                addFilterTag('Task Type', activeFilters.task_type, 'task_type');
+            }
+        } else {
+            $('#filter-badge').hide();
+            $('#active-filters').hide();
+        }
+    }
+
+    function addFilterTag(label, value, type) {
+        const tag = $(`
+            <span class="badge badge-info mr-2 mb-1 filter-tag">
+                ${label}: ${value}
+                <i class="fas fa-times ml-1 remove-filter" data-filter-type="${type}" style="cursor: pointer;"></i>
+            </span>
+        `);
+        $('#filter-tags').append(tag);
+    }
+
+    function loadFilterOptions() {
+        $.ajax({
+            url: URLS.workers,
+            type: 'GET',
+            success: function(data) {
+                availableWorkers = data.map(worker => worker.name);
+                updateWorkerFilterOptions();
+            }
+        });
+
+        $.ajax({
+            url: URLS.celeryDashboardData,
+            type: 'GET',
+            data: { get_task_types: true },
+            success: function(data) {
+                if (data.task_types) {
+                    availableTaskTypes = data.task_types;
+                    updateTaskTypeFilterOptions();
+                }
+            }
+        });
+    }
+
+    function updateWorkerFilterOptions() {
+        const select = $('#worker-filter');
+        select.find('option:not(:first)').remove();
+
+        availableWorkers.forEach(function(worker) {
+            select.append($('<option>', {
+                value: worker,
+                text: worker
+            }));
+        });
+
+        if (activeFilters.worker && availableWorkers.includes(activeFilters.worker)) {
+            select.val(activeFilters.worker);
+        }
+    }
+
+    function updateTaskTypeFilterOptions() {
+        const select = $('#task-type-filter');
+        select.find('option:not(:first)').remove();
+
+        availableTaskTypes.forEach(function(taskType) {
+            const displayName = taskType.split('.').pop();
+            select.append($('<option>', {
+                value: taskType,
+                text: displayName,
+                title: taskType
+            }));
+        });
+
+        if (activeFilters.task_type && availableTaskTypes.includes(activeFilters.task_type)) {
+            select.val(activeFilters.task_type);
+        }
+    }
+
     function loadTaskTable(showLoading = true) {
         if (showLoading) {
             $('#tasks-table-body').html('<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-2">Loading tasks...</span></td></tr>');
-            $('#search-button').prop('disabled', true).find('#search-spinner').show();
-            $('#search-button').find('#search-icon').hide();
+            $('#search-button').prop('disabled', true);
+            $('#search-icon').hide();
+            $('#search-spinner').show();
         }
 
         const params = {
             q: $('#task-search').val(),
-            status: $('#status-filter').val(),
-            worker: $('#worker-filter').val(),
-            task_type: $('#task-type-filter').val(),
+            status: activeFilters.status,
+            worker: activeFilters.worker,
+            task_type: activeFilters.task_type,
             limit: 20
         };
 
@@ -70,14 +169,30 @@ $(document).ready(function() {
             data: params,
             success: function(data) {
                 updateTaskTable(data.tasks);
+
+                if (data.tasks && data.tasks.length > 0) {
+                    const workers = [...new Set(data.tasks.map(task => task.worker).filter(Boolean))];
+                    const taskTypes = [...new Set(data.tasks.map(task => task.name).filter(Boolean))];
+
+                    if (workers.length > 0 && availableWorkers.length === 0) {
+                        availableWorkers = workers;
+                        updateWorkerFilterOptions();
+                    }
+
+                    if (taskTypes.length > 0 && availableTaskTypes.length === 0) {
+                        availableTaskTypes = taskTypes;
+                        updateTaskTypeFilterOptions();
+                    }
+                }
             },
             error: function() {
                 $('#tasks-table-body').html('<tr><td colspan="5" class="text-center text-danger">Error loading tasks.</td></tr>');
             },
             complete: function() {
                 if (showLoading) {
-                    $('#search-button').prop('disabled', false).find('#search-spinner').hide();
-                    $('#search-button').find('#search-icon').show();
+                    $('#search-button').prop('disabled', false);
+                    $('#search-spinner').hide();
+                    $('#search-icon').show();
                 }
             }
         });
@@ -93,6 +208,11 @@ $(document).ready(function() {
             type: 'GET',
             success: function(data) {
                 updateWorkerStats(data);
+
+                if (data.length > 0) {
+                    availableWorkers = data.map(worker => worker.name);
+                    updateWorkerFilterOptions();
+                }
             },
             error: function() {
                 $('#workers-table-body').html('<tr><td colspan="3" class="text-center text-danger">Error loading worker data.</td></tr>');
@@ -164,6 +284,12 @@ $(document).ready(function() {
     }
 
     function initEventListeners() {
+        $(document).on('click', '.dropdown-menu', function(e) {
+            if ($(e.target).is('select, option, label, .form-group, .form-control')) {
+                e.stopPropagation();
+            }
+        });
+
         $('#task-search').on('keyup', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function() {
@@ -173,6 +299,50 @@ $(document).ready(function() {
 
         $('#search-button').on('click', function() {
             clearTimeout(searchTimeout);
+            loadTaskTable();
+        });
+
+        $('#apply-filters').on('click', function() {
+            activeFilters.status = $('#status-filter').val();
+            activeFilters.worker = $('#worker-filter').val();
+            activeFilters.task_type = $('#task-type-filter').val();
+
+            updateFilterDisplay();
+            loadTaskTable();
+            $('.dropdown-menu').removeClass('show');
+        });
+
+        $('#reset-filters').on('click', function() {
+            $('#status-filter, #worker-filter, #task-type-filter').val('');
+            activeFilters = {
+                status: '',
+                worker: '',
+                task_type: ''
+            };
+
+            updateFilterDisplay();
+            loadTaskTable();
+            $('.dropdown-menu').removeClass('show');
+        });
+
+        $(document).on('click', '.remove-filter', function() {
+            const filterType = $(this).data('filter-type');
+            activeFilters[filterType] = '';
+            $(`#${filterType}-filter`).val('');
+
+            updateFilterDisplay();
+            loadTaskTable();
+        });
+
+        $('#clear-all-filters').on('click', function() {
+            $('#status-filter, #worker-filter, #task-type-filter').val('');
+            activeFilters = {
+                status: '',
+                worker: '',
+                task_type: ''
+            };
+
+            updateFilterDisplay();
             loadTaskTable();
         });
 
@@ -216,8 +386,9 @@ $(document).ready(function() {
         loadTaskCounters();
         loadTaskTable();
         loadWorkerStatus();
+        loadFilterOptions();
 
-        setInterval(loadTaskCounters, 10000);
+        setInterval(loadTaskCounters, 120000);
     }
 
     init();
