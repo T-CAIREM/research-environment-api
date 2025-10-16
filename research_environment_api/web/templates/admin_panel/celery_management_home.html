@@ -66,21 +66,66 @@ Celery Management
     <div class="card-body">
         <div class="table-responsive">
             <div class="d-flex justify-content-between mb-3">
-                <div>
-                    <button type="button" class="btn btn-danger btn-sm ml-2" id="purge-tasks">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-danger btn-sm" id="purge-tasks">
                         <i class="fas fa-trash mr-1"></i> Purge Tasks
                     </button>
+
+                    <div class="dropdown ml-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-filter mr-1"></i> Filters
+                            <span class="badge badge-primary ml-1" id="filter-badge" style="display: none;">0</span>
+                        </button>
+                        <div class="dropdown-menu p-3" aria-labelledby="filterDropdown" style="width: 250px;">
+                            <div class="form-group">
+                                <label for="status-filter">Status</label>
+                                <select class="form-control form-control-sm" id="status-filter">
+                                    <option value="">All Statuses</option>
+                                    <option value="SUCCESS">Success</option>
+                                    <option value="FAILURE">Failure</option>
+                                    <option value="STARTED">Started</option>
+                                    <option value="RECEIVED">Received</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="RETRY">Retry</option>
+                                    <option value="REVOKED">Revoked</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="worker-filter">Worker</label>
+                                <select class="form-control form-control-sm" id="worker-filter">
+                                    <option value="">All Workers</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="task-type-filter">Task Type</label>
+                                <select class="form-control form-control-sm" id="task-type-filter">
+                                    <option value="">All Task Types</option>
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="button" class="btn btn-sm btn-secondary" id="reset-filters">Reset</button>
+                                <button type="button" class="btn btn-sm btn-primary" id="apply-filters">Apply</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <div class="input-group input-group-sm">
                         <input type="text" class="form-control" id="task-search" name="q" placeholder="Search tasks..." value="{{ search_query }}">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" id="search-button">
-                                <i class="fas fa-search"></i>
+                                <i class="fas fa-search" id="search-icon"></i>
+                                <span id="search-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div id="active-filters" class="mb-3" style="display: none;">
+                <span class="mr-2"><strong>Active Filters:</strong></span>
+                <div class="d-inline-block" id="filter-tags"></div>
+                <button class="btn btn-sm btn-link text-danger" id="clear-all-filters">Clear All</button>
             </div>
 
             <table class="table table-bordered table-hover" id="tasksTable" width="100%" cellspacing="0">
