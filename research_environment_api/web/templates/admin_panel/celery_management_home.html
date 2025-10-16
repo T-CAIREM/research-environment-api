@@ -270,7 +270,6 @@
                             <td>${statusBadge}</td>
                             <td>${task.worker || 'N/A'}</td>
                             <td>
-                                <button class="btn btn-sm btn-info task-detail-btn" data-task-id="${task.id}"><i class="fas fa-eye"></i></button>
                                 <button class="btn btn-sm btn-danger task-delete-btn" data-task-id="${task.id}"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -312,8 +311,6 @@
         }
 
         function attachActionHandlers() {
-            $('.task-detail-btn').off('click').on('click', function() {
-            });
             $('.task-delete-btn').off('click').on('click', function() {
                 const taskId = $(this).data('task-id');
                 $('#delete-task-id').text(taskId);
@@ -330,16 +327,6 @@
         $('#search-button').on('click', function() {
             clearTimeout(searchTimeout);
             loadTaskTable();
-        });
-
-        $('#apply-filters').on('click', function() {
-            loadTaskTable();
-            $('.dropdown-menu').removeClass('show');
-        });
-        $('#reset-filters').on('click', function() {
-            $('#status-filter, #worker-filter, #task-type-filter').val('');
-            loadTaskTable();
-            $('.dropdown-menu').removeClass('show');
         });
 
         $('#purge-tasks').on('click', function() {
