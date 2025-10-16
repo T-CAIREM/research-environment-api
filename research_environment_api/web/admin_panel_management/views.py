@@ -21,29 +21,51 @@ def admin_home():
 @validate_admin_page_auth
 @validate_token
 def celery_management():
-    """Celery management page"""
+    """Celery management page - loads skeleton and data is fetched via API"""
+    # Pass empty data initially, it will be loaded by JavaScript
+    return render_template(
+        'admin_panel/celery_management_home.html',
+        worker_stats=[],
+        task_counts={'active': 0, 'reserved': 0, 'scheduled': 0, 'completed': 0, 'failed': 0},
+        tasks=[],
+        search_query=request.args.get('q', '')
+    )
+
+
+@admin_panel_management_bp.route('/api/celery-dashboard-data', methods=['GET'])
+@validate_admin_page_auth
+@validate_token
+def get_celery_dashboard_data():
+    """API endpoint to get all celery dashboard data for initial load and refresh"""
     # Get task counts
     task_counts = services.get_task_queue_counts()
 
     # Get worker stats
     worker_stats = services.get_worker_stats()
 
-    # Get search parameter if present
-    search_query = request.args.get('q', '')
-
     # Get tasks (filtered, sorted and paginated)
+    search_query = request.args.get('q', '')
+    status = request.args.get('status')
+    worker = request.args.get('worker')
+    task_type = request.args.get('task_type')
+
     tasks = services.get_paginated_tasks(
         search_query=search_query,
-        limit=20  # Limit to 20 tasks for UI
+        status=status,
+        worker=worker,
+        task_type=task_type,
+        limit=20
     )
 
-    return render_template(
-        'admin_panel/celery_management_home.html',
-        worker_stats=worker_stats,
-        task_counts=task_counts,
-        tasks=tasks,
-        search_query=search_query
-    )
+    # Serialize data
+    tasks_schema = schemas.TaskSchema(many=True)
+    workers_schema = schemas.WorkerStatsSchema(many=True)
+
+    return jsonify({
+        'tasks': tasks_schema.dump(tasks),
+        'task_counts': task_counts,
+        'worker_stats': workers_schema.dump(worker_stats)
+    })
 
 
 @admin_panel_management_bp.route('/tasks', methods=['GET'])
@@ -127,17 +149,16 @@ def get_workers():
 @validate_token
 def get_celery_tasks_api():
     """API endpoint to get celery task data for AJAX refresh"""
-    # Get task counts from service
+    # This endpoint is now less critical but can be kept for specific task-only refreshes
+    # Or it can be merged with get_celery_dashboard_data
     task_counts = services.get_task_queue_counts()
 
-    # Get filtered tasks
     search_query = request.args.get('q', '')
-    limit = int(request.args.get('limit', 20))  # Default to 20 tasks
+    limit = int(request.args.get('limit', 20))
     status = request.args.get('status')
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
 
-    # Use our centralized function for task retrieval
     tasks = services.get_paginated_tasks(
         search_query=search_query,
         status=status,
@@ -146,7 +167,6 @@ def get_celery_tasks_api():
         limit=limit
     )
 
-    # Serialize tasks
     tasks_schema = schemas.TaskSchema(many=True)
 
     return jsonify({

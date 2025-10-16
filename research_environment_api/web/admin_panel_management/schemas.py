@@ -6,7 +6,7 @@ from marshmallow import Schema, fields
 
 class TaskResultSchema(Schema):
     """Schema for serializing TaskResult entities"""
-    value = fields.Raw(allow_none=True)
+    value = fields.Str(allow_none=True)
     error = fields.String(allow_none=True)
     traceback = fields.String(allow_none=True)
 
@@ -15,8 +15,8 @@ class TaskSchema(Schema):
     """Schema for serializing Task entities"""
     id = fields.String(required=True)
     name = fields.String(allow_none=True)
-    args = fields.List(fields.Raw(), allow_none=True)
-    kwargs = fields.Dict(allow_none=True)
+    args = fields.List(fields.Str(), allow_none=True)
+    kwargs = fields.Dict(keys=fields.Str(), values=fields.Str(), allow_none=True)
     status = fields.String(allow_none=True)
     worker = fields.String(allow_none=True)
     eta = fields.String(allow_none=True)
