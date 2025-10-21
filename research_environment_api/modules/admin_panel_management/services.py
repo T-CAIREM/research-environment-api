@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from celery.result import AsyncResult
 
+from research_environment_api.modules.admin_panel_management.cache import get_inspector_data
 from research_environment_api.modules.admin_panel_management.entities import (
     Task,
     TaskResult,
@@ -11,17 +12,14 @@ from research_environment_api.modules.admin_panel_management.entities import (
 )
 from research_environment_api.modules.admin_panel_management.utils import (
     get_task_state,
-    get_backend_client,
     force_task_state,
+    sort_tasks_by_date,
 )
 from research_environment_api.worker import app as celery_app
 
 
 def search_tasks_by_name(name_fragment: str) -> List[Task]:
-    i = celery_app.control.inspect()
-    active_tasks = i.active() or {}
-    reserved_tasks = i.reserved() or {}
-    scheduled_tasks = i.scheduled() or {}
+    active_tasks, reserved_tasks, scheduled_tasks, _, _ = get_inspector_data()
 
     all_tasks = []
 
@@ -86,10 +84,7 @@ def filter_tasks(
     task_type: Optional[str] = None,
     worker: Optional[str] = None,
 ) -> List[Task]:
-    i = celery_app.control.inspect()
-    active_tasks = i.active() or {}
-    reserved_tasks = i.reserved() or {}
-    scheduled_tasks = i.scheduled() or {}
+    active_tasks, reserved_tasks, scheduled_tasks, _, _ = get_inspector_data()
 
     all_tasks = []
 
@@ -194,51 +189,8 @@ def get_task_details(task_id: str) -> Task:
     )
 
 
-def list_backend_tasks(limit: int = 100, pattern: str = None) -> List[Task]:
-    backend_client = get_backend_client()
-    tasks = []
-    count = 0
-    logger = logging.getLogger(__name__)
-
-    if backend_client and hasattr(backend_client, "scan_iter"):
-        redis_pattern = "celery-task-meta-*"
-
-        for key in backend_client.scan_iter(match=redis_pattern):
-            if count >= limit:
-                break
-
-            try:
-                task_data = backend_client.get(key)
-                task_id = key.decode("utf-8").replace("celery-task-meta-", "")
-
-                if task_data:
-                    task = get_task_details(task_id)
-
-                    if not pattern or (
-                        (task.name and pattern.lower() in task.name.lower())
-                        or pattern.lower() in task_id.lower()
-                    ):
-                        tasks.append(task)
-                        count += 1
-            except Exception as e:
-                logger.error(f"Error processing task key {key}: {str(e)}")
-                tasks.append(
-                    Task(
-                        id=key.decode("utf-8").replace("celery-task-meta-", ""),
-                        result=TaskResult(error=f"Error processing task: {str(e)}"),
-                    )
-                )
-    else:
-        logger.warning("Direct result backend access not supported")
-
-    return tasks
-
-
 def get_worker_stats() -> List[WorkerStats]:
-    i = celery_app.control.inspect()
-    stats = i.stats() or {}
-    active = i.active() or {}
-    registered_tasks = i.registered() or {}
+    active_tasks, reserved_tasks, scheduled_tasks, stats, workers = get_inspector_data()
 
     result = []
     for worker, worker_stats in stats.items():
@@ -246,8 +198,8 @@ def get_worker_stats() -> List[WorkerStats]:
             WorkerStats(
                 name=worker,
                 stats=worker_stats,
-                active_tasks=len(active.get(worker, [])),
-                registered_tasks=registered_tasks.get(worker, []),
+                active_tasks=len(active_tasks.get(worker, [])),
+                registered_tasks=reserved_tasks.get(worker, []),
             )
         )
 
@@ -285,3 +237,43 @@ def delete_tasks(task_ids: list[str]) -> list[TaskOperationResult]:
         results.append(TaskOperationResult(task_id=task_id, is_successful=success))
 
     return results
+
+
+def get_task_queue_counts():
+    active_tasks, reserved_tasks, scheduled_tasks, _, _ = get_inspector_data()
+
+    queue_counts = {
+        "active": sum(len(tasks) for tasks in active_tasks.values()),
+        "reserved": sum(len(tasks) for tasks in reserved_tasks.values()),
+        "scheduled": sum(len(tasks) for tasks in scheduled_tasks.values()),
+    }
+
+    tasks = filter_tasks()
+
+    status_counts = {
+        "completed": len([t for t in tasks if t.status == "SUCCESS"]),
+        "failed": len(
+            [t for t in tasks if t.status in ("FAILURE", "REVOKED", "REJECTED")]
+        ),
+    }
+
+    return {**queue_counts, **status_counts}
+
+
+def get_tasks(
+    search_query: str = None,
+    status: str = None,
+    task_type: str = None,
+    worker: str = None,
+    sort_by_date: bool = True,
+    reverse: bool = True,
+) -> List[Task]:
+    if search_query and len(search_query) >= 2:
+        tasks = search_tasks_by_name(search_query)
+    else:
+        tasks = filter_tasks(status=status, worker=worker, task_type=task_type)
+
+    if sort_by_date:
+        tasks = sort_tasks_by_date(tasks, reverse=reverse)
+
+    return tasks
