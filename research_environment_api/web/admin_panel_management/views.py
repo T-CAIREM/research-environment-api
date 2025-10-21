@@ -1,12 +1,11 @@
-from flask import request, render_template, jsonify
-from datetime import datetime
+from flask import request, render_template
 
 from research_environment_api.modules.admin_panel_management import services
-from research_environment_api.web.decorators import validate_token, validate_admin_page_auth
 from research_environment_api.web.admin_panel_management import (
     admin_panel_management_bp,
     schemas,
 )
+from research_environment_api.web.decorators import validate_token, validate_admin_page_auth
 
 
 @admin_panel_management_bp.get('/')
@@ -34,7 +33,6 @@ def celery_management():
 @validate_token
 def get_celery_dashboard_data():
     task_counts = services.get_task_queue_counts()
-
     worker_stats = services.get_worker_stats()
 
     search_query = request.args.get('q', '')
@@ -42,69 +40,52 @@ def get_celery_dashboard_data():
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
 
-    tasks = services.get_paginated_tasks(
+    tasks = services.get_tasks(
         search_query=search_query,
         status=status,
         worker=worker,
         task_type=task_type,
     )
 
-    tasks_schema = schemas.TaskSchema(many=True)
-    workers_schema = schemas.WorkerStatsSchema(many=True)
-
-    return jsonify({
-        'tasks': tasks_schema.dump(tasks),
+    return {
+        'tasks': schemas.TaskSchema(many=True).dump(tasks),
         'task_counts': task_counts,
-        'worker_stats': workers_schema.dump(worker_stats)
-    })
+        'worker_stats': schemas.WorkerStatsSchema(many=True).dump(worker_stats)
+    }, 200
 
 
 @admin_panel_management_bp.get('/tasks')
 @validate_admin_page_auth
 def get_tasks():
+    name_fragment = request.args.get('q', '')
     status = request.args.get('status')
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
 
-    tasks = services.get_paginated_tasks(
+    search_query = name_fragment if name_fragment and len(name_fragment) >= 2 else None
+
+    tasks = services.get_tasks(
+        search_query=search_query,
         status=status,
         worker=worker,
         task_type=task_type,
     )
 
-    tasks_schema = schemas.TaskSchema(many=True)
-    return jsonify(tasks_schema.dump(tasks))
-
-
-@admin_panel_management_bp.get('/tasks/search')
-@validate_admin_page_auth
-def search_tasks():
-    name_fragment = request.args.get('q', '')
-
-    if not name_fragment or len(name_fragment) < 2:
-        return jsonify([])
-
-    tasks = services.get_paginated_tasks(
-        search_query=name_fragment,
-    )
-
-    tasks_schema = schemas.TaskSchema(many=True)
-    return jsonify(tasks_schema.dump(tasks))
+    return schemas.TaskSchema(many=True).dump(tasks), 200
 
 
 @admin_panel_management_bp.get('/tasks/<task_id>')
 @validate_admin_page_auth
 def get_task_details(task_id):
     task = services.get_task_details(task_id)
-    task_schema = schemas.TaskSchema()
-    return jsonify(task_schema.dump(task))
+    return schemas.TaskSchema().dump(task), 200
 
 
 @admin_panel_management_bp.post('/tasks/purge')
 @validate_admin_page_auth
 def purge_tasks():
     count = services.purge_tasks()
-    return jsonify({'success': True, 'purged_count': count})
+    return {'success': True, 'purged_count': count}, 200
 
 
 @admin_panel_management_bp.post('/tasks/delete')
@@ -112,42 +93,14 @@ def purge_tasks():
 def delete_tasks():
     data = request.get_json()
     if not data or 'task_ids' not in data:
-        return jsonify({'error': 'Missing task_ids'}), 400
+        return {'error': 'Missing task_ids'}, 400
 
     results = services.delete_tasks(data['task_ids'])
-    results_schema = schemas.TaskOperationResultSchema(many=True)
-    return jsonify(results_schema.dump(results))
+    return schemas.TaskOperationResultSchema(many=True).dump(results), 200
 
 
 @admin_panel_management_bp.get('/workers')
 @validate_admin_page_auth
 def get_workers():
     workers = services.get_worker_stats()
-    workers_schema = schemas.WorkerStatsSchema(many=True)
-    return jsonify(workers_schema.dump(workers))
-
-
-@admin_panel_management_bp.get('/api/celery-tasks')
-@validate_admin_page_auth
-@validate_token
-def get_celery_tasks_api():
-    task_counts = services.get_task_queue_counts()
-
-    search_query = request.args.get('q', '')
-    status = request.args.get('status')
-    worker = request.args.get('worker')
-    task_type = request.args.get('task_type')
-
-    tasks = services.get_paginated_tasks(
-        search_query=search_query,
-        status=status,
-        task_type=task_type,
-        worker=worker,
-    )
-
-    tasks_schema = schemas.TaskSchema(many=True)
-
-    return jsonify({
-        'tasks': tasks_schema.dump(tasks),
-        'task_counts': task_counts
-    })
+    return schemas.WorkerStatsSchema(many=True).dump(workers), 200
