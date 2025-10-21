@@ -13,7 +13,6 @@ from research_environment_api.web.admin_panel_management import (
 @validate_admin_page_auth
 @validate_token
 def admin_home():
-    """Admin panel home page"""
     return render_template('admin_panel/home.html')
 
 
@@ -21,8 +20,6 @@ def admin_home():
 @validate_admin_page_auth
 @validate_token
 def celery_management():
-    """Celery management page - loads skeleton and data is fetched via API"""
-    # Pass empty data initially, it will be loaded by JavaScript
     return render_template(
         'admin_panel/celery_management_home.html',
         worker_stats=[],
@@ -36,14 +33,10 @@ def celery_management():
 @validate_admin_page_auth
 @validate_token
 def get_celery_dashboard_data():
-    """API endpoint to get all celery dashboard data for initial load and refresh"""
-    # Get task counts
     task_counts = services.get_task_queue_counts()
 
-    # Get worker stats
     worker_stats = services.get_worker_stats()
 
-    # Get tasks (filtered, sorted and paginated)
     search_query = request.args.get('q', '')
     status = request.args.get('status')
     worker = request.args.get('worker')
@@ -57,7 +50,6 @@ def get_celery_dashboard_data():
         limit=20
     )
 
-    # Serialize data
     tasks_schema = schemas.TaskSchema(many=True)
     workers_schema = schemas.WorkerStatsSchema(many=True)
 
@@ -71,7 +63,6 @@ def get_celery_dashboard_data():
 @admin_panel_management_bp.route('/tasks', methods=['GET'])
 @validate_admin_page_auth
 def get_tasks():
-    """API endpoint to get tasks list"""
     status = request.args.get('status')
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
@@ -91,7 +82,6 @@ def get_tasks():
 @admin_panel_management_bp.route('/tasks/search', methods=['GET'])
 @validate_admin_page_auth
 def search_tasks():
-    """API endpoint to search tasks by name"""
     name_fragment = request.args.get('q', '')
     limit = int(request.args.get('limit', 100))
 
@@ -110,7 +100,6 @@ def search_tasks():
 @admin_panel_management_bp.route('/tasks/<task_id>', methods=['GET'])
 @validate_admin_page_auth
 def get_task_details(task_id):
-    """API endpoint to get task details"""
     task = services.get_task_details(task_id)
     task_schema = schemas.TaskSchema()
     return jsonify(task_schema.dump(task))
@@ -119,7 +108,6 @@ def get_task_details(task_id):
 @admin_panel_management_bp.route('/tasks/purge', methods=['POST'])
 @validate_admin_page_auth
 def purge_tasks():
-    """API endpoint to purge tasks"""
     count = services.purge_tasks()
     return jsonify({'success': True, 'purged_count': count})
 
@@ -148,9 +136,6 @@ def get_workers():
 @validate_admin_page_auth
 @validate_token
 def get_celery_tasks_api():
-    """API endpoint to get celery task data for AJAX refresh"""
-    # This endpoint is now less critical but can be kept for specific task-only refreshes
-    # Or it can be merged with get_celery_dashboard_data
     task_counts = services.get_task_queue_counts()
 
     search_query = request.args.get('q', '')

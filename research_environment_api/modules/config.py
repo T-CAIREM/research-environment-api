@@ -73,6 +73,7 @@ class Config:
         ]
         self.admin_panel_username = environ["ADMIN_PANEL_USERNAME"]
         self.admin_panel_password = environ["ADMIN_PANEL_PASSWORD"]
+        self.admin_panel_cache_ttl = environ["ADMIN_PANEL_CACHE_TTL"]
 
     def _init_database_config(self):
         if self.is_development():

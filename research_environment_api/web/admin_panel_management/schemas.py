@@ -1,6 +1,3 @@
-"""
-Schemas for Celery management API endpoints
-"""
 from marshmallow import Schema, fields
 
 
@@ -35,45 +32,9 @@ class TaskOperationResultSchema(Schema):
     operations = fields.Dict()
 
 
-class BatchOperationResultSchema(Schema):
-    """Schema for serializing BatchOperationResult entities"""
-    total_matched = fields.Integer()
-    total_processed = fields.Integer()
-    limited = fields.Boolean()
-    pattern = fields.String(allow_none=True)
-    tasks = fields.List(fields.Nested(TaskOperationResultSchema))
-    errors = fields.List(fields.String())
-
-
 class WorkerStatsSchema(Schema):
     """Schema for serializing WorkerStats entities"""
     name = fields.String(required=True)
     stats = fields.Dict()
     active_tasks = fields.Integer()
     registered_tasks = fields.List(fields.String())
-
-
-# Request schemas
-class TaskSearchRequestSchema(Schema):
-    """Schema for task search requests"""
-    name_fragment = fields.String(required=True)
-
-
-class TaskFilterRequestSchema(Schema):
-    """Schema for task filtering requests"""
-    status = fields.String(allow_none=True)
-    task_type = fields.String(allow_none=True)
-    worker = fields.String(allow_none=True)
-
-
-class BackendTasksRequestSchema(Schema):
-    """Schema for listing backend tasks requests"""
-    limit = fields.Integer(load_default=100)
-    pattern = fields.String(allow_none=True)
-
-
-class DeleteTaskPatternRequestSchema(Schema):
-    """Schema for deleting tasks by pattern requests"""
-    pattern = fields.String(required=True)
-    use_glob = fields.Boolean(load_default=False)
-    limit = fields.Integer(load_default=100)
