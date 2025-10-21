@@ -103,14 +103,6 @@ variable "network_name" {
   type = string
 }
 
-variable "rstudio_ssl_private_key" {
-  type = string
-}
-
-variable "rstudio_ssl_certificate" {
-  type = string
-}
-
 variable "sharing_folder_id" {
   type = string
 }
@@ -205,4 +197,8 @@ variable "flower_basic_auth" {
 variable "root_postgres_password" {
   default = "postgres"
   type = string
+}
+
+variable "rstudio_certificate_secret_id" {
+  type    = string
 }
