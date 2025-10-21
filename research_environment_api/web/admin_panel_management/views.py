@@ -8,6 +8,33 @@ from research_environment_api.web.admin_panel_management import (
 from research_environment_api.web.decorators import validate_token, validate_admin_page_auth
 
 
+def _get_dashboard_data():
+    search_query = request.args.get('q', '')
+    status = request.args.get('status')
+    worker = request.args.get('worker')
+    task_type = request.args.get('task_type')
+
+    task_counts = services.get_task_queue_counts()
+    worker_stats = services.get_worker_stats()
+
+    debounced_search_query = search_query if search_query and len(search_query) >= 3 else None
+    tasks = services.get_tasks(
+        search_query=debounced_search_query,
+        status=status,
+        worker=worker,
+        task_type=task_type,
+    )
+
+    filter_params = {
+        'search_query': search_query,
+        'status': status,
+        'worker': worker,
+        'task_type': task_type,
+    }
+
+    return task_counts, worker_stats, tasks, filter_params
+
+
 @admin_panel_management_bp.get('/')
 @validate_admin_page_auth
 @validate_token
@@ -19,33 +46,22 @@ def admin_home():
 @validate_admin_page_auth
 @validate_token
 def celery_management():
+    task_counts, worker_stats, tasks, filter_params = _get_dashboard_data()
+
     return render_template(
         'admin_panel/celery_management_home.html',
-        worker_stats=[],
-        task_counts={'active': 0, 'reserved': 0, 'scheduled': 0, 'completed': 0, 'failed': 0},
-        tasks=[],
-        search_query=request.args.get('q', '')
+        worker_stats=worker_stats,
+        task_counts=task_counts,
+        tasks=tasks,
+        search_query=filter_params['search_query']
     )
 
 
-@admin_panel_management_bp.get('/api/celery-dashboard-data')
+@admin_panel_management_bp.get('/celery-dashboard-data')
 @validate_admin_page_auth
 @validate_token
 def get_celery_dashboard_data():
-    task_counts = services.get_task_queue_counts()
-    worker_stats = services.get_worker_stats()
-
-    search_query = request.args.get('q', '')
-    status = request.args.get('status')
-    worker = request.args.get('worker')
-    task_type = request.args.get('task_type')
-
-    tasks = services.get_tasks(
-        search_query=search_query,
-        status=status,
-        worker=worker,
-        task_type=task_type,
-    )
+    task_counts, worker_stats, tasks, _ = _get_dashboard_data()
 
     return {
         'tasks': schemas.TaskSchema(many=True).dump(tasks),
