@@ -9,14 +9,14 @@ from research_environment_api.web.admin_panel_management import (
 )
 
 
-@admin_panel_management_bp.route('/')
+@admin_panel_management_bp.get('/')
 @validate_admin_page_auth
 @validate_token
 def admin_home():
     return render_template('admin_panel/home.html')
 
 
-@admin_panel_management_bp.route('/celery')
+@admin_panel_management_bp.get('/celery')
 @validate_admin_page_auth
 @validate_token
 def celery_management():
@@ -29,7 +29,7 @@ def celery_management():
     )
 
 
-@admin_panel_management_bp.route('/api/celery-dashboard-data', methods=['GET'])
+@admin_panel_management_bp.get('/api/celery-dashboard-data')
 @validate_admin_page_auth
 @validate_token
 def get_celery_dashboard_data():
@@ -47,7 +47,6 @@ def get_celery_dashboard_data():
         status=status,
         worker=worker,
         task_type=task_type,
-        limit=20
     )
 
     tasks_schema = schemas.TaskSchema(many=True)
@@ -60,44 +59,40 @@ def get_celery_dashboard_data():
     })
 
 
-@admin_panel_management_bp.route('/tasks', methods=['GET'])
+@admin_panel_management_bp.get('/tasks')
 @validate_admin_page_auth
 def get_tasks():
     status = request.args.get('status')
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
-    limit = int(request.args.get('limit', 100))
 
     tasks = services.get_paginated_tasks(
         status=status,
         worker=worker,
         task_type=task_type,
-        limit=limit
     )
 
     tasks_schema = schemas.TaskSchema(many=True)
     return jsonify(tasks_schema.dump(tasks))
 
 
-@admin_panel_management_bp.route('/tasks/search', methods=['GET'])
+@admin_panel_management_bp.get('/tasks/search')
 @validate_admin_page_auth
 def search_tasks():
     name_fragment = request.args.get('q', '')
-    limit = int(request.args.get('limit', 100))
 
     if not name_fragment or len(name_fragment) < 2:
         return jsonify([])
 
     tasks = services.get_paginated_tasks(
         search_query=name_fragment,
-        limit=limit
     )
 
     tasks_schema = schemas.TaskSchema(many=True)
     return jsonify(tasks_schema.dump(tasks))
 
 
-@admin_panel_management_bp.route('/tasks/<task_id>', methods=['GET'])
+@admin_panel_management_bp.get('/tasks/<task_id>')
 @validate_admin_page_auth
 def get_task_details(task_id):
     task = services.get_task_details(task_id)
@@ -105,14 +100,14 @@ def get_task_details(task_id):
     return jsonify(task_schema.dump(task))
 
 
-@admin_panel_management_bp.route('/tasks/purge', methods=['POST'])
+@admin_panel_management_bp.post('/tasks/purge')
 @validate_admin_page_auth
 def purge_tasks():
     count = services.purge_tasks()
     return jsonify({'success': True, 'purged_count': count})
 
 
-@admin_panel_management_bp.route('/tasks/delete', methods=['POST'])
+@admin_panel_management_bp.post('/tasks/delete')
 @validate_admin_page_auth
 def delete_tasks():
     data = request.get_json()
@@ -124,7 +119,7 @@ def delete_tasks():
     return jsonify(results_schema.dump(results))
 
 
-@admin_panel_management_bp.route('/workers', methods=['GET'])
+@admin_panel_management_bp.get('/workers')
 @validate_admin_page_auth
 def get_workers():
     workers = services.get_worker_stats()
@@ -132,14 +127,13 @@ def get_workers():
     return jsonify(workers_schema.dump(workers))
 
 
-@admin_panel_management_bp.route('/api/celery-tasks', methods=['GET'])
+@admin_panel_management_bp.get('/api/celery-tasks')
 @validate_admin_page_auth
 @validate_token
 def get_celery_tasks_api():
     task_counts = services.get_task_queue_counts()
 
     search_query = request.args.get('q', '')
-    limit = int(request.args.get('limit', 20))
     status = request.args.get('status')
     worker = request.args.get('worker')
     task_type = request.args.get('task_type')
@@ -149,7 +143,6 @@ def get_celery_tasks_api():
         status=status,
         task_type=task_type,
         worker=worker,
-        limit=limit
     )
 
     tasks_schema = schemas.TaskSchema(many=True)
