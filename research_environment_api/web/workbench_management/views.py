@@ -276,17 +276,8 @@ def get_collaborators():
             application/json:
               schema: WorkbenchCollaboratorList
     """
-    workspace_project_id = request.args.get("workspace_project_id")
-    service_account_name = request.args.get("service_account_name")
-
-    if not workspace_project_id or not service_account_name:
-        return {"error": "Missing required parameters"}, 400
-
-    get_collaborators_entity = entities.WorkbenchGetCollaborators(
-        workspace_project_id=workspace_project_id,
-        service_account_name=service_account_name,
-    )
-
+    get_collaborators_request = schemas.WorkbenchGetCollaboratorsRequest().load(request.args)
+    get_collaborators_entity = entities.WorkbenchGetCollaborators(**get_collaborators_request)
     collaborators = services.get_workbench_collaborators(get_collaborators_entity)
     serialized_collaborators = schemas.WorkbenchCollaboratorList().dump(collaborators)
 
@@ -320,17 +311,8 @@ def get_notifications():
             application/json:
               schema: WorkbenchNotificationList
     """
-    workspace_project_id = request.args.get("workspace_project_id")
-    service_account_name = request.args.get("service_account_name")
-
-    if not workspace_project_id or not service_account_name:
-        return {"error": "Missing required parameters"}, 400
-
-    get_notifications_entity = entities.WorkbenchGetNotifications(
-        workspace_project_id=workspace_project_id,
-        service_account_name=service_account_name,
-    )
-
+    get_notifications_request = schemas.WorkbenchNotificationRequest().load(request.args)
+    get_notifications_entity = entities.WorkbenchGetNotifications(**get_notifications_request)
     notifications = services.get_workbench_notifications(get_notifications_entity)
     serialized_notifications = schemas.WorkbenchNotificationList().dump(notifications)
 
@@ -391,3 +373,37 @@ def clear_all_notifications():
     services.clear_all_notifications(clear_notifications_entity)
 
     return {"message": "All notifications marked as viewed."}, 200
+
+
+@workbench_management_bp.put("/renew-ssl-certificate")
+@validate_token
+def renew_rstudio_ssl_certificate():
+    """Renews SSL certificate for the Rstudio workbench.
+    ---
+    put:
+      tags:
+        - workbench_management
+      description: Renews SSL certificate for the Rstudio workbench.
+      requestBody:
+        content:
+          application/json:
+            schema: WorkbenchRenewSSLCertificateRequest
+      responses:
+        200:
+          description: Returns the ID of the workflow.
+          content:
+            application/json:
+              schema: WorkbenchWorkflowIdentifier
+    """
+    body = request.get_json()
+    workbench_renewal_request = schemas.WorkbenchRenewSSLCertificateRequest().load(body)
+    workbench_renewal_entity = entities.WorkbenchRenewSSLCertificate(
+        workbench_type=entities.WorkbenchType.RSTUDIO.value, **workbench_renewal_request
+    )
+    workbench_activity_id = services.schedule_workbench_ssl_certificate_renewal(
+        workbench_renewal_entity
+    )
+    workflow_identifier = schemas.WorkbenchWorkflowIdentifier().dump(
+        dict(workflow_id=workbench_activity_id)
+    )
+    return workflow_identifier, 200

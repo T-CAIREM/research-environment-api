@@ -556,7 +556,6 @@ def assign_initial_collaborators(
     workspace_project_id: str,
     user_email: str,
 ):
-
     # locally workbenches fail even if they are created, to test this feature please comment below condition
     if operation.status() == OperationStatus.FAILURE:
         logging.warning(

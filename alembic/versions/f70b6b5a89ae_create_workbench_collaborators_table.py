@@ -15,7 +15,9 @@ down_revision = "1053e575b4ef"
 branch_labels = None
 depends_on = None
 
-collaborator_status_enum = sa.Enum("SUCCESS", "FAILED", "REMOVED", name="collaboratorstatus")
+collaborator_status_enum = sa.Enum(
+    "SUCCESS", "FAILED", "REMOVED", name="collaboratorstatus"
+)
 
 
 def upgrade() -> None:

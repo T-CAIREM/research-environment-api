@@ -26,6 +26,38 @@ from research_environment_api.modules.monitoring_management import (
     models,
     monitoring as monitoring_services,
 )
+from research_environment_api.modules.common.error_handlers import safe_google_service_call
+
+
+def _compute_accessibility(billing_info: entities.BillingInfo, service_errors: list) -> tuple[bool, Optional[str]]:
+    """Derive accessibility based on billing and critical service errors.
+    Rules (minimal to avoid over-engineering):
+      - Inaccessible if billing_account_id missing OR billing disabled.
+      - Inaccessible if any service_error of type billing_disabled or permission_denied.
+    Returns (is_accessible, reason_or_none).
+    """
+    reasons: list[str] = []
+    if not billing_info.billing_account_id:
+        reasons.append("No billing account connected")
+    elif not billing_info.billing_enabled:
+        reasons.append("Billing account inactive or closed")
+
+    for err in service_errors:
+        et = getattr(err, "error_type", "")
+        if et in ("billing_disabled", "permission_denied"):
+            # Prefer user-friendly message if available
+            reasons.append(err.message or et.replace("_", " "))
+
+    if reasons:
+        # Deduplicate while preserving order
+        seen = set()
+        deduped = []
+        for r in reasons:
+            if r not in seen:
+                deduped.append(r)
+                seen.add(r)
+        return False, "; ".join(deduped)
+    return True, None
 
 
 def create_workspace(workspace_creation: entities.WorkspaceCreation):
@@ -189,15 +221,46 @@ def _build_workspace_entity(
 ) -> Optional[entities.Workspace]:
     gcp_project_id = gcp_project.project_id
     billing_info_entity = _build_billing_entity(gcp_project.name)
+    region = gcp_project.labels["region"]
     is_owner = gcp_project.labels["cloud_identity_username"] == user_email.split("@")[0]
-    workbenches = list_workbenches(
-        gcp_project_id=gcp_project_id,
-        workflows_in_progress=workflows_in_progress,
-        user_email=user_email,
-        is_owner=is_owner,
+    
+    service_errors = []
+    
+    # Safely fetch billing info with error handling
+    billing_info_entity, billing_error = safe_google_service_call(
+        func=lambda: _build_billing_entity(gcp_project.name),
+        resource_id=gcp_project_id,
+        service_name="Billing Management",
+        operation="get_project_billing_info",
+        default_return=entities.BillingInfo(
+            billing_account_id=None,
+            billing_enabled=False,
+        )
     )
+    
+    if billing_error:
+        service_errors.append(billing_error)
+    
+    # Safely fetch workbenches with error handling
+    workbenches, workbench_error = safe_google_service_call(
+        func=lambda: list_workbenches(
+            gcp_project_id=gcp_project_id,
+            workflows_in_progress=workflows_in_progress,
+            user_email=user_email,
+            is_owner=is_owner,
+        ),
+        resource_id=gcp_project_id,
+        service_name="Workbench Management",
+        operation="list_workbenches",
+        default_return=[]
+    )
+    
+    if workbench_error:
+        service_errors.append(workbench_error)
 
-    if not is_owner and not workbenches:
+    # Return None only if user is not owner, has no workbenches, and no service errors
+    # This ensures workspaces with errors are still returned to the user
+    if not is_owner and not workbenches and not service_errors:
         return None
 
     workspace_workflow_in_progress = _match_workspace_workflow(
@@ -209,12 +272,16 @@ def _build_workspace_entity(
         else entities.WorkspaceStatus.CREATED
     )
 
+    is_accessible, denial_reason = _compute_accessibility(billing_info_entity, service_errors)
     return entities.Workspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
         status=status,
         is_owner=is_owner,
+        service_errors=service_errors,
+        is_accessible=is_accessible,
+        access_denial_reason=denial_reason,
     )
 
 
@@ -225,12 +292,40 @@ def _build_shared_workspace_entity(
     caller_username: str,
 ) -> entities.SharedWorkspace:
     gcp_project_id = gcp_project.project_id
-    billing_info_entity = _build_billing_entity(gcp_project.name)
-    buckets = list_accessible_buckets_in_project(
-        gcp_project_id=gcp_project_id,
-        username=caller_username,
-        caller_email=caller_email,
+    
+    service_errors = []
+    
+    # Safely fetch billing info with error handling
+    billing_info_entity, billing_error = safe_google_service_call(
+        func=lambda: _build_billing_entity(gcp_project.name),
+        resource_id=gcp_project_id,
+        service_name="Billing Management",
+        operation="get_project_billing_info",
+        default_return=entities.BillingInfo(
+            billing_account_id=None,
+            billing_enabled=False,
+        )
     )
+    
+    if billing_error:
+        service_errors.append(billing_error)
+    
+    # Safely fetch buckets with error handling
+    buckets, bucket_error = safe_google_service_call(
+        func=lambda: list_accessible_buckets_in_project(
+            gcp_project_id=gcp_project_id,
+            username=caller_username,
+            caller_email=caller_email,
+        ),
+        resource_id=gcp_project_id,
+        service_name="Storage Management",
+        operation="list_accessible_buckets",
+        default_return=[]
+    )
+    
+    if bucket_error:
+        service_errors.append(bucket_error)
+    
     workspace_workflow_in_progress = _match_workspace_workflow(
         gcp_project_id, workflows_in_progress
     )
@@ -240,12 +335,16 @@ def _build_shared_workspace_entity(
         else entities.WorkspaceStatus.CREATED
     )
     is_owner = gcp_project.labels["cloud_identity_username"] == caller_username
+    is_accessible, denial_reason = _compute_accessibility(billing_info_entity, service_errors)
     return entities.SharedWorkspace(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         buckets=buckets,
         status=status,
         is_owner=is_owner,
+        service_errors=service_errors,
+        is_accessible=is_accessible,
+        access_denial_reason=denial_reason,
     )
 
 

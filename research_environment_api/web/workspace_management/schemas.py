@@ -33,7 +33,7 @@ class ListActiveWorkspacesRequest(Schema):
 
 
 class EntityScaffolding(Schema):
-    id = fields.Str(required=True)
+    gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Str(required=True)
     gcp_project_id = fields.Str(required=True)
 
@@ -43,6 +43,15 @@ class EntityScaffoldingWorkbenchSchema(OneOfSchema):
         "Workbench": WorkbenchSchema,
         "EntityScaffolding": EntityScaffolding,
     }
+
+
+class ServiceErrorSchema(Schema):
+    error_type = fields.Str(required=True)
+    message = fields.Str(required=True)
+    resource_id = fields.Str(required=True)
+    service_name = fields.Str(required=True)
+    details = fields.Str(missing=None, allow_none=True)
+    can_retry = fields.Bool(missing=False)
 
 
 class BillingInfo(Schema):
@@ -56,6 +65,9 @@ class Workspace(Schema):
     workbenches = fields.Nested(EntityScaffoldingWorkbenchSchema, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     is_owner = fields.Bool(required=True)
+    service_errors = fields.Nested(ServiceErrorSchema, many=True, missing=[])
+    is_accessible = fields.Bool(required=True)
+    access_denial_reason = fields.Str(allow_none=True, missing=None)
 
 
 class SharedWorkspaceCreationRequest(Schema):
@@ -77,6 +89,9 @@ class SharedWorkspace(Schema):
     buckets = fields.Nested(SharedBucket, many=True)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     is_owner = fields.Boolean(required=True)
+    service_errors = fields.Nested(ServiceErrorSchema, many=True, missing=[])
+    is_accessible = fields.Bool(required=True)
+    access_denial_reason = fields.Str(allow_none=True, missing=None)
 
 
 class EntityScaffoldingWorkspaceSchema(OneOfSchema):

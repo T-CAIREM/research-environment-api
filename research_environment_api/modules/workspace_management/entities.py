@@ -11,6 +11,7 @@ from research_environment_api.modules.workbench_management.entities import (
 from research_environment_api.modules.sharing_management.entities import SharedBucket
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
+from research_environment_api.modules.common.error_handlers import ServiceError
 
 
 class WorkspaceStatus(StrEnum):
@@ -115,6 +116,9 @@ class Workspace:
     workbenches: Iterable[Workbench]
     status: WorkspaceStatus
     is_owner: bool
+    service_errors: list[ServiceError] = field(default_factory=list)
+    is_accessible: bool = True
+    access_denial_reason: str | None = None
 
 
 @dataclass
@@ -124,6 +128,9 @@ class SharedWorkspace:
     billing_info: BillingInfo
     buckets: Iterable[SharedBucket]
     status: WorkspaceStatus
+    service_errors: list[ServiceError] = field(default_factory=list)
+    is_accessible: bool = True
+    access_denial_reason: str | None = None
 
 
 @dataclass
