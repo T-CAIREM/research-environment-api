@@ -3,7 +3,9 @@ from typing import List, Optional
 
 from celery.result import AsyncResult
 
-from research_environment_api.modules.admin_panel_management.cache import get_inspector_data
+from research_environment_api.modules.admin_panel_management.cache import (
+    get_inspector_data,
+)
 from research_environment_api.modules.admin_panel_management.entities import (
     Task,
     TaskResult,
