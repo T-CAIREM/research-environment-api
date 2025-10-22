@@ -59,6 +59,9 @@ class Workbench(Schema):
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)
     workbench_owner_username = fields.Str(required=False)
+    rstudio_ssl_certificate_expiration_date = fields.Str(
+        required=False, allow_none=True
+    )
 
 
 class WorkbenchWorkflowIdentifier(Schema):
@@ -93,3 +96,9 @@ class WorkbenchNotification(Schema):
 
 class WorkbenchNotificationList(Schema):
     notifications = fields.List(fields.Nested(WorkbenchNotification), required=True)
+
+
+class WorkbenchRenewSSLCertificateRequest(Schema):
+    workspace_project_id = fields.Str(required=True)
+    user_email = fields.Str(required=True)
+    workbench_resource_id = fields.Str(required=True)
