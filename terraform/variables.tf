@@ -143,6 +143,10 @@ variable "admin_panel_password" {
   type = string
 }
 
+variable "admin_panel_cache_ttl" {
+  type = string
+}
+
 variable "gcs_project_id" {
   default = "data-project-333710"
   type    = string

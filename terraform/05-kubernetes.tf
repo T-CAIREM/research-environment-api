@@ -156,6 +156,7 @@ locals {
     MONITORING_CSV_EXPORTS_ROOT_BUCKET  = var.monitoring_csv_exports_root_bucket
     ADMIN_PANEL_USERNAME                = var.admin_panel_username
     ADMIN_PANEL_PASSWORD                = var.admin_panel_password
+    ADMIN_PANEL_CACHE_TTL               = var.admin_panel_cache_ttl
   }
 
   _backend_volumes = {
