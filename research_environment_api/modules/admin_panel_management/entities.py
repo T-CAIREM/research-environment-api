@@ -32,10 +32,6 @@ class Task:
     worker: Optional[str] = None
     eta: Optional[str] = None
     date_done: Optional[datetime] = None
-    result: Optional[TaskResult] = None
-    ready: bool = False
-    successful: bool = False
-    failed: bool = False
 
 
 @dataclass

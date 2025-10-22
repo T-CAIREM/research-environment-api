@@ -165,32 +165,6 @@ def purge_tasks() -> int:
     return celery_app.control.purge()
 
 
-def get_task_details(task_id: str) -> Task:
-    result = AsyncResult(task_id, app=celery_app)
-
-    task_result = None
-    if result.ready():
-        try:
-            if not result.failed():
-                task_result = TaskResult(value=result.get(timeout=1))
-            else:
-                task_result = TaskResult(
-                    error=str(result.result), traceback=result.traceback
-                )
-        except Exception as e:
-            task_result = TaskResult(error=f"Error retrieving result: {str(e)}")
-
-    return Task(
-        id=task_id,
-        status=result.state,
-        ready=result.ready(),
-        successful=result.successful(),
-        failed=result.failed(),
-        date_done=result.date_done,
-        result=task_result,
-    )
-
-
 def get_worker_stats() -> List[WorkerStats]:
     active_tasks, reserved_tasks, scheduled_tasks, stats, workers = get_inspector_data()
 
