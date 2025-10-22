@@ -3,6 +3,7 @@ from marshmallow import Schema, fields
 from research_environment_api.modules.workbench_management.entities import (
     MachineType,
     WorkbenchType,
+    Region,
 )
 
 from research_environment_api.modules.workbench_management.entities import (
@@ -27,6 +28,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     gpu_accelerator_type = fields.Str(allow_none=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
+    region = fields.Enum(Region, by_value=True, required=True)
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):
@@ -55,6 +57,7 @@ class Workbench(Schema):
         WorkbenchType, by_value=True, required=True, attribute="type"
     )
     zone = fields.Str()
+    region = fields.Enum(Region, by_value=True, required=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)

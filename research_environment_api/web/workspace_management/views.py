@@ -1,4 +1,5 @@
 from flask import request
+from collections import defaultdict
 
 from research_environment_api.modules.workspace_management import entities, services
 from research_environment_api.web.decorators import validate_token
@@ -12,6 +13,7 @@ from research_environment_api.web.workspace_management import (
     schemas,
     workspace_management_bp,
 )
+from research_environment_api.background import constants
 
 
 @workspace_management_bp.post("/create")
@@ -228,9 +230,9 @@ def list_active_shared_workspaces(email: str):
     return serialized_shared_workspaces, 200
 
 
-@workspace_management_bp.get("/quotas/<region>/<workspace_project_id>")
+@workspace_management_bp.get("/quotas/<workspace_project_id>")
 @validate_token
-def list_workspace_quotas(region: str, workspace_project_id: str):
+def list_workspace_quotas(workspace_project_id: str):
     """Lists limits and current usage for entities.QUOTAS_TO_LIST quotas.
     ---
     post:
@@ -250,17 +252,28 @@ def list_workspace_quotas(region: str, workspace_project_id: str):
                 type: array
                 items: dict
     """
-    list_workspace_quotas_request = schemas.ListWorkspaceQuotasRequest().load(
-        {"workspace_project_id": workspace_project_id, "region": region}
-    )
+    regions = list(constants.AVAILABLE_ZONES.keys())
     workspace_list_quotas_query_entity = monitoring_entities.BaseQuotaMetricsEntity(
-        **list_workspace_quotas_request
+        workspace_project_id=workspace_project_id
     )
-    quotas_list = monitoring_services.check_google_quotas(
-        workspace_list_quotas_query_entity, monitoring_entities.GeneralQuotaMetrics
-    )
-
-    return quotas_list, 200
+    all_quotas = []
+    for region in regions:
+        quotas = monitoring_services.check_google_quotas(
+            workspace_list_quotas_query_entity,
+            monitoring_entities.GeneralQuotaMetrics,
+            region=region,
+        )
+        all_quotas.extend(quotas)
+    grouped_quotas = defaultdict(list)
+    for quota in all_quotas:
+        grouped_quotas[quota.region].append(
+            {
+                "metric_name": quota.metric_name,
+                "limit": quota.limit,
+                "usage": quota.usage,
+            }
+        )
+    return grouped_quotas, 200
 
 
 @workspace_management_bp.post("/update_billing")

@@ -155,7 +155,6 @@ def create_workspace_build(
     billing_account_id: str,
     workspace_project_id: str,
     user_email: str,
-    region: Region,
     user_permissions_list: list[str],
 ):
     cloud_build = _base_build()
@@ -164,7 +163,6 @@ def create_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
-        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
@@ -317,7 +315,7 @@ def destroy_collaborative_workbench_build(
 
 
 def destroy_workspace_build(
-    billing_account_id: str, workspace_project_id: str, user_email: str, region: Region
+    billing_account_id: str, workspace_project_id: str, user_email: str
 ):
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_WORKSPACE_STEPS
@@ -325,7 +323,6 @@ def destroy_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
-        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,

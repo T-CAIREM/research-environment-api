@@ -247,38 +247,36 @@ def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
 def start_stopped_workbenches(folder_id: str):
     projects_client = app.config.google_cloud_resource_client
 
-    project_ids = []
-    for project in projects_client.list_projects(parent=f"folders/{folder_id}"):
-        if project.state == google.cloud.resourcemanager.Project.State.ACTIVE:
-            project_ids.append((project.project_id, project.labels["region"]))
+    active_project_ids = [
+        project.project_id
+        for project in projects_client.list_projects(parent=f"folders/{folder_id}")
+        if project.state == google.cloud.resourcemanager.Project.State.ACTIVE
+    ]
 
     notebooks_client = app.config.google_cloud_notebooks_client
     instances_to_start = []
-    for project_id, region in project_ids:
-        if region == "":
-            continue
 
-        for zone in constants.AVAILABLE_ZONES.get(region, ""):
-            for instance in notebooks_client.list_instances(
-                parent=f"projects/{project_id}/locations/{zone}"
-            ):
-                if (
-                    instance.state
-                    != google.cloud.notebooks_v2.types.instance.State.STOPPED
+    for project_id in active_project_ids:
+        for region, zones in constants.AVAILABLE_ZONES.items():
+            for zone in zones:
+                for nb_instance in notebooks_client.list_instances(
+                    parent=f"projects/{project_id}/locations/{zone}"
                 ):
-                    continue
+                    if (
+                        nb_instance.state
+                        != google.cloud.notebooks_v2.types.instance.State.STOPPED
+                    ):
+                        continue
 
-                update_time = instance.update_time
-                current_time = datetime.now(timezone.utc)
-                if current_time - update_time > timedelta(days=3):
-                    continue
+                    update_time = nb_instance.update_time
+                    current_time = datetime.now(timezone.utc)
+                    if current_time - update_time > timedelta(days=3):
+                        continue
 
-                instances_to_start.append(instance.name)
+                    instances_to_start.append(nb_instance.name)
 
     for instance_name in instances_to_start:
-        notebooks_client.start_instance(
-            {"name": instance_name},
-        )
+        notebooks_client.start_instance({"name": instance_name})
 
     return f"Started {len(instances_to_start)} instances."
 

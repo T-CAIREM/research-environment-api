@@ -7,20 +7,11 @@ from typing import Iterable, Union
 from research_environment_api.modules.workbench_management.entities import (
     Workbench,
     WorkbenchStatus,
-    Region,
 )
 from research_environment_api.modules.sharing_management.entities import SharedBucket
 from research_environment_api.background.enums import BuildType
 from research_environment_api.modules.app import app
 from research_environment_api.modules.common.error_handlers import ServiceError
-
-
-GOOGLE_REGIONS_SHORTCUTS = {
-    Region.US_CENTRAL.value: "us-c1",
-    Region.EUROPE_WEST.value: "eu-w3",
-    Region.NORTHAMERICA_NORTHEAST.value: "na-ne3",
-    Region.AUSTRALIA_SOUTHEAST.value: "au-se1",
-}
 
 
 class WorkspaceStatus(StrEnum):
@@ -39,7 +30,6 @@ WORKSPACE_ACTIVITY_TYPE_MAP = {
 
 @dataclass
 class WorkspaceCreation:
-    region: Region
     user_email: str
     user_groups: list[str]
     workspace_project_id: str = field(init=False)
@@ -53,9 +43,8 @@ class WorkspaceCreation:
         self.organization_id = app.config.organization_id
 
     def _workspace_project_id(self):
-        workspace_project_id = (
-            f"{self.username[:15]}-{GOOGLE_REGIONS_SHORTCUTS[self.region.value]}-"
-            + "".join(random.choices(string.ascii_lowercase, k=5))
+        workspace_project_id = f"{self.username[:15]}-" + "".join(
+            random.choices(string.ascii_lowercase, k=5)
         )
         return workspace_project_id
 
@@ -63,7 +52,6 @@ class WorkspaceCreation:
 @dataclass
 class WorkspaceDeletion:
     workspace_project_id: str
-    region: Region
     user_email: str
     billing_account_id: str
     username: str = field(init=False)
@@ -125,7 +113,6 @@ class BillingInfo:
 class Workspace:
     gcp_project_id: str
     billing_info: BillingInfo
-    region: str
     workbenches: Iterable[Workbench]
     status: WorkspaceStatus
     is_owner: bool

@@ -220,6 +220,7 @@ def _build_workspace_entity(
     user_email: str = None,
 ) -> Optional[entities.Workspace]:
     gcp_project_id = gcp_project.project_id
+    billing_info_entity = _build_billing_entity(gcp_project.name)
     region = gcp_project.labels["region"]
     is_owner = gcp_project.labels["cloud_identity_username"] == user_email.split("@")[0]
     
@@ -276,7 +277,6 @@ def _build_workspace_entity(
         gcp_project_id=gcp_project_id,
         billing_info=billing_info_entity,
         workbenches=workbenches,
-        region=entities.Region(region),
         status=status,
         is_owner=is_owner,
         service_errors=service_errors,
