@@ -82,12 +82,6 @@
                             <div class="collapse {% if 'entries-monitoring' in request.path or 'workbench-activities' in request.path %}show{% endif %}" id="entriesSubmenu">
                                 <ul class="nav flex-column dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item {% if request.path == url_for('admin_panel_management.entries_monitoring') %}active{% endif %}" href="{{ url_for('admin_panel_management.entries_monitoring') }}">
-                                            <i class="fas fa-th-large"></i>
-                                            Overview
-                                        </a>
-                                    </li>
-                                    <li>
                                         <a class="dropdown-item {% if request.path == url_for('admin_panel_management.workbench_activities') %}active{% endif %}" href="{{ url_for('admin_panel_management.workbench_activities') }}">
                                             <i class="fas fa-cogs"></i>
                                             Workbench Activities

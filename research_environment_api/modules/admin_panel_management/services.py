@@ -447,3 +447,4 @@ def get_workbench_activities_summary() -> Dict[str, Any]:
                 "by_build_type": build_type_counts,
                 "by_status": status_counts
             }
+

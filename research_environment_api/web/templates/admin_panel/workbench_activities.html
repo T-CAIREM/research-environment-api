@@ -56,40 +56,6 @@
 
 {% block content %}
 <div class="container-fluid">
-  <!-- Summary Cards -->
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card bg-primary text-white">
-        <div class="card-body">
-          <h5 class="card-title">Total Activities</h5>
-          <h2 class="display-4">{{ summary.total }}</h2>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card bg-success text-white">
-        <div class="card-title p-2">Success Rate</div>
-        <div class="card-body">
-          {% set success_count = summary.by_status.get('SUCCESS', 0) %}
-          {% set total = summary.total %}
-          {% if total > 0 %}
-            {% set success_rate = (success_count / total * 100) | round %}
-          {% else %}
-            {% set success_rate = 0 %}
-          {% endif %}
-          <h2 class="display-4">{{ success_rate }}%</h2>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card bg-danger text-white">
-        <div class="card-title p-2">Failed Activities</div>
-        <div class="card-body">
-          <h2 class="display-4">{{ summary.by_status.get('FAILED', 0) }}</h2>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Search and Filters -->
   <div class="card filter-card">
