@@ -11,6 +11,39 @@
       <link rel="stylesheet" href="{{ url_for('static', filename='admin_panel/css/admin-panel.css') }}">
       {% block admin_head %}{% endblock %}
     {% endblock %}
+    <style>
+        .sidebar .nav-link.has-dropdown {
+            padding-bottom: 0.5rem;
+        }
+        .dropdown-menu {
+            position: static;
+            float: none;
+            background: transparent;
+            border: none;
+            padding-left: 1rem;
+            margin-top: 0;
+        }
+        .dropdown-menu .nav-link {
+            padding-left: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .dropdown-toggle::after {
+            margin-left: 0.5rem;
+        }
+        .sidebar .dropdown-item {
+            color: rgba(255, 255, 255, .75);
+            padding: 0.5rem 1rem;
+        }
+        .sidebar .dropdown-item:hover,
+        .sidebar .dropdown-item:focus {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .1);
+        }
+        .sidebar .dropdown-item.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .1);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
@@ -39,6 +72,30 @@
                                 <i class="fas fa-tasks"></i>
                                 Celery Management
                             </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link has-dropdown {% if 'entries-monitoring' in request.path %}active{% endif %}" href="#entriesSubmenu" data-toggle="collapse" aria-expanded="{% if 'entries-monitoring' in request.path %}true{% else %}false{% endif %}">
+                                <i class="fas fa-database"></i>
+                                Entries Management
+                                <i class="fas fa-angle-down ml-auto"></i>
+                            </a>
+                            <div class="collapse {% if 'entries-monitoring' in request.path or 'workbench-activities' in request.path %}show{% endif %}" id="entriesSubmenu">
+                                <ul class="nav flex-column dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('admin_panel_management.entries_monitoring') %}active{% endif %}" href="{{ url_for('admin_panel_management.entries_monitoring') }}">
+                                            <i class="fas fa-th-large"></i>
+                                            Overview
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.path == url_for('admin_panel_management.workbench_activities') %}active{% endif %}" href="{{ url_for('admin_panel_management.workbench_activities') }}">
+                                            <i class="fas fa-cogs"></i>
+                                            Workbench Activities
+                                        </a>
+                                    </li>
+                                    <!-- Additional entry types can be added here in the future -->
+                                </ul>
+                            </div>
                         </li>
                     </ul>
                 </div>

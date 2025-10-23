@@ -62,6 +62,92 @@ def celery_management():
     )
 
 
+@admin_panel_management_bp.get("/entries-monitoring")
+@validate_admin_page_auth
+@validate_token
+def entries_monitoring():
+    # This is a placeholder for the entries monitoring page
+    # You can add actual data fetching logic here when needed
+    search_query = request.args.get("q", "")
+    entry_type = request.args.get("type")
+    status = request.args.get("status")
+
+    return render_template(
+        "admin_panel/entries_monitoring.html",
+        entries=[],
+        search_query=search_query,
+        entry_type=entry_type,
+        status=status
+    )
+
+
+@admin_panel_management_bp.get("/workbench-activities")
+@validate_admin_page_auth
+@validate_token
+def workbench_activities():
+    # Get filter parameters
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    search_query = request.args.get("q", "")
+    status = request.args.get("status")
+    build_type = request.args.get("build_type")
+    workspace_id = request.args.get("workspace_id")
+    workbench_id = request.args.get("workbench_id")
+    email = request.args.get("email")
+    sort_by = request.args.get("sort_by", "id")
+    sort_direction = request.args.get("sort_direction", "desc")
+
+    # Get activities data
+    activities, total_count = services.get_workbench_activities(
+        page=page,
+        per_page=per_page,
+        status=status,
+        build_type=build_type,
+        workspace_id=workspace_id,
+        workbench_id=workbench_id,
+        email=email,
+        search_query=search_query if search_query else None,
+        sort_by=sort_by,
+        sort_direction=sort_direction
+    )
+
+    # Get summary statistics
+    summary = services.get_workbench_activities_summary()
+
+    # Calculate pagination metadata
+    total_pages = (total_count + per_page - 1) // per_page  # Ceiling division
+    has_next = page < total_pages
+    has_prev = page > 1
+
+    # Prepare filter params for template rendering
+    filter_params = {
+        "search_query": search_query,
+        "status": status,
+        "build_type": build_type,
+        "workspace_id": workspace_id,
+        "workbench_id": workbench_id,
+        "email": email,
+        "sort_by": sort_by,
+        "sort_direction": sort_direction
+    }
+
+    # Adding the min and max functions to the template context
+    return render_template(
+        "admin_panel/workbench_activities.html",
+        activities=activities,
+        summary=summary,
+        total_count=total_count,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+        has_next=has_next,
+        has_prev=has_prev,
+        filter_params=filter_params,
+        min=min,
+        max=max
+    )
+
+
 @admin_panel_management_bp.get("/celery-dashboard-data")
 @validate_admin_page_auth
 @validate_token
