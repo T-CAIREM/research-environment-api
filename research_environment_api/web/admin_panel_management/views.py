@@ -110,6 +110,13 @@ def delete_tasks():
         return {"error": "Missing task_ids"}, 400
 
     results = services.delete_tasks(data["task_ids"])
+    failed_tasks = any(not result.is_successful for result in results)
+
+    if failed_tasks:
+        return {
+            "error": "Some tasks could not be deleted.",
+        }, 500
+
     return schemas.TaskOperationResultSchema(many=True).dump(results), 200
 
 
