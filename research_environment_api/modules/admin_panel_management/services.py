@@ -12,11 +12,7 @@ from research_environment_api.modules.admin_panel_management.entities import (
     TaskOperationResult,
     WorkerStats,
 )
-from research_environment_api.modules.admin_panel_management.utils import (
-    get_task_state,
-    force_task_state,
-    sort_tasks_by_date,
-)
+from research_environment_api.modules.admin_panel_management import utils
 from research_environment_api.worker import app as celery_app
 
 
@@ -29,7 +25,7 @@ def search_tasks_by_name(name_fragment: str) -> List[Task]:
     for worker, tasks in active_tasks.items():
         for task in tasks:
             if name_fragment.lower() in task.get("name", "").lower():
-                state = get_task_state(task["id"])
+                state = utils.get_task_state(task["id"])
                 all_tasks.append(
                     Task(
                         id=task["id"],
@@ -45,7 +41,7 @@ def search_tasks_by_name(name_fragment: str) -> List[Task]:
     for worker, tasks in reserved_tasks.items():
         for task in tasks:
             if name_fragment.lower() in task.get("name", "").lower():
-                state = get_task_state(task["id"])
+                state = utils.get_task_state(task["id"])
                 all_tasks.append(
                     Task(
                         id=task["id"],
@@ -65,7 +61,7 @@ def search_tasks_by_name(name_fragment: str) -> List[Task]:
                 and name_fragment.lower() in task["request"].get("name", "").lower()
             ):
                 task_data = task["request"]
-                state = get_task_state(task_data["id"])
+                state = utils.get_task_state(task_data["id"])
                 all_tasks.append(
                     Task(
                         id=task_data["id"],
@@ -98,7 +94,7 @@ def filter_tasks(
             if task_type and task_type not in task.get("name", ""):
                 continue
 
-            state = get_task_state(task["id"])
+            state = utils.get_task_state(task["id"])
             if not status or status.upper() == state.upper():
                 all_tasks.append(
                     Task(
@@ -119,7 +115,7 @@ def filter_tasks(
             if task_type and task_type not in task.get("name", ""):
                 continue
 
-            state = get_task_state(task["id"])
+            state = utils.get_task_state(task["id"])
             if not status or status.upper() == state.upper():
                 all_tasks.append(
                     Task(
@@ -144,7 +140,7 @@ def filter_tasks(
             if task_type and task_type not in task_req.get("name", ""):
                 continue
 
-            state = get_task_state(task_req["id"])
+            state = utils.get_task_state(task_req["id"])
             if not status or status.upper() == state.upper():
                 all_tasks.append(
                     Task(
@@ -205,7 +201,7 @@ def delete_tasks(task_ids: list[str]) -> list[TaskOperationResult]:
 
         # Step 3: Force REVOKED state
         try:
-            force_task_state(task_id, "REVOKED")
+            utils.force_task_state(task_id, "REVOKED")
         except Exception as e:
             logger.warning(f"[{task_id}] Error forcing task state: {e}")
             success = False
@@ -250,6 +246,6 @@ def get_tasks(
         tasks = filter_tasks(status=status, worker=worker, task_type=task_type)
 
     if sort_by_date:
-        tasks = sort_tasks_by_date(tasks, reverse=reverse)
+        tasks = utils.sort_tasks_by_date(tasks, reverse=reverse)
 
     return tasks
