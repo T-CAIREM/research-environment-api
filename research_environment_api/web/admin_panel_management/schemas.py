@@ -17,9 +17,6 @@ class TaskSchema(Schema):
     eta = fields.String(allow_none=True)
     date_done = fields.DateTime(allow_none=True)
     result = fields.Nested(TaskResultSchema, allow_none=True)
-    ready = fields.Boolean()
-    successful = fields.Boolean()
-    failed = fields.Boolean()
 
 
 class TaskOperationResultSchema(Schema):

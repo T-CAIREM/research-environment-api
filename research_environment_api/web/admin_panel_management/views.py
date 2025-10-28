@@ -20,11 +20,8 @@ def _get_dashboard_data():
     task_counts = services.get_task_queue_counts()
     worker_stats = services.get_worker_stats()
 
-    debounced_search_query = (
-        search_query if search_query and len(search_query) >= 3 else None
-    )
     tasks = services.get_tasks(
-        search_query=debounced_search_query,
+        search_query=search_query,
         status=status,
         worker=worker,
         task_type=task_type,
