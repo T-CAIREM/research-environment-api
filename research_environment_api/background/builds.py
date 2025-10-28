@@ -46,7 +46,7 @@ def create_jupyter_workbench_build(
     sharing_bucket_permission_dict: dict[str, str],
     user_permissions_list: list[str],
     collaborative: str,
-    associated_event: str
+    associated_event: str,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -411,7 +411,7 @@ def create_rstudio_workbench_build(
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
-        "_ASSOCIATED_EVENT": associated_event
+        "_ASSOCIATED_EVENT": associated_event,
     }
 
     return cloud_build

@@ -61,7 +61,7 @@ def create_jupyter_workbench(
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
         collaborative=workbench_creation_request.collaborative,
-        associated_event=workbench_creation_request.associated_event
+        associated_event=workbench_creation_request.associated_event,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -130,7 +130,7 @@ def create_collaborative_workbench(
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
         collaborative=workbench_creation_request.collaborative,
-        associated_event=workbench_creation_request.associated_event
+        associated_event=workbench_creation_request.associated_event,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -461,15 +461,9 @@ def update_jupyter_workbench(
             return workbench_activity.id
 
 
-def destroy_jupyter_workbench(
-    workbench_destroy_request: entities.WorkbenchDestroy,
+def destroy_jupyter_workbench_flow(
+    workbench_destroy_request: entities.WorkbenchDestroy, workbench: entities.Workbench
 ) -> uuid.UUID:
-    workbench = services.get_compute_engine_workbench(
-        gcp_project_id=workbench_destroy_request.workspace_project_id,
-        instance_name=workbench_destroy_request.workbench_resource_id,
-        user_email=workbench_destroy_request.user_email,
-    )
-
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
         workbench.region,
@@ -511,6 +505,18 @@ def destroy_jupyter_workbench(
             )()
 
             return workbench_activity.id
+
+
+def destroy_jupyter_workbench(
+    workbench_destroy_request: entities.WorkbenchDestroy,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_destroy_request.workspace_project_id,
+        instance_name=workbench_destroy_request.workbench_resource_id,
+        user_email=workbench_destroy_request.user_email,
+    )
+
+    destroy_jupyter_workbench_flow(workbench_destroy_request, workbench)
 
 
 def stop_collaborative_workbench(
@@ -647,15 +653,9 @@ def update_collaborative_workbench(
             return workbench_activity.id
 
 
-def destroy_collaborative_workbench(
-    workbench_destroy_request: entities.WorkbenchDestroy,
+def destroy_collaborative_workbench_flow(
+    workbench_destroy_request: entities.WorkbenchDestroy, workbench: entities.Workbench
 ) -> uuid.UUID:
-    workbench = services.get_compute_engine_workbench(
-        gcp_project_id=workbench_destroy_request.workspace_project_id,
-        instance_name=workbench_destroy_request.workbench_resource_id,
-        user_email=workbench_destroy_request.user_email,
-    )
-
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
         workbench.region,
@@ -717,6 +717,17 @@ def destroy_collaborative_workbench(
             return workbench_activity.id
 
 
+def destroy_collaborative_workbench(
+    workbench_destroy_request: entities.WorkbenchDestroy,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        gcp_project_id=workbench_destroy_request.workspace_project_id,
+        instance_name=workbench_destroy_request.workbench_resource_id,
+        user_email=workbench_destroy_request.user_email,
+    )
+    destroy_collaborative_workbench_flow(workbench_destroy_request, workbench)
+
+
 def create_rstudio_workbench(
     workbench_creation_request: entities.WorkbenchCreate,
 ) -> uuid.UUID:
@@ -756,7 +767,7 @@ def create_rstudio_workbench(
         bucket_name=workbench_creation_request.bucket_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
-        associated_event=workbench_creation_request.associated_event
+        associated_event=workbench_creation_request.associated_event,
     )
 
     with app.database_session() as session:
@@ -895,15 +906,9 @@ def update_rstudio_workbench(
             return workbench_activity.id
 
 
-def destroy_rstudio_workbench(
-    workbench_destroy_request: entities.WorkbenchDestroy,
+def destroy_rstudio_workbench_flow(
+    workbench_destroy_request: entities.WorkbenchDestroy, workbench: entities.Workbench
 ) -> uuid.UUID:
-    workbench = services.get_compute_engine_workbench(
-        workbench_destroy_request.workspace_project_id,
-        workbench_destroy_request.workbench_resource_id,
-        workbench_destroy_request.user_email,
-    )
-
     monitoring_services.clear_quotas_cache(
         workbench_destroy_request.workspace_project_id,
         workbench.region,
@@ -946,3 +951,14 @@ def destroy_rstudio_workbench(
             )()
 
             return workbench_activity.id
+
+
+def destroy_rstudio_workbench(
+    workbench_destroy_request: entities.WorkbenchDestroy,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        workbench_destroy_request.workspace_project_id,
+        workbench_destroy_request.workbench_resource_id,
+        workbench_destroy_request.user_email,
+    )
+    destroy_rstudio_workbench_flow(workbench_destroy_request, workbench)

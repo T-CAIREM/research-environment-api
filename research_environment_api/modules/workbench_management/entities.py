@@ -82,6 +82,7 @@ class Workbench:
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[str] = None
     workbench_owner_username: Optional[str] = None
+    associated_event: Optional[str] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
@@ -134,6 +135,7 @@ class Workbench:
             else []
         )
         workbench_owner_username = instance.labels.get("owner")
+        associated_event = instance.labels.get("associated_event_slug")
         return cls(
             id=name,
             resource_id=instance.id,
@@ -154,6 +156,7 @@ class Workbench:
             service_account_name=service_account_name,
             sharing_bucket_identifiers=sharing_bucket_identifiers,
             workbench_owner_username=workbench_owner_username,
+            associated_event=associated_event,
         )
 
 
