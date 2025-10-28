@@ -21,7 +21,7 @@ $(document).ready(function() {
             type: 'GET',
             data: { counter_type: 'active' },
             success: function(data) {
-                $('.active-tasks-count').text(data.task_counts.active || 0);
+                $('.active-tasks-count').html(data.task_counts.active || 0);
             },
             error: function() {
                 $('.active-tasks-count').html('<span class="text-danger">Error</span>');
@@ -35,7 +35,7 @@ $(document).ready(function() {
             type: 'GET',
             data: { counter_type: 'reserved' },
             success: function(data) {
-                $('.reserved-tasks-count').text(data.task_counts.reserved || 0);
+                $('.reserved-tasks-count').html(data.task_counts.reserved || 0);
             },
             error: function() {
                 $('.reserved-tasks-count').html('<span class="text-danger">Error</span>');
@@ -49,7 +49,7 @@ $(document).ready(function() {
             type: 'GET',
             data: { counter_type: 'scheduled' },
             success: function(data) {
-                $('.scheduled-tasks-count').text(data.task_counts.scheduled || 0);
+                $('.scheduled-tasks-count').html(data.task_counts.scheduled || 0);
             },
             error: function() {
                 $('.scheduled-tasks-count').html('<span class="text-danger">Error</span>');
@@ -173,7 +173,7 @@ $(document).ready(function() {
             status: activeFilters.status,
             worker: activeFilters.worker,
             task_type: activeFilters.task_type,
-            limit: 50 // Increased limit to show more tasks
+            limit: 50
         };
 
         $.ajax({
@@ -219,7 +219,6 @@ $(document).ready(function() {
             success: function(data) {
                 updateWorkerStats(data);
 
-                // Update worker filter options
                 if (data.length > 0) {
                     availableWorkers = data.map(worker => worker.name);
                     updateWorkerFilterOptions();
@@ -233,6 +232,7 @@ $(document).ready(function() {
 
     function updateTaskTable(tasks) {
         const tableBody = $('#tasks-table-body');
+        tableBody.find('.skeleton-table-row').remove();
         tableBody.empty();
         if (tasks && tasks.length > 0) {
             tasks.forEach(function(task) {
@@ -277,6 +277,7 @@ $(document).ready(function() {
 
     function updateWorkerStats(workers) {
         const tableBody = $('#workers-table-body');
+        tableBody.find('.skeleton-table-row').remove();
         tableBody.empty();
         if (workers && workers.length > 0) {
             workers.forEach(function(worker) {
