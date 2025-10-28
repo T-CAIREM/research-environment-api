@@ -8,7 +8,6 @@ from research_environment_api.modules.admin_panel_management.cache import (
 )
 from research_environment_api.modules.admin_panel_management.entities import (
     Task,
-    TaskResult,
     TaskOperationResult,
     WorkerStats,
 )
@@ -16,63 +15,67 @@ from research_environment_api.modules.admin_panel_management import utils
 from research_environment_api.worker import app as celery_app
 
 
+def _process_tasks(
+    tasks_by_worker: dict,
+    is_scheduled: bool = False,
+    name_fragment: Optional[str] = None,
+    status: Optional[str] = None,
+    task_type: Optional[str] = None,
+    worker_filter: Optional[str] = None,
+) -> List[Task]:
+    all_tasks = []
+    for worker_name, tasks in tasks_by_worker.items():
+        if worker_filter and worker_filter != worker_name:
+            continue
+
+        for task_data in tasks:
+            task_info = task_data
+            eta = None
+            if is_scheduled:
+                if "request" not in task_data:
+                    continue
+                task_info = task_data["request"]
+                eta = task_data.get("eta")
+
+            task_name = task_info.get("name", "")
+            task_id = task_info.get("id")
+
+            if not task_id:
+                continue
+
+            if name_fragment and name_fragment.lower() not in task_name.lower():
+                continue
+
+            if task_type and task_type not in task_name:
+                continue
+
+            state = utils.get_task_state(task_id)
+            if status and status.upper() != state.upper():
+                continue
+
+            all_tasks.append(
+                Task(
+                    id=task_id,
+                    name=task_name,
+                    args=task_info.get("args"),
+                    kwargs=task_info.get("kwargs"),
+                    status=state,
+                    worker=worker_name,
+                    eta=eta,
+                )
+            )
+    return all_tasks
+
+
 def search_tasks_by_name(name_fragment: str) -> List[Task]:
     active_tasks, reserved_tasks, scheduled_tasks, _, _ = get_inspector_data()
 
     all_tasks = []
-
-    # Active tasks
-    for worker, tasks in active_tasks.items():
-        for task in tasks:
-            if name_fragment.lower() in task.get("name", "").lower():
-                state = utils.get_task_state(task["id"])
-                all_tasks.append(
-                    Task(
-                        id=task["id"],
-                        name=task.get("name"),
-                        args=task.get("args"),
-                        kwargs=task.get("kwargs"),
-                        status=state,
-                        worker=worker,
-                    )
-                )
-
-    # Reserved tasks
-    for worker, tasks in reserved_tasks.items():
-        for task in tasks:
-            if name_fragment.lower() in task.get("name", "").lower():
-                state = utils.get_task_state(task["id"])
-                all_tasks.append(
-                    Task(
-                        id=task["id"],
-                        name=task.get("name"),
-                        args=task.get("args"),
-                        kwargs=task.get("kwargs"),
-                        status=state,
-                        worker=worker,
-                    )
-                )
-
-    # Scheduled tasks
-    for worker, tasks in scheduled_tasks.items():
-        for task in tasks:
-            if (
-                "request" in task
-                and name_fragment.lower() in task["request"].get("name", "").lower()
-            ):
-                task_data = task["request"]
-                state = utils.get_task_state(task_data["id"])
-                all_tasks.append(
-                    Task(
-                        id=task_data["id"],
-                        name=task_data.get("name"),
-                        args=task_data.get("args"),
-                        kwargs=task_data.get("kwargs"),
-                        status=state,
-                        worker=worker,
-                        eta=task.get("eta"),
-                    )
-                )
+    all_tasks.extend(_process_tasks(active_tasks, name_fragment=name_fragment))
+    all_tasks.extend(_process_tasks(reserved_tasks, name_fragment=name_fragment))
+    all_tasks.extend(
+        _process_tasks(scheduled_tasks, is_scheduled=True, name_fragment=name_fragment)
+    )
 
     return all_tasks
 
@@ -85,74 +88,31 @@ def filter_tasks(
     active_tasks, reserved_tasks, scheduled_tasks, _, _ = get_inspector_data()
 
     all_tasks = []
-
-    # Process active tasks
-    for worker_name, tasks in active_tasks.items():
-        for task in tasks:
-            if worker and worker != worker_name:
-                continue
-            if task_type and task_type not in task.get("name", ""):
-                continue
-
-            state = utils.get_task_state(task["id"])
-            if not status or status.upper() == state.upper():
-                all_tasks.append(
-                    Task(
-                        id=task["id"],
-                        name=task.get("name"),
-                        args=task.get("args"),
-                        kwargs=task.get("kwargs"),
-                        status=state,
-                        worker=worker_name,
-                    )
-                )
-
-    # Process reserved tasks
-    for worker_name, tasks in reserved_tasks.items():
-        for task in tasks:
-            if worker and worker != worker_name:
-                continue
-            if task_type and task_type not in task.get("name", ""):
-                continue
-
-            state = utils.get_task_state(task["id"])
-            if not status or status.upper() == state.upper():
-                all_tasks.append(
-                    Task(
-                        id=task["id"],
-                        name=task.get("name"),
-                        args=task.get("args"),
-                        kwargs=task.get("kwargs"),
-                        status=state,
-                        worker=worker_name,
-                    )
-                )
-
-    # Process scheduled tasks
-    for worker_name, tasks in scheduled_tasks.items():
-        for task in tasks:
-            if "request" not in task:
-                continue
-
-            task_req = task["request"]
-            if worker and worker != worker_name:
-                continue
-            if task_type and task_type not in task_req.get("name", ""):
-                continue
-
-            state = utils.get_task_state(task_req["id"])
-            if not status or status.upper() == state.upper():
-                all_tasks.append(
-                    Task(
-                        id=task_req["id"],
-                        name=task_req.get("name"),
-                        args=task_req.get("args"),
-                        kwargs=task_req.get("kwargs"),
-                        status=state,
-                        worker=worker_name,
-                        eta=task.get("eta"),
-                    )
-                )
+    all_tasks.extend(
+        _process_tasks(
+            active_tasks,
+            status=status,
+            task_type=task_type,
+            worker_filter=worker,
+        )
+    )
+    all_tasks.extend(
+        _process_tasks(
+            reserved_tasks,
+            status=status,
+            task_type=task_type,
+            worker_filter=worker,
+        )
+    )
+    all_tasks.extend(
+        _process_tasks(
+            scheduled_tasks,
+            is_scheduled=True,
+            status=status,
+            task_type=task_type,
+            worker_filter=worker,
+        )
+    )
 
     return all_tasks
 
