@@ -48,14 +48,11 @@ def admin_home():
 @validate_admin_page_auth
 @validate_token
 def celery_management():
-    task_counts, worker_stats, tasks, filter_params = _get_dashboard_data()
+    search_query = request.args.get("q", "")
 
     return render_template(
         "admin_panel/celery_management_home.html",
-        worker_stats=worker_stats,
-        task_counts=task_counts,
-        tasks=tasks,
-        search_query=filter_params["search_query"],
+        search_query=search_query,
     )
 
 
