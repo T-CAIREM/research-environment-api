@@ -1,6 +1,7 @@
 from flask import request, render_template
 
 from research_environment_api.modules.admin_panel_management import services
+from research_environment_api.modules.admin_management import services as admin_services
 from research_environment_api.web.admin_panel_management import (
     admin_panel_management_bp,
     schemas,
@@ -119,3 +120,80 @@ def delete_tasks():
 def get_workers():
     workers = services.get_worker_stats()
     return schemas.WorkerStatsSchema(many=True).dump(workers), 200
+
+
+@admin_panel_management_bp.get("/events/workbenches")
+@validate_admin_page_auth
+@validate_token
+def event_workbenches():
+    workbenches, errors = admin_services.get_event_workbenches()
+
+    return render_template(
+        "admin_panel/event_workbenches.html",
+        workbenches=workbenches,
+        errors=errors
+    )
+
+
+@admin_panel_management_bp.post("/events/workbenches/stop")
+@validate_admin_page_auth
+@validate_token
+def stop_event_workbench():
+    data = request.get_json()
+    if not data:
+        return {"error": "Missing request data"}, 400
+
+    project_id = data.get("project_id")
+    workbench_id = data.get("workbench_id")
+    event_slug = data.get("event_slug")
+
+    if not all([project_id, workbench_id, event_slug]):
+        return {"error": "Missing required fields"}, 400
+
+    try:
+        all_workbenches, _ = admin_services.get_event_workbenches()
+        workbench_to_stop = [
+            (pid, wb) for pid, wb in all_workbenches
+            if pid == project_id and wb.id == workbench_id
+        ]
+
+        if not workbench_to_stop:
+            return {"error": "Workbench not found"}, 404
+
+        admin_services.stop_event_workbenches(workbench_to_stop, event_slug)
+
+        return {"success": True, "message": "Workbench stop initiated"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@admin_panel_management_bp.post("/events/workbenches/destroy")
+@validate_admin_page_auth
+@validate_token
+def destroy_event_workbench():
+    data = request.get_json()
+    if not data:
+        return {"error": "Missing request data"}, 400
+
+    project_id = data.get("project_id")
+    workbench_id = data.get("workbench_id")
+    event_slug = data.get("event_slug")
+
+    if not all([project_id, workbench_id, event_slug]):
+        return {"error": "Missing required fields"}, 400
+
+    try:
+        all_workbenches, _ = admin_services.get_event_workbenches()
+        workbench_to_destroy = [
+            (pid, wb) for pid, wb in all_workbenches
+            if pid == project_id and wb.id == workbench_id
+        ]
+
+        if not workbench_to_destroy:
+            return {"error": "Workbench not found"}, 404
+
+        admin_services.destroy_event_workbenches(workbench_to_destroy, event_slug)
+
+        return {"success": True, "message": "Workbench destroy initiated"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
