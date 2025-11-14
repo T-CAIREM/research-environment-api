@@ -1,7 +1,6 @@
 from flask import request, render_template
 
 from research_environment_api.modules.admin_panel_management import services
-from research_environment_api.modules.admin_management import services as admin_services
 from research_environment_api.web.admin_panel_management import (
     admin_panel_management_bp,
     schemas,
@@ -126,7 +125,7 @@ def get_workers():
 @validate_admin_page_auth
 @validate_token
 def event_workbenches():
-    workbenches, errors = admin_services.get_event_workbenches()
+    workbenches, errors = services.get_event_workbenches()
 
     return render_template(
         "admin_panel/event_workbenches.html",
@@ -151,7 +150,7 @@ def stop_event_workbench():
         return {"error": "Missing required fields"}, 400
 
     try:
-        all_workbenches, _ = admin_services.get_event_workbenches()
+        all_workbenches, _ = services.get_event_workbenches()
         workbench_to_stop = [
             (pid, wb) for pid, wb in all_workbenches
             if pid == project_id and wb.id == workbench_id
@@ -160,7 +159,7 @@ def stop_event_workbench():
         if not workbench_to_stop:
             return {"error": "Workbench not found"}, 404
 
-        admin_services.stop_event_workbenches(workbench_to_stop, event_slug)
+        services.stop_event_workbenches(workbench_to_stop, event_slug)
 
         return {"success": True, "message": "Workbench stop initiated"}, 200
     except Exception as e:
@@ -183,7 +182,7 @@ def destroy_event_workbench():
         return {"error": "Missing required fields"}, 400
 
     try:
-        all_workbenches, _ = admin_services.get_event_workbenches()
+        all_workbenches, _ = services.get_event_workbenches()
         workbench_to_destroy = [
             (pid, wb) for pid, wb in all_workbenches
             if pid == project_id and wb.id == workbench_id
@@ -192,7 +191,7 @@ def destroy_event_workbench():
         if not workbench_to_destroy:
             return {"error": "Workbench not found"}, 404
 
-        admin_services.destroy_event_workbenches(workbench_to_destroy, event_slug)
+        services.destroy_event_workbenches(workbench_to_destroy, event_slug)
 
         return {"success": True, "message": "Workbench destroy initiated"}, 200
     except Exception as e:
