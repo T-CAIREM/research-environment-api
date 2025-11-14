@@ -142,26 +142,31 @@ def stop_event_workbench():
     if not data:
         return {"error": "Missing request data"}, 400
 
-    project_id = data.get("project_id")
-    workbench_id = data.get("workbench_id")
+    workbenches_data = data.get("workbenches", [])
     event_slug = data.get("event_slug")
 
-    if not all([project_id, workbench_id, event_slug]):
+    if not workbenches_data or not event_slug:
         return {"error": "Missing required fields"}, 400
 
     try:
         all_workbenches, _ = services.get_event_workbenches()
-        workbench_to_stop = [
+
+        workbenches_to_stop = [
             (pid, wb) for pid, wb in all_workbenches
-            if pid == project_id and wb.id == workbench_id
+            if any(
+                pid == w.get("project_id") and wb.id == w.get("workbench_id")
+                for w in workbenches_data
+            )
         ]
 
-        if not workbench_to_stop:
+        if not workbenches_to_stop:
             return {"error": "Workbench not found"}, 404
 
-        services.stop_event_workbenches(workbench_to_stop, event_slug)
+        services.stop_event_workbenches(workbenches_to_stop, event_slug)
 
-        return {"success": True, "message": "Workbench stop initiated"}, 200
+        count = len(workbenches_to_stop)
+        message = f"Stop initiated for {count} workbench(es)" if count > 1 else "Workbench stop initiated"
+        return {"success": True, "message": message}, 200
     except Exception as e:
         return {"error": str(e)}, 500
 
@@ -174,25 +179,30 @@ def destroy_event_workbench():
     if not data:
         return {"error": "Missing request data"}, 400
 
-    project_id = data.get("project_id")
-    workbench_id = data.get("workbench_id")
+    workbenches_data = data.get("workbenches", [])
     event_slug = data.get("event_slug")
 
-    if not all([project_id, workbench_id, event_slug]):
+    if not workbenches_data or not event_slug:
         return {"error": "Missing required fields"}, 400
 
     try:
         all_workbenches, _ = services.get_event_workbenches()
-        workbench_to_destroy = [
+
+        workbenches_to_destroy = [
             (pid, wb) for pid, wb in all_workbenches
-            if pid == project_id and wb.id == workbench_id
+            if any(
+                pid == w.get("project_id") and wb.id == w.get("workbench_id")
+                for w in workbenches_data
+            )
         ]
 
-        if not workbench_to_destroy:
+        if not workbenches_to_destroy:
             return {"error": "Workbench not found"}, 404
 
-        services.destroy_event_workbenches(workbench_to_destroy, event_slug)
+        services.destroy_event_workbenches(workbenches_to_destroy, event_slug)
 
-        return {"success": True, "message": "Workbench destroy initiated"}, 200
+        count = len(workbenches_to_destroy)
+        message = f"Destroy initiated for {count} workbench(es)" if count > 1 else "Workbench destroy initiated"
+        return {"success": True, "message": message}, 200
     except Exception as e:
         return {"error": str(e)}, 500

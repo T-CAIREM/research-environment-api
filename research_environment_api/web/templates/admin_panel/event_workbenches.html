@@ -39,10 +39,28 @@
         </div>
         <div class="card-body">
             {% if workbenches %}
+            <div class="d-flex justify-content-between mb-3 flex-wrap">
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <button type="button" class="btn btn-warning btn-sm" id="bulk-stop-workbenches" disabled>
+                        <i class="fas fa-stop mr-1"></i> Stop Selected (<span id="selected-count-stop">0</span>)
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-sm ml-2" id="bulk-destroy-workbenches" disabled>
+                        <i class="fas fa-trash-alt mr-1"></i> Destroy Selected (<span id="selected-count-destroy">0</span>)
+                    </button>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                     <thead>
                         <tr>
+                            <th width="40px">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="select-all-workbenches">
+                                    <label class="custom-control-label" for="select-all-workbenches"></label>
+                                </div>
+                            </th>
                             <th>Workbench ID</th>
                             <th>Type</th>
                             <th>Owner</th>
@@ -55,6 +73,17 @@
                     <tbody>
                         {% for project_id, workbench in workbenches %}
                         <tr>
+                            <td>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox"
+                                           class="custom-control-input workbench-checkbox"
+                                           id="workbench-{{ loop.index }}"
+                                           data-project-id="{{ project_id }}"
+                                           data-workbench-id="{{ workbench.id }}"
+                                           data-event-slug="{{ workbench.associated_event }}">
+                                    <label class="custom-control-label" for="workbench-{{ loop.index }}"></label>
+                                </div>
+                            </td>
                             <td>
                                 <code>{{ workbench.id }}</code>
                             </td>
@@ -142,12 +171,13 @@
     $(document).ready(function() {
         let currentAction = null;
         let currentData = null;
+        let isBulkAction = false;
 
         $('.stop-workbench-btn').on('click', function() {
+            isBulkAction = false;
             currentData = {
                 project_id: $(this).data('project-id'),
                 workbench_id: $(this).data('workbench-id'),
-                workbench_type: $(this).data('workbench-type'),
                 event_slug: $(this).data('event-slug'),
                 owner: $(this).data('owner')
             };
@@ -161,10 +191,10 @@
         });
 
         $('.destroy-workbench-btn').on('click', function() {
+            isBulkAction = false;
             currentData = {
                 project_id: $(this).data('project-id'),
                 workbench_id: $(this).data('workbench-id'),
-                workbench_type: $(this).data('workbench-type'),
                 event_slug: $(this).data('event-slug'),
                 owner: $(this).data('owner')
             };
@@ -177,26 +207,98 @@
             $('#confirmActionModal').modal('show');
         });
 
+        function updateBulkActionButtons() {
+            const selectedCount = $('.workbench-checkbox:checked').length;
+            $('#selected-count-stop').text(selectedCount);
+            $('#selected-count-destroy').text(selectedCount);
+            $('#bulk-stop-workbenches').prop('disabled', selectedCount === 0);
+            $('#bulk-destroy-workbenches').prop('disabled', selectedCount === 0);
+        }
+
+        $('.workbench-checkbox').on('change', function() {
+            updateBulkActionButtons();
+
+            const totalCheckboxes = $('.workbench-checkbox').length;
+            const checkedCheckboxes = $('.workbench-checkbox:checked').length;
+            $('#select-all-workbenches').prop('checked', totalCheckboxes === checkedCheckboxes);
+        });
+
+        $('#select-all-workbenches').on('change', function() {
+            $('.workbench-checkbox').prop('checked', this.checked);
+            updateBulkActionButtons();
+        });
+
+        $('#bulk-stop-workbenches').on('click', function() {
+            isBulkAction = true;
+            currentAction = 'stop';
+            const selectedCount = $('.workbench-checkbox:checked').length;
+
+            $('#confirmActionMessage').html(
+                `Are you sure you want to stop <strong>${selectedCount}</strong> selected workbench(es)?`
+            );
+            $('#confirmActionBtn').removeClass('btn-danger').addClass('btn-warning').text('Stop All');
+            $('#confirmActionModal').modal('show');
+        });
+
+        $('#bulk-destroy-workbenches').on('click', function() {
+            isBulkAction = true;
+            currentAction = 'destroy';
+            const selectedCount = $('.workbench-checkbox:checked').length;
+
+            $('#confirmActionMessage').html(
+                `Are you sure you want to DESTROY <strong>${selectedCount}</strong> selected workbench(es)? This action cannot be undone!`
+            );
+            $('#confirmActionBtn').removeClass('btn-warning').addClass('btn-danger').text('Destroy All');
+            $('#confirmActionModal').modal('show');
+        });
+
         $('#confirmActionBtn').on('click', function() {
-            if (!currentAction || !currentData) return;
+            if (!currentAction) return;
 
             const endpoint = currentAction === 'stop'
                 ? '{{ url_for("admin_panel_management.stop_event_workbench") }}'
                 : '{{ url_for("admin_panel_management.destroy_event_workbench") }}';
 
+            let workbenches = [];
+            let eventSlug = null;
+
+            if (isBulkAction) {
+                $('.workbench-checkbox:checked').each(function() {
+                    workbenches.push({
+                        project_id: $(this).data('project-id'),
+                        workbench_id: $(this).data('workbench-id')
+                    });
+                    eventSlug = $(this).data('event-slug');
+                });
+            } else {
+                workbenches.push({
+                    project_id: currentData.project_id,
+                    workbench_id: currentData.workbench_id
+                });
+                eventSlug = currentData.event_slug;
+            }
+
+            if (workbenches.length === 0) {
+                $('#confirmActionModal').modal('hide');
+                return;
+            }
+
             $.ajax({
                 url: endpoint,
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(currentData),
+                data: JSON.stringify({
+                    workbenches: workbenches,
+                    event_slug: eventSlug
+                }),
                 success: function(response) {
                     $('#confirmActionModal').modal('hide');
-                    alert(`Workbench ${currentAction} initiated successfully!`);
+                    alert(response.message || `Workbench ${currentAction} initiated successfully!`);
                     location.reload();
                 },
                 error: function(xhr) {
                     $('#confirmActionModal').modal('hide');
-                    alert(`Error: ${xhr.responseJSON?.error || 'Failed to ' + currentAction + ' workbench'}`);
+                    alert(`Error: ${xhr.responseJSON?.error || 'Failed to ' + currentAction + ' workbench(es)'}`);
                 }
             });
         });
