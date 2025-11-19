@@ -45,6 +45,27 @@
   .detail-content {
     white-space: pre-wrap;
   }
+  .sortable-header {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px;
+  }
+  .sortable-header:hover {
+    background-color: #f0f0f0;
+  }
+  .sort-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+  .sort-icon.active {
+    color: #007bff;
+    font-weight: bold;
+  }
 </style>
 {% endblock %}
 
@@ -69,32 +90,15 @@
     <div class="card-body">
       <form id="filter-form" method="get">
         <div class="form-row">
-          <div class="col-md-3 mb-3">
+          <div class="col-md-4 mb-3">
             <label for="workbench_id">Workbench ID</label>
             <input type="text" class="form-control" id="workbench_id" name="workbench_id" placeholder="Workbench ID..." value="{{ filter_params.workbench_id or '' }}">
           </div>
-          <div class="col-md-2 mb-3">
-            <label for="sort_by">Sort By</label>
-            <select class="form-control" id="sort_by" name="sort_by">
-              <option value="id" {% if filter_params.sort_by == "id" %}selected{% endif %}>ID</option>
-              <option value="build_type" {% if filter_params.sort_by == "build_type" %}selected{% endif %}>Build Type</option>
-              <option value="build_status" {% if filter_params.sort_by == "build_status" %}selected{% endif %}>Status</option>
-              <option value="workbench_id" {% if filter_params.sort_by == "workbench_id" %}selected{% endif %}>Workbench ID</option>
-              <option value="invoker_email" {% if filter_params.sort_by == "invoker_email" %}selected{% endif %}>Email</option>
-            </select>
-          </div>
-          <div class="col-md-2 mb-3">
-            <label for="sort_direction">Direction</label>
-            <select class="form-control" id="sort_direction" name="sort_direction">
-              <option value="desc" {% if filter_params.sort_direction == "desc" %}selected{% endif %}>Descending</option>
-              <option value="asc" {% if filter_params.sort_direction == "asc" %}selected{% endif %}>Ascending</option>
-            </select>
-          </div>
-          <div class="col-md-2 mb-3">
+          <div class="col-md-3 mb-3">
             <label for="email">Email</label>
             <input type="text" class="form-control" id="email" name="email" placeholder="User email..." value="{{ filter_params.email or '' }}">
           </div>
-          <div class="col-md-2 mb-3">
+          <div class="col-md-3 mb-3">
             <label for="status">Status</label>
             <select class="form-control" id="status" name="status">
               <option value="">All Statuses</option>
@@ -105,10 +109,13 @@
               {% endfor %}
             </select>
           </div>
-          <div class="col-md-1 mb-3 d-flex align-items-end">
+          <div class="col-md-2 mb-3 d-flex align-items-end">
             <button type="submit" class="btn btn-primary btn-block">Apply</button>
           </div>
         </div>
+        <!-- Hidden fields to preserve sort state -->
+        <input type="hidden" id="sort_by" name="sort_by" value="{{ filter_params.sort_by or 'id' }}">
+        <input type="hidden" id="sort_direction" name="sort_direction" value="{{ filter_params.sort_direction or 'desc' }}">
       </form>
     </div>
   </div>
@@ -124,10 +131,30 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Email</th>
-              <th>Workbench ID</th>
-              <th>Build Type</th>
-              <th>Status</th>
+              <th class="sortable-header" data-sort="invoker_email">
+                Email
+                <span class="sort-icon {% if filter_params.sort_by == 'invoker_email' %}active{% endif %}">
+                  {% if filter_params.sort_by == 'invoker_email' and filter_params.sort_direction == 'asc' %}▲{% else %}▼{% endif %}
+                </span>
+              </th>
+              <th class="sortable-header" data-sort="workbench_id">
+                Workbench ID
+                <span class="sort-icon {% if filter_params.sort_by == 'workbench_id' %}active{% endif %}">
+                  {% if filter_params.sort_by == 'workbench_id' and filter_params.sort_direction == 'asc' %}▲{% else %}▼{% endif %}
+                </span>
+              </th>
+              <th class="sortable-header" data-sort="build_type">
+                Build Type
+                <span class="sort-icon {% if filter_params.sort_by == 'build_type' %}active{% endif %}">
+                  {% if filter_params.sort_by == 'build_type' and filter_params.sort_direction == 'asc' %}▲{% else %}▼{% endif %}
+                </span>
+              </th>
+              <th class="sortable-header" data-sort="build_status">
+                Status
+                <span class="sort-icon {% if filter_params.sort_by == 'build_status' %}active{% endif %}">
+                  {% if filter_params.sort_by == 'build_status' and filter_params.sort_direction == 'asc' %}▲{% else %}▼{% endif %}
+                </span>
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -286,13 +313,39 @@
     }
   }
 
-
-  // Initialize tooltips
+  // Handle sortable column header clicks
   document.addEventListener('DOMContentLoaded', function() {
     // Ensure any Bootstrap tooltips are initialized
     if (typeof $().tooltip === 'function') {
       $('[data-toggle="tooltip"]').tooltip();
     }
+
+    // Add click handlers to sortable headers
+    const sortableHeaders = document.querySelectorAll('.sortable-header');
+    sortableHeaders.forEach(header => {
+      header.addEventListener('click', function() {
+        const sortField = this.getAttribute('data-sort');
+        const currentSortBy = '{{ filter_params.sort_by or "id" }}';
+        const currentDirection = '{{ filter_params.sort_direction or "desc" }}';
+
+        let newDirection = 'desc';
+
+        // If clicking on the same column, toggle direction
+        if (sortField === currentSortBy) {
+          newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+        } else {
+          // If clicking on a new column, default to descending
+          newDirection = 'desc';
+        }
+
+        // Update the hidden form fields
+        document.getElementById('sort_by').value = sortField;
+        document.getElementById('sort_direction').value = newDirection;
+
+        // Submit the form
+        document.getElementById('filter-form').submit();
+      });
+    });
   });
 </script>
 {% endblock %}
