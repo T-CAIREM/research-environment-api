@@ -2,7 +2,7 @@
 
 {% block title %}Workbench Activities - Admin Panel{% endblock %}
 
-{% block page_header %}Workbench Activities Management{% endblock %}
+{% block page_header %}Workbench Activities{% endblock %}
 
 {% block admin_head %}
 <style>
@@ -56,11 +56,18 @@
 
 {% block content %}
 <div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <p class="text-muted">View and manage workbench activity logs</p>
+    </div>
+  </div>
 
   <!-- Search and Filters -->
-  <div class="card filter-card">
+  <div class="card shadow mb-4 filter-card">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Search and Filter</h6>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">Search and Filter</h5>
       <form id="filter-form" method="get">
         <div class="form-row">
           <div class="col-md-3 mb-3">
@@ -136,18 +143,18 @@
   </div>
 
   <!-- Activities Table -->
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Activities List ({{ total_count }} total)</h5>
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h6 class="m-0 font-weight-bold text-primary">Activities List ({{ total_count }} total)</h6>
       <div>
         <button class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
           <i class="fas fa-sync"></i> Refresh
         </button>
       </div>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-striped table-hover mb-0">
+        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
           <thead>
             <tr>
               <th>ID</th>
@@ -166,12 +173,12 @@
                   <td>{{ activity.invoker_email }}</td>
                   <td>
                     {% if activity.workbench_id %}
-                      {{ activity.workbench_id }}
+                      <code>{{ activity.workbench_id }}</code>
                     {% else %}
                       <span class="text-muted">N/A</span>
                     {% endif %}
                   </td>
-                  <td>{{ activity.build_type }}</td>
+                  <td><span class="badge badge-info">{{ activity.build_type }}</span></td>
                   <td>
                     <span class="status-badge status-{{ activity.build_status }}">{{ activity.build_status }}</span>
                   </td>
