@@ -6,12 +6,6 @@
 
 {% block admin_head %}
 <style>
-  .filter-card {
-    margin-bottom: 20px;
-  }
-  .stats-card {
-    margin-bottom: 20px;
-  }
   .status-badge {
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
@@ -28,12 +22,6 @@
   .status-FAILURE {
     background-color: #dc3545;
     color: white;
-  }
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
   }
   .sortable-header {
     cursor: pointer;
@@ -67,7 +55,7 @@
     </div>
   </div>
 
-  <div class="card shadow mb-4 filter-card">
+  <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Search and Filter</h6>
       {% if filter_params.workbench_id or filter_params.email or filter_params.status %}
@@ -217,13 +205,11 @@
                 <span aria-hidden="true">&laquo;</span>
               </a>
             </li>
-
             {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
               <li class="page-item {% if p == page %}active{% endif %}">
                 <a class="page-link" href="{{ url_for('admin_panel_management.workbench_activities', page=p, **filtered_params) }}">{{ p }}</a>
               </li>
             {% endfor %}
-
             <li class="page-item {% if not has_next %}disabled{% endif %}">
               <a class="page-link" href="{{ url_for('admin_panel_management.workbench_activities', page=(page+1), **filtered_params) }}" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
@@ -244,11 +230,11 @@
   </div>
 </div>
 
-<div class="modal fade" id="editStatusModal" tabindex="-1" role="dialog" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+<div class="modal fade" id="editStatusModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editStatusModalLabel">Edit Activity Status</h5>
+        <h5 class="modal-title">Edit Activity Status</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -260,9 +246,6 @@
             <label for="new-status">Select New Status</label>
             <select class="form-control" id="new-status" name="new_status" required>
               <option value="">-- Select Status --</option>
-              {% for status_name in summary.by_status.keys() %}
-                <option value="{{ status_name }}">{{ status_name }}</option>
-              {% endfor %}
             </select>
           </div>
         </form>
@@ -275,11 +258,11 @@
   </div>
 </div>
 
-<div class="modal fade" id="errorDetailsModal" tabindex="-1" role="dialog" aria-labelledby="errorDetailsModalLabel" aria-hidden="true">
+<div class="modal fade" id="errorDetailsModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="errorDetailsModalLabel">
+        <h5 class="modal-title">
           <i class="fas fa-exclamation-circle"></i> Error Details
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
@@ -292,10 +275,8 @@
             <dl class="row">
               <dt class="col-sm-4">Activity ID:</dt>
               <dd class="col-sm-8" id="detail-activity-id"></dd>
-
               <dt class="col-sm-4">Email:</dt>
               <dd class="col-sm-8" id="detail-email"></dd>
-
               <dt class="col-sm-4">Workbench ID:</dt>
               <dd class="col-sm-8"><code id="detail-workbench-id"></code></dd>
             </dl>
@@ -304,13 +285,11 @@
             <dl class="row">
               <dt class="col-sm-4">Build Type:</dt>
               <dd class="col-sm-8" id="detail-build-type"></dd>
-
               <dt class="col-sm-4">Workspace ID:</dt>
               <dd class="col-sm-8" id="detail-workspace-id"></dd>
             </dl>
           </div>
         </div>
-
         <div class="row">
           <div class="col-12">
             <h6 class="text-danger"><i class="fas fa-bug"></i> Error Information:</h6>
@@ -326,53 +305,33 @@
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-
-  // Handle sortable column header clicks
   document.addEventListener('DOMContentLoaded', function() {
-    // Ensure any Bootstrap tooltips are initialized
     if (typeof $().tooltip === 'function') {
       $('[data-toggle="tooltip"]').tooltip();
     }
 
-    // Add click handlers to sortable headers
-    const sortableHeaders = document.querySelectorAll('.sortable-header');
-    sortableHeaders.forEach(header => {
+    document.querySelectorAll('.sortable-header').forEach(header => {
       header.addEventListener('click', function() {
         const sortField = this.getAttribute('data-sort');
         const currentSortBy = '{{ filter_params.sort_by or "id" }}';
         const currentDirection = '{{ filter_params.sort_direction or "desc" }}';
+        const newDirection = sortField === currentSortBy ? (currentDirection === 'desc' ? 'asc' : 'desc') : 'desc';
 
-        let newDirection = 'desc';
-
-        // If clicking on the same column, toggle direction
-        if (sortField === currentSortBy) {
-          newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
-        } else {
-          // If clicking on a new column, default to descending
-          newDirection = 'desc';
-        }
-
-        // Update the hidden form fields
         document.getElementById('sort_by').value = sortField;
         document.getElementById('sort_direction').value = newDirection;
-
-        // Submit the form
         document.getElementById('filter-form').submit();
       });
     });
 
-    // Handle edit status button click
     document.querySelectorAll('.edit-status-btn').forEach(button => {
       button.addEventListener('click', function() {
         const activityId = this.getAttribute('data-activity-id');
         const currentStatus = this.getAttribute('data-current-status');
 
-        // Set the activity ID in the modal
         document.getElementById('edit-activity-id').value = activityId;
 
         const statusDropdown = document.getElementById('new-status');
@@ -393,12 +352,10 @@
           }
         });
 
-        // Show the modal
         $('#editStatusModal').modal('show');
       });
     });
 
-    // Handle save status button click in modal
     document.getElementById('save-status-btn').addEventListener('click', function() {
       const activityId = document.getElementById('edit-activity-id').value;
       const newStatus = document.getElementById('new-status').value;
@@ -408,21 +365,14 @@
         return;
       }
 
-      // Make an AJAX request to update the status
       fetch('{{ url_for("admin_panel_management.update_activity_status") }}', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          activity_id: activityId,
-          new_status: newStatus
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activity_id: activityId, new_status: newStatus })
       })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Close modal and reload page to show updated status
           $('#editStatusModal').modal('hide');
           alert('Status updated successfully!');
           location.reload();
@@ -438,19 +388,12 @@
 
     document.querySelectorAll('.show-details-btn').forEach(button => {
       button.addEventListener('click', function() {
-        const activityId = this.getAttribute('data-activity-id');
-        const workbenchId = this.getAttribute('data-workbench-id');
-        const email = this.getAttribute('data-email');
-        const buildType = this.getAttribute('data-build-type');
-        const workspaceId = this.getAttribute('data-workspace-id');
-        const errorInfo = this.getAttribute('data-error');
-
-        document.getElementById('detail-activity-id').innerText = activityId;
-        document.getElementById('detail-email').innerText = email;
-        document.getElementById('detail-workbench-id').innerText = workbenchId;
-        document.getElementById('detail-build-type').innerText = buildType;
-        document.getElementById('detail-workspace-id').innerText = workspaceId;
-        document.getElementById('detail-error-info').innerText = errorInfo;
+        document.getElementById('detail-activity-id').innerText = this.getAttribute('data-activity-id');
+        document.getElementById('detail-email').innerText = this.getAttribute('data-email');
+        document.getElementById('detail-workbench-id').innerText = this.getAttribute('data-workbench-id');
+        document.getElementById('detail-build-type').innerText = this.getAttribute('data-build-type');
+        document.getElementById('detail-workspace-id').innerText = this.getAttribute('data-workspace-id');
+        document.getElementById('detail-error-info').innerText = this.getAttribute('data-error');
 
         $('#errorDetailsModal').modal('show');
       });

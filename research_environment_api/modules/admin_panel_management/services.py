@@ -15,7 +15,9 @@ from research_environment_api.modules.admin_panel_management.entities import (
     TaskOperationResult,
     WorkerStats,
 )
-from research_environment_api.modules.monitoring_management.models import WorkbenchActivity
+from research_environment_api.modules.monitoring_management.models import (
+    WorkbenchActivity,
+)
 from research_environment_api.modules.workbench_management.services import (
     list_workbenches,
 )
@@ -32,15 +34,16 @@ from research_environment_api.modules.admin_panel_management import utils
 from research_environment_api.modules.monitoring_management import monitoring
 from research_environment_api.modules.app import app
 from research_environment_api.worker import app as celery_app
-from research_environment_api.modules.common.error_handlers import safe_google_service_call
+from research_environment_api.modules.common.error_handlers import (
+    safe_google_service_call,
+)
 from research_environment_api.background import schedulers
 
 
 def authenticate_admin(username: str, password: str) -> bool:
-    return (
-        secrets.compare_digest(username, app.config.admin_panel_username)
-        and secrets.compare_digest(password, app.config.admin_panel_password)
-    )
+    return secrets.compare_digest(
+        username, app.config.admin_panel_username
+    ) and secrets.compare_digest(password, app.config.admin_panel_password)
 
 
 def _process_tasks(
@@ -303,7 +306,9 @@ def destroy_event_workbenches(
                 )
 
 
-def stop_event_workbenches(workbenches_with_events: Iterable[tuple[str, Workbench]], event_slug: str):
+def stop_event_workbenches(
+    workbenches_with_events: Iterable[tuple[str, Workbench]], event_slug: str
+):
     for gcp_project_id, workbench in workbenches_with_events:
         if workbench.associated_event == event_slug:
             user_email = f"{workbench.workbench_owner_username}@healthdatanexus.ai"
@@ -315,9 +320,7 @@ def stop_event_workbenches(workbenches_with_events: Iterable[tuple[str, Workbenc
             )
             workbench_type = workbench.type
             if workbench_type == WorkbenchType.JUPYTER:
-                schedulers.stop_jupyter_workbench(
-                    workbench_stop_entity
-                )
+                schedulers.stop_jupyter_workbench(workbench_stop_entity)
             elif workbench_type == WorkbenchType.COLLABORATIVE:
                 schedulers.stop_collaborative_workbench(workbench_stop_entity)
             elif workbench_type == WorkbenchType.RSTUDIO:
@@ -334,67 +337,47 @@ def get_workbench_activities(
     email: Optional[str] = None,
     search_query: Optional[str] = None,
     sort_by: str = "id",
-    sort_direction: str = "desc"
+    sort_direction: str = "desc",
 ) -> Tuple[List[Dict[str, Any]], int]:
-    """
-    Fetch workbench activities with pagination and filtering options.
-
-    Args:
-        page: Page number, starting from 1
-        per_page: Number of items per page
-        status: Filter by workflow status
-        build_type: Filter by build type
-        workspace_id: Filter by workspace ID
-        workbench_id: Filter by workbench ID
-        email: Filter by invoker email
-        search_query: Search across multiple fields
-        sort_by: Field to sort by (id, workspace_id, etc.)
-        sort_direction: Sort direction ('asc' or 'desc')
-        start_date: Filter by activities after this date (not used - model has no date field)
-        end_date: Filter by activities before this date (not used - model has no date field)
-
-    Returns:
-        Tuple of (list of activities as dicts, total count)
-    """
     with app.database_session() as session:
         with session.begin():
             query = session.query(WorkbenchActivity)
 
-            # Apply filters if provided
             if status:
                 try:
-                    # Try to get the enum by name (e.g., "IN_PROGRESS" -> WorkflowStatus.IN_PROGRESS)
                     workflow_status = WorkflowStatus[status.upper().replace(" ", "_")]
-                    query = query.filter(WorkbenchActivity.build_status == workflow_status)
+                    query = query.filter(
+                        WorkbenchActivity.build_status == workflow_status
+                    )
                 except (KeyError, ValueError):
-                    # Invalid status, ignore the filter
                     pass
 
             if build_type:
                 try:
-                    # Try to get the enum by name (e.g., "WORKBENCH_START" -> BuildType.WORKBENCH_START)
                     build_type_enum = BuildType[build_type.upper().replace(" ", "_")]
-                    query = query.filter(WorkbenchActivity.build_type == build_type_enum)
+                    query = query.filter(
+                        WorkbenchActivity.build_type == build_type_enum
+                    )
                 except (KeyError, ValueError):
-                    # Invalid build type, ignore the filter
                     pass
 
             if workspace_id:
                 query = query.filter(WorkbenchActivity.workspace_id == workspace_id)
 
             if workbench_id:
-                # Strip whitespace and use pattern matching for partial matches
                 workbench_id_clean = workbench_id.strip() if workbench_id else None
                 if workbench_id_clean:
-                    query = query.filter(WorkbenchActivity.workbench_id.ilike(f"%{workbench_id_clean}%"))
+                    query = query.filter(
+                        WorkbenchActivity.workbench_id.ilike(f"%{workbench_id_clean}%")
+                    )
 
             if email:
-                # Strip whitespace from email and use pattern matching for partial matches
                 email_clean = email.strip() if email else None
                 if email_clean:
-                    query = query.filter(WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%"))
+                    query = query.filter(
+                        WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%")
+                    )
 
-            # Search across multiple fields if search_query is provided
             if search_query:
                 search_pattern = f"%{search_query}%"
                 query = query.filter(
@@ -402,17 +385,12 @@ def get_workbench_activities(
                         WorkbenchActivity.invoker_email.ilike(search_pattern),
                         WorkbenchActivity.workbench_id.ilike(search_pattern),
                         WorkbenchActivity.workspace_id.ilike(search_pattern),
-                        WorkbenchActivity.build_error_information.ilike(search_pattern)
+                        WorkbenchActivity.build_error_information.ilike(search_pattern),
                     )
                 )
 
-            # Note: The model doesn't have created_at or updated_at fields
-            # We'll ignore date filters since they don't apply
-
-            # Get total count before pagination
             total_count = query.count()
 
-            # Apply sorting - default to ID if field doesn't exist
             if hasattr(WorkbenchActivity, sort_by):
                 sort_attr = getattr(WorkbenchActivity, sort_by)
                 if sort_direction.lower() == "desc":
@@ -420,43 +398,43 @@ def get_workbench_activities(
                 else:
                     query = query.order_by(sort_attr)
             else:
-                # Default sort by id
-                query = query.order_by(desc(WorkbenchActivity.id) if sort_direction.lower() == "desc" else WorkbenchActivity.id)
+                query = query.order_by(
+                    desc(WorkbenchActivity.id)
+                    if sort_direction.lower() == "desc"
+                    else WorkbenchActivity.id
+                )
 
-            # Apply pagination
             query = query.offset((page - 1) * per_page).limit(per_page)
 
-            # Execute query and convert results to dictionaries
             activities = []
             for activity in query.all():
-                activities.append({
-                    "id": activity.id,
-                    "invoker_email": activity.invoker_email,
-                    "workbench_id": activity.workbench_id,
-                    "build_type": activity.build_type.name if activity.build_type else None,
-                    "build_status": activity.build_status.name if activity.build_status else None,
-                    "workspace_id": activity.workspace_id,
-                    "build_error_information": activity.build_error_information,
-                })
+                activities.append(
+                    {
+                        "id": activity.id,
+                        "invoker_email": activity.invoker_email,
+                        "workbench_id": activity.workbench_id,
+                        "build_type": activity.build_type.name
+                        if activity.build_type
+                        else None,
+                        "build_status": activity.build_status.name
+                        if activity.build_status
+                        else None,
+                        "workspace_id": activity.workspace_id,
+                        "build_error_information": activity.build_error_information,
+                    }
+                )
 
             return activities, total_count
 
 
 def get_workbench_activity_details(activity_id: int) -> Optional[Dict[str, Any]]:
-    """
-    Get detailed information about a specific workbench activity.
-
-    Args:
-        activity_id: ID of the workbench activity
-
-    Returns:
-        Activity details as a dictionary or None if not found
-    """
     with app.database_session() as session:
         with session.begin():
-            activity = session.query(WorkbenchActivity).filter(
-                WorkbenchActivity.id == activity_id
-            ).first()
+            activity = (
+                session.query(WorkbenchActivity)
+                .filter(WorkbenchActivity.id == activity_id)
+                .first()
+            )
 
             if not activity:
                 return None
@@ -466,58 +444,53 @@ def get_workbench_activity_details(activity_id: int) -> Optional[Dict[str, Any]]
                 "invoker_email": activity.invoker_email,
                 "workbench_id": activity.workbench_id,
                 "build_type": activity.build_type.name if activity.build_type else None,
-                "build_status": activity.build_status.name if activity.build_status else None,
+                "build_status": activity.build_status.name
+                if activity.build_status
+                else None,
                 "workspace_id": activity.workspace_id,
-                "build_error_information": activity.build_error_information
+                "build_error_information": activity.build_error_information,
             }
 
 
 def get_workbench_activities_summary() -> Dict[str, Any]:
-    """
-    Get summary statistics about workbench activities.
-
-    Returns:
-        Dictionary with summary statistics
-    """
     with app.database_session() as session:
         with session.begin():
-            # Count by build type
             build_type_counts = {}
             for build_type in BuildType:
-                count = session.query(func.count(WorkbenchActivity.id)).filter(
-                    WorkbenchActivity.build_type == build_type
-                ).scalar()
+                count = (
+                    session.query(func.count(WorkbenchActivity.id))
+                    .filter(WorkbenchActivity.build_type == build_type)
+                    .scalar()
+                )
                 build_type_counts[build_type.name] = count
 
-            # Count by status
             status_counts = {}
             for status in WorkflowStatus:
-                count = session.query(func.count(WorkbenchActivity.id)).filter(
-                    WorkbenchActivity.build_status == status
-                ).scalar()
+                count = (
+                    session.query(func.count(WorkbenchActivity.id))
+                    .filter(WorkbenchActivity.build_status == status)
+                    .scalar()
+                )
                 status_counts[status.name] = count
 
-            # Total count
             total_count = session.query(func.count(WorkbenchActivity.id)).scalar()
-
-            # Note: We can't calculate recent activities as the model has no date fields
-            # Setting recent count to 0
-            recent_count = 0
 
             return {
                 "total": total_count,
-                "recent": recent_count,
+                "recent": 0,
                 "by_build_type": build_type_counts,
-                "by_status": status_counts
+                "by_status": status_counts,
             }
 
 
 def update_workbench_activity_status(activity_id: int, new_status: str) -> bool:
     with app.database_session() as session:
         with session.begin():
-            activity = session.query(WorkbenchActivity).filter(
-                WorkbenchActivity.id == activity_id
-            ).first()
+            activity = (
+                session.query(WorkbenchActivity)
+                .filter(WorkbenchActivity.id == activity_id)
+                .first()
+            )
 
             if not activity:
                 return False
@@ -528,6 +501,4 @@ def update_workbench_activity_status(activity_id: int, new_status: str) -> bool:
                 session.commit()
                 return True
             except (KeyError, ValueError):
-                # Invalid status
                 return False
-

@@ -144,20 +144,20 @@ def get_workbenches_data():
     serializable_workbenches = {}
     for event_slug, event_workbenches in workbenches_by_event.items():
         serializable_workbenches[event_slug] = [
-            (project_id, {
-                'id': wb.id,
-                'type': wb.type,
-                'status': wb.status,
-                'workbench_owner_username': wb.workbench_owner_username,
-                'associated_event': wb.associated_event
-            })
+            (
+                project_id,
+                {
+                    "id": wb.id,
+                    "type": wb.type,
+                    "status": wb.status,
+                    "workbench_owner_username": wb.workbench_owner_username,
+                    "associated_event": wb.associated_event,
+                },
+            )
             for project_id, wb in event_workbenches
         ]
 
-    return {
-        'workbenches': serializable_workbenches,
-        'errors': errors
-    }, 200
+    return {"workbenches": serializable_workbenches, "errors": errors}, 200
 
 
 @admin_panel_management_bp.post("/events/workbenches/stop")
@@ -178,7 +178,8 @@ def stop_event_workbench():
         all_workbenches, _ = services.get_event_workbenches()
 
         workbenches_to_stop = [
-            (pid, wb) for pid, wb in all_workbenches
+            (pid, wb)
+            for pid, wb in all_workbenches
             if any(
                 pid == w.get("project_id") and wb.id == w.get("workbench_id")
                 for w in workbenches_data
@@ -191,7 +192,11 @@ def stop_event_workbench():
         services.stop_event_workbenches(workbenches_to_stop, event_slug)
 
         count = len(workbenches_to_stop)
-        message = f"Stop initiated for {count} workbench(es)" if count > 1 else "Workbench stop initiated"
+        message = (
+            f"Stop initiated for {count} workbench(es)"
+            if count > 1
+            else "Workbench stop initiated"
+        )
         return {"success": True, "message": message}, 200
     except Exception as e:
         return {"error": str(e)}, 500
@@ -215,7 +220,8 @@ def destroy_event_workbench():
         all_workbenches, _ = services.get_event_workbenches()
 
         workbenches_to_destroy = [
-            (pid, wb) for pid, wb in all_workbenches
+            (pid, wb)
+            for pid, wb in all_workbenches
             if any(
                 pid == w.get("project_id") and wb.id == w.get("workbench_id")
                 for w in workbenches_data
@@ -228,7 +234,11 @@ def destroy_event_workbench():
         services.destroy_event_workbenches(workbenches_to_destroy, event_slug)
 
         count = len(workbenches_to_destroy)
-        message = f"Destroy initiated for {count} workbench(es)" if count > 1 else "Workbench destroy initiated"
+        message = (
+            f"Destroy initiated for {count} workbench(es)"
+            if count > 1
+            else "Workbench destroy initiated"
+        )
         return {"success": True, "message": message}, 200
     except Exception as e:
         return {"error": str(e)}, 500
@@ -238,7 +248,6 @@ def destroy_event_workbench():
 @validate_admin_page_auth
 @validate_token
 def workbench_activities():
-    # Get filter parameters
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     search_query = request.args.get("q", "")
@@ -250,7 +259,6 @@ def workbench_activities():
     sort_by = request.args.get("sort_by", "id")
     sort_direction = request.args.get("sort_direction", "desc")
 
-    # Get activities data
     activities, total_count = services.get_workbench_activities(
         page=page,
         per_page=per_page,
@@ -261,18 +269,15 @@ def workbench_activities():
         email=email,
         search_query=search_query if search_query else None,
         sort_by=sort_by,
-        sort_direction=sort_direction
+        sort_direction=sort_direction,
     )
 
-    # Get summary statistics
     summary = services.get_workbench_activities_summary()
 
-    # Calculate pagination metadata
-    total_pages = (total_count + per_page - 1) // per_page  # Ceiling division
+    total_pages = (total_count + per_page - 1) // per_page
     has_next = page < total_pages
     has_prev = page > 1
 
-    # Prepare filter params for template rendering
     filter_params = {
         "search_query": search_query,
         "status": status,
@@ -281,10 +286,9 @@ def workbench_activities():
         "workbench_id": workbench_id,
         "email": email,
         "sort_by": sort_by,
-        "sort_direction": sort_direction
+        "sort_direction": sort_direction,
     }
 
-    # Adding the min and max functions to the template context
     return render_template(
         "admin_panel/workbench_activities.html",
         activities=activities,
@@ -297,7 +301,7 @@ def workbench_activities():
         has_prev=has_prev,
         filter_params=filter_params,
         min=min,
-        max=max
+        max=max,
     )
 
 
@@ -305,7 +309,6 @@ def workbench_activities():
 @validate_admin_page_auth
 @validate_token
 def update_activity_status():
-    """Update the status of a workbench activity."""
     data = request.get_json()
     activity_id = data.get("activity_id")
     new_status = data.get("new_status")
@@ -321,4 +324,3 @@ def update_activity_status():
             return {"success": False, "error": "Activity not found"}, 404
     except Exception as e:
         return {"success": False, "error": str(e)}, 500
-
