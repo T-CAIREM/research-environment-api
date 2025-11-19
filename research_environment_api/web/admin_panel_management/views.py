@@ -125,6 +125,13 @@ def get_workers():
 @validate_admin_page_auth
 @validate_token
 def event_workbenches():
+    return render_template("admin_panel/event_workbenches.html")
+
+
+@admin_panel_management_bp.get("/events/workbenches/data")
+@validate_admin_page_auth
+@validate_token
+def get_workbenches_data():
     workbenches_list, errors = services.get_event_workbenches()
 
     workbenches_by_event = {}
@@ -134,11 +141,23 @@ def event_workbenches():
             workbenches_by_event[event_slug] = []
         workbenches_by_event[event_slug].append((project_id, workbench))
 
-    return render_template(
-        "admin_panel/event_workbenches.html",
-        workbenches=workbenches_by_event,
-        errors=errors
-    )
+    serializable_workbenches = {}
+    for event_slug, event_workbenches in workbenches_by_event.items():
+        serializable_workbenches[event_slug] = [
+            (project_id, {
+                'id': wb.id,
+                'type': wb.type,
+                'status': wb.status,
+                'workbench_owner_username': wb.workbench_owner_username,
+                'associated_event': wb.associated_event
+            })
+            for project_id, wb in event_workbenches
+        ]
+
+    return {
+        'workbenches': serializable_workbenches,
+        'errors': errors
+    }, 200
 
 
 @admin_panel_management_bp.post("/events/workbenches/stop")
