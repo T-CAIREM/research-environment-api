@@ -1,0 +1,46 @@
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  color: white;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.status-SUCCESS {
+  background-color: #28a745;
+}
+
+.status-IN_PROGRESS {
+  background-color: #17a2b8;
+}
+
+.status-FAILURE {
+  background-color: #dc3545;
+  color: white;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 20px;
+}
+
+.sortable-header:hover {
+  background-color: #f0f0f0;
+}
+
+.sort-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.sort-icon.active {
+  color: #007bff;
+  font-weight: bold;
+}
+
