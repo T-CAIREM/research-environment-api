@@ -33,115 +33,123 @@
     </div>
     {% endif %}
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Workbenches with Associated Events</h6>
-        </div>
-        <div class="card-body">
-            {% if workbenches %}
-            <div class="d-flex justify-content-between mb-3 flex-wrap">
-                <div class="d-flex align-items-center mb-2 mb-md-0">
-                    <button type="button" class="btn btn-warning btn-sm" id="bulk-stop-workbenches" disabled>
-                        <i class="fas fa-stop mr-1"></i> Stop Selected (<span id="selected-count-stop">0</span>)
-                    </button>
+    {% if workbenches %}
+        {% for event_slug, event_workbenches in workbenches.items() %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <span class="badge badge-primary mr-2">{{ event_slug }}</span>
+                    <span class="text-muted">({{ event_workbenches|length }} workbench{{ 'es' if event_workbenches|length != 1 else '' }})</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3 flex-wrap">
+                    <div class="d-flex align-items-center mb-2 mb-md-0">
+                        <button type="button" class="btn btn-warning btn-sm bulk-stop-workbenches" data-event-slug="{{ event_slug }}" disabled>
+                            <i class="fas fa-stop mr-1"></i> Stop Selected (<span class="selected-count-stop">0</span>)
+                        </button>
 
-                    <button type="button" class="btn btn-danger btn-sm ml-2" id="bulk-destroy-workbenches" disabled>
-                        <i class="fas fa-trash-alt mr-1"></i> Destroy Selected (<span id="selected-count-destroy">0</span>)
-                    </button>
+                        <button type="button" class="btn btn-danger btn-sm ml-2 bulk-destroy-workbenches" data-event-slug="{{ event_slug }}" disabled>
+                            <i class="fas fa-trash-alt mr-1"></i> Destroy Selected (<span class="selected-count-destroy">0</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th width="40px">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input select-all-workbenches" id="select-all-{{ event_slug }}" data-event-slug="{{ event_slug }}">
+                                        <label class="custom-control-label" for="select-all-{{ event_slug }}"></label>
+                                    </div>
+                                </th>
+                                <th>Workbench ID</th>
+                                <th>Type</th>
+                                <th>Owner</th>
+                                <th>Project ID</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project_id, workbench in event_workbenches %}
+                            <tr>
+                                <td>
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox"
+                                               class="custom-control-input workbench-checkbox"
+                                               id="workbench-{{ event_slug }}-{{ loop.index }}"
+                                               data-project-id="{{ project_id }}"
+                                               data-workbench-id="{{ workbench.id }}"
+                                               data-event-slug="{{ event_slug }}">
+                                        <label class="custom-control-label" for="workbench-{{ event_slug }}-{{ loop.index }}"></label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code>{{ workbench.id }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ workbench.type }}</span>
+                                </td>
+                                <td>{{ workbench.workbench_owner_username }}</td>
+                                <td>
+                                    <small class="text-muted">{{ project_id }}</small>
+                                </td>
+                                <td>
+                                    {% if workbench.status == 'ACTIVE' %}
+                                    <span class="badge badge-success">{{ workbench.status }}</span>
+                                    {% elif workbench.status == 'STOPPED' %}
+                                    <span class="badge badge-secondary">{{ workbench.status }}</span>
+                                    {% else %}
+                                    <span class="badge badge-warning">{{ workbench.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button"
+                                                class="btn btn-sm btn-warning stop-workbench-btn"
+                                                data-project-id="{{ project_id }}"
+                                                data-workbench-id="{{ workbench.id }}"
+                                                data-workbench-type="{{ workbench.type }}"
+                                                data-event-slug="{{ event_slug }}"
+                                                data-owner="{{ workbench.workbench_owner_username }}"
+                                                title="Stop workbench">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger destroy-workbench-btn"
+                                                data-project-id="{{ project_id }}"
+                                                data-workbench-id="{{ workbench.id }}"
+                                                data-workbench-type="{{ workbench.type }}"
+                                                data-event-slug="{{ event_slug }}"
+                                                data-owner="{{ workbench.workbench_owner_username }}"
+                                                title="Destroy workbench">
+                                            <i class="fas fa-trash"></i> Destroy
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th width="40px">
-                                <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="select-all-workbenches">
-                                    <label class="custom-control-label" for="select-all-workbenches"></label>
-                                </div>
-                            </th>
-                            <th>Workbench ID</th>
-                            <th>Type</th>
-                            <th>Owner</th>
-                            <th>Project ID</th>
-                            <th>Associated Event</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project_id, workbench in workbenches %}
-                        <tr>
-                            <td>
-                                <div class="custom-control custom-checkbox">
-                                    <input type="checkbox"
-                                           class="custom-control-input workbench-checkbox"
-                                           id="workbench-{{ loop.index }}"
-                                           data-project-id="{{ project_id }}"
-                                           data-workbench-id="{{ workbench.id }}"
-                                           data-event-slug="{{ workbench.associated_event }}">
-                                    <label class="custom-control-label" for="workbench-{{ loop.index }}"></label>
-                                </div>
-                            </td>
-                            <td>
-                                <code>{{ workbench.id }}</code>
-                            </td>
-                            <td>
-                                <span class="badge badge-info">{{ workbench.type }}</span>
-                            </td>
-                            <td>{{ workbench.workbench_owner_username }}</td>
-                            <td>
-                                <small class="text-muted">{{ project_id }}</small>
-                            </td>
-                            <td>
-                                <span class="badge badge-primary">{{ workbench.associated_event }}</span>
-                            </td>
-                            <td>
-                                {% if workbench.status == 'ACTIVE' %}
-                                <span class="badge badge-success">{{ workbench.status }}</span>
-                                {% elif workbench.status == 'STOPPED' %}
-                                <span class="badge badge-secondary">{{ workbench.status }}</span>
-                                {% else %}
-                                <span class="badge badge-warning">{{ workbench.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <button type="button"
-                                            class="btn btn-sm btn-warning stop-workbench-btn"
-                                            data-project-id="{{ project_id }}"
-                                            data-workbench-id="{{ workbench.id }}"
-                                            data-workbench-type="{{ workbench.type }}"
-                                            data-event-slug="{{ workbench.associated_event }}"
-                                            data-owner="{{ workbench.workbench_owner_username }}"
-                                            title="Stop workbench">
-                                        <i class="fas fa-stop"></i> Stop
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-danger destroy-workbench-btn"
-                                            data-project-id="{{ project_id }}"
-                                            data-workbench-id="{{ workbench.id }}"
-                                            data-workbench-type="{{ workbench.type }}"
-                                            data-event-slug="{{ workbench.associated_event }}"
-                                            data-owner="{{ workbench.workbench_owner_username }}"
-                                            title="Destroy workbench">
-                                        <i class="fas fa-trash"></i> Destroy
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info" role="alert">
-                <i class="fas fa-info-circle"></i> No workbenches with associated events found.
-            </div>
-            {% endif %}
         </div>
-    </div>
+        {% endfor %}
+    {% else %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Workbenches with Associated Events</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i> No workbenches with associated events found.
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 <div class="modal fade" id="confirmActionModal" tabindex="-1" role="dialog" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
@@ -207,46 +215,52 @@
             $('#confirmActionModal').modal('show');
         });
 
-        function updateBulkActionButtons() {
-            const selectedCount = $('.workbench-checkbox:checked').length;
-            $('#selected-count-stop').text(selectedCount);
-            $('#selected-count-destroy').text(selectedCount);
-            $('#bulk-stop-workbenches').prop('disabled', selectedCount === 0);
-            $('#bulk-destroy-workbenches').prop('disabled', selectedCount === 0);
+        function updateBulkActionButtons(eventSlug) {
+            const selectedCount = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+            $(`.bulk-stop-workbenches[data-event-slug="${eventSlug}"]`).find('.selected-count-stop').text(selectedCount);
+            $(`.bulk-destroy-workbenches[data-event-slug="${eventSlug}"]`).find('.selected-count-destroy').text(selectedCount);
+            $(`.bulk-stop-workbenches[data-event-slug="${eventSlug}"]`).prop('disabled', selectedCount === 0);
+            $(`.bulk-destroy-workbenches[data-event-slug="${eventSlug}"]`).prop('disabled', selectedCount === 0);
         }
 
         $('.workbench-checkbox').on('change', function() {
-            updateBulkActionButtons();
+            const eventSlug = $(this).data('event-slug');
+            updateBulkActionButtons(eventSlug);
 
-            const totalCheckboxes = $('.workbench-checkbox').length;
-            const checkedCheckboxes = $('.workbench-checkbox:checked').length;
-            $('#select-all-workbenches').prop('checked', totalCheckboxes === checkedCheckboxes);
+            const totalCheckboxes = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]`).length;
+            const checkedCheckboxes = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+            $(`.select-all-workbenches[data-event-slug="${eventSlug}"]`).prop('checked', totalCheckboxes === checkedCheckboxes);
         });
 
-        $('#select-all-workbenches').on('change', function() {
-            $('.workbench-checkbox').prop('checked', this.checked);
-            updateBulkActionButtons();
+        $('.select-all-workbenches').on('change', function() {
+            const eventSlug = $(this).data('event-slug');
+            $(`.workbench-checkbox[data-event-slug="${eventSlug}"]`).prop('checked', this.checked);
+            updateBulkActionButtons(eventSlug);
         });
 
-        $('#bulk-stop-workbenches').on('click', function() {
+        $('.bulk-stop-workbenches').on('click', function() {
             isBulkAction = true;
             currentAction = 'stop';
-            const selectedCount = $('.workbench-checkbox:checked').length;
+            const eventSlug = $(this).data('event-slug');
+            const selectedCount = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+            currentData = { event_slug: eventSlug };
 
             $('#confirmActionMessage').html(
-                `Are you sure you want to stop <strong>${selectedCount}</strong> selected workbench(es)?`
+                `Are you sure you want to stop <strong>${selectedCount}</strong> selected workbench(es) from event <strong>${eventSlug}</strong>?`
             );
             $('#confirmActionBtn').removeClass('btn-danger').addClass('btn-warning').text('Stop All');
             $('#confirmActionModal').modal('show');
         });
 
-        $('#bulk-destroy-workbenches').on('click', function() {
+        $('.bulk-destroy-workbenches').on('click', function() {
             isBulkAction = true;
             currentAction = 'destroy';
-            const selectedCount = $('.workbench-checkbox:checked').length;
+            const eventSlug = $(this).data('event-slug');
+            const selectedCount = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+            currentData = { event_slug: eventSlug };
 
             $('#confirmActionMessage').html(
-                `Are you sure you want to DESTROY <strong>${selectedCount}</strong> selected workbench(es)? This action cannot be undone!`
+                `Are you sure you want to DESTROY <strong>${selectedCount}</strong> selected workbench(es) from event <strong>${eventSlug}</strong>? This action cannot be undone!`
             );
             $('#confirmActionBtn').removeClass('btn-warning').addClass('btn-danger').text('Destroy All');
             $('#confirmActionModal').modal('show');
@@ -263,12 +277,12 @@
             let eventSlug = null;
 
             if (isBulkAction) {
-                $('.workbench-checkbox:checked').each(function() {
+                eventSlug = currentData.event_slug;
+                $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).each(function() {
                     workbenches.push({
                         project_id: $(this).data('project-id'),
                         workbench_id: $(this).data('workbench-id')
                     });
-                    eventSlug = $(this).data('event-slug');
                 });
             } else {
                 workbenches.push({

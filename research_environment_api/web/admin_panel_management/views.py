@@ -125,11 +125,18 @@ def get_workers():
 @validate_admin_page_auth
 @validate_token
 def event_workbenches():
-    workbenches, errors = services.get_event_workbenches()
+    workbenches_list, errors = services.get_event_workbenches()
+
+    workbenches_by_event = {}
+    for project_id, workbench in workbenches_list:
+        event_slug = workbench.associated_event
+        if event_slug not in workbenches_by_event:
+            workbenches_by_event[event_slug] = []
+        workbenches_by_event[event_slug].append((project_id, workbench))
 
     return render_template(
         "admin_panel/event_workbenches.html",
-        workbenches=workbenches,
+        workbenches=workbenches_by_event,
         errors=errors
     )
 
