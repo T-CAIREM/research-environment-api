@@ -58,22 +58,29 @@
 
   <!-- Search and Filters -->
   <div class="card shadow mb-4 filter-card">
-    <div class="card-header py-3">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Search and Filter</h6>
+      {% if filter_params.workbench_id or filter_params.email or filter_params.status %}
+      <a href="{{ url_for('admin_panel_management.workbench_activities') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-times"></i> Clear Filters
+      </a>
+      {% endif %}
     </div>
     <div class="card-body">
       <form id="filter-form" method="get">
         <div class="form-row">
           <div class="col-md-3 mb-3">
             <label for="workbench_id">Workbench ID</label>
-            <input type="text" class="form-control" id="workbench_id" name="workbench_id" placeholder="Workbench ID..." value="{{ filter_params.workbench_id }}">
+            <input type="text" class="form-control" id="workbench_id" name="workbench_id" placeholder="Workbench ID..." value="{{ filter_params.workbench_id or '' }}">
           </div>
           <div class="col-md-2 mb-3">
             <label for="sort_by">Sort By</label>
             <select class="form-control" id="sort_by" name="sort_by">
+              <option value="id" {% if filter_params.sort_by == "id" %}selected{% endif %}>ID</option>
               <option value="build_type" {% if filter_params.sort_by == "build_type" %}selected{% endif %}>Build Type</option>
-              <option value="status" {% if filter_params.sort_by == "status" %}selected{% endif %}>Status</option>
+              <option value="build_status" {% if filter_params.sort_by == "build_status" %}selected{% endif %}>Status</option>
               <option value="workbench_id" {% if filter_params.sort_by == "workbench_id" %}selected{% endif %}>Workbench ID</option>
+              <option value="invoker_email" {% if filter_params.sort_by == "invoker_email" %}selected{% endif %}>Email</option>
             </select>
           </div>
           <div class="col-md-2 mb-3">
@@ -85,7 +92,7 @@
           </div>
           <div class="col-md-2 mb-3">
             <label for="email">Email</label>
-            <input type="text" class="form-control" id="email" name="email" placeholder="User email..." value="{{ filter_params.email }}">
+            <input type="text" class="form-control" id="email" name="email" placeholder="User email..." value="{{ filter_params.email or '' }}">
           </div>
           <div class="col-md-2 mb-3">
             <label for="status">Status</label>

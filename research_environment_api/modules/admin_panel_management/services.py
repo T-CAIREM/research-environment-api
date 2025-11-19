@@ -363,7 +363,8 @@ def get_workbench_activities(
             # Apply filters if provided
             if status:
                 try:
-                    workflow_status = WorkflowStatus[status.upper()]
+                    # Try to get the enum by name (e.g., "IN_PROGRESS" -> WorkflowStatus.IN_PROGRESS)
+                    workflow_status = WorkflowStatus[status.upper().replace(" ", "_")]
                     query = query.filter(WorkbenchActivity.build_status == workflow_status)
                 except (KeyError, ValueError):
                     # Invalid status, ignore the filter
@@ -371,7 +372,8 @@ def get_workbench_activities(
 
             if build_type:
                 try:
-                    build_type_enum = BuildType[build_type.upper()]
+                    # Try to get the enum by name (e.g., "WORKBENCH_START" -> BuildType.WORKBENCH_START)
+                    build_type_enum = BuildType[build_type.upper().replace(" ", "_")]
                     query = query.filter(WorkbenchActivity.build_type == build_type_enum)
                 except (KeyError, ValueError):
                     # Invalid build type, ignore the filter
@@ -381,10 +383,16 @@ def get_workbench_activities(
                 query = query.filter(WorkbenchActivity.workspace_id == workspace_id)
 
             if workbench_id:
-                query = query.filter(WorkbenchActivity.workbench_id == workbench_id)
+                # Strip whitespace and handle potential None values
+                workbench_id_clean = workbench_id.strip() if workbench_id else None
+                if workbench_id_clean:
+                    query = query.filter(WorkbenchActivity.workbench_id == workbench_id_clean)
 
             if email:
-                query = query.filter(WorkbenchActivity.invoker_email.ilike(f"%{email}%"))
+                # Strip whitespace from email to handle tab characters and spaces
+                email_clean = email.strip() if email else None
+                if email_clean:
+                    query = query.filter(WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%"))
 
             # Search across multiple fields if search_query is provided
             if search_query:
