@@ -383,13 +383,13 @@ def get_workbench_activities(
                 query = query.filter(WorkbenchActivity.workspace_id == workspace_id)
 
             if workbench_id:
-                # Strip whitespace and handle potential None values
+                # Strip whitespace and use pattern matching for partial matches
                 workbench_id_clean = workbench_id.strip() if workbench_id else None
                 if workbench_id_clean:
-                    query = query.filter(WorkbenchActivity.workbench_id == workbench_id_clean)
+                    query = query.filter(WorkbenchActivity.workbench_id.ilike(f"%{workbench_id_clean}%"))
 
             if email:
-                # Strip whitespace from email to handle tab characters and spaces
+                # Strip whitespace from email and use pattern matching for partial matches
                 email_clean = email.strip() if email else None
                 if email_clean:
                     query = query.filter(WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%"))
