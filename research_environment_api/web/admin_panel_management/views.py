@@ -299,3 +299,26 @@ def workbench_activities():
         min=min,
         max=max
     )
+
+
+@admin_panel_management_bp.post("/workbench-activities/update-status")
+@validate_admin_page_auth
+@validate_token
+def update_activity_status():
+    """Update the status of a workbench activity."""
+    data = request.get_json()
+    activity_id = data.get("activity_id")
+    new_status = data.get("new_status")
+
+    if not activity_id or not new_status:
+        return {"success": False, "error": "Missing activity_id or new_status"}, 400
+
+    try:
+        success = services.update_workbench_activity_status(activity_id, new_status)
+        if success:
+            return {"success": True, "message": "Status updated successfully"}, 200
+        else:
+            return {"success": False, "error": "Activity not found"}, 404
+    except Exception as e:
+        return {"success": False, "error": str(e)}, 500
+

@@ -510,3 +510,24 @@ def get_workbench_activities_summary() -> Dict[str, Any]:
                 "by_build_type": build_type_counts,
                 "by_status": status_counts
             }
+
+
+def update_workbench_activity_status(activity_id: int, new_status: str) -> bool:
+    with app.database_session() as session:
+        with session.begin():
+            activity = session.query(WorkbenchActivity).filter(
+                WorkbenchActivity.id == activity_id
+            ).first()
+
+            if not activity:
+                return False
+
+            try:
+                workflow_status = WorkflowStatus[new_status.upper().replace(" ", "_")]
+                activity.build_status = workflow_status
+                session.commit()
+                return True
+            except (KeyError, ValueError):
+                # Invalid status
+                return False
+

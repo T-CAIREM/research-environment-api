@@ -35,16 +35,6 @@
     margin-top: 20px;
     margin-bottom: 20px;
   }
-  .detail-row {
-    display: none;
-    background-color: #f8f9fa;
-  }
-  .detail-row td {
-    padding: 15px;
-  }
-  .detail-content {
-    white-space: pre-wrap;
-  }
   .sortable-header {
     cursor: pointer;
     user-select: none;
@@ -155,7 +145,7 @@
                   {% if filter_params.sort_by == 'build_status' and filter_params.sort_direction == 'asc' %}▲{% else %}▼{% endif %}
                 </span>
               </th>
-              <th>Actions</th>
+              <th style="width: 150px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -176,59 +166,24 @@
                     <span class="status-badge status-{{ activity.build_status }}">{{ activity.build_status }}</span>
                   </td>
                   <td>
-                    <button class="btn btn-sm btn-info" onclick="toggleDetails('{{ activity.id }}')">
-                      <i class="fas fa-info-circle"></i> Details
-                    </button>
-                  </td>
-                </tr>
-                <tr id="details-{{ activity.id }}" class="detail-row">
-                  <td colspan="6">
-                    <div class="detail-content">
-                      <h6>Activity Details</h6>
-                      <div class="row">
-                        <div class="col-md-6">
-                          <dl class="row">
-                            <dt class="col-sm-4">ID</dt>
-                            <dd class="col-sm-8">{{ activity.id }}</dd>
-
-                            <dt class="col-sm-4">Email</dt>
-                            <dd class="col-sm-8">{{ activity.invoker_email }}</dd>
-
-                            <dt class="col-sm-4">Workbench ID</dt>
-                            <dd class="col-sm-8">
-                              {% if activity.workbench_id %}
-                                {{ activity.workbench_id }}
-                              {% else %}
-                                <span class="text-muted">N/A</span>
-                              {% endif %}
-                            </dd>
-
-                            <dt class="col-sm-4">Workspace ID</dt>
-                            <dd class="col-sm-8">{{ activity.workspace_id }}</dd>
-                          </dl>
-                        </div>
-                        <div class="col-md-6">
-                          <dl class="row">
-                            <dt class="col-sm-4">Build Type</dt>
-                            <dd class="col-sm-8">{{ activity.build_type }}</dd>
-
-                            <dt class="col-sm-4">Status</dt>
-                            <dd class="col-sm-8">
-                              <span class="status-badge status-{{ activity.build_status }}">{{ activity.build_status }}</span>
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-
-                      {% if activity.build_error_information %}
-                      <div class="row mt-3">
-                        <div class="col-12">
-                          <h6>Error Information</h6>
-                          <div class="alert alert-danger">
-                            <pre>{{ activity.build_error_information }}</pre>
-                          </div>
-                        </div>
-                      </div>
+                    <div class="btn-group-vertical btn-group-sm" role="group">
+                      <button class="btn btn-sm btn-primary edit-status-btn mb-1"
+                              data-activity-id="{{ activity.id }}"
+                              data-current-status="{{ activity.build_status }}"
+                              title="Edit status">
+                        <i class="fas fa-edit"></i> Edit Status
+                      </button>
+                      {% if activity.build_status == 'FAILURE' %}
+                      <button class="btn btn-sm btn-danger show-details-btn"
+                              data-activity-id="{{ activity.id }}"
+                              data-workbench-id="{{ activity.workbench_id or 'N/A' }}"
+                              data-email="{{ activity.invoker_email }}"
+                              data-build-type="{{ activity.build_type }}"
+                              data-workspace-id="{{ activity.workspace_id }}"
+                              data-error="{{ activity.build_error_information or 'No error information available' }}"
+                              title="View error details">
+                        <i class="fas fa-exclamation-circle"></i> Details
+                      </button>
                       {% endif %}
                     </div>
                   </td>
@@ -292,26 +247,99 @@
     </div>
   </div>
 </div>
+
+<!-- Edit Status Modal -->
+<div class="modal fade" id="editStatusModal" tabindex="-1" role="dialog" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editStatusModalLabel">Edit Activity Status</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-status-form">
+          <input type="hidden" id="edit-activity-id" name="activity_id">
+          <div class="form-group">
+            <label for="new-status">Select New Status</label>
+            <select class="form-control" id="new-status" name="new_status" required>
+              <option value="">-- Select Status --</option>
+              {% for status_name in summary.by_status.keys() %}
+                <option value="{{ status_name }}">{{ status_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="alert alert-info">
+            <small><strong>Current Status:</strong> <span id="current-status-display"></span></small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="save-status-btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error Details Modal -->
+<div class="modal fade" id="errorDetailsModal" tabindex="-1" role="dialog" aria-labelledby="errorDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorDetailsModalLabel">
+          <i class="fas fa-exclamation-circle"></i> Error Details
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4">Activity ID:</dt>
+              <dd class="col-sm-8" id="detail-activity-id"></dd>
+
+              <dt class="col-sm-4">Email:</dt>
+              <dd class="col-sm-8" id="detail-email"></dd>
+
+              <dt class="col-sm-4">Workbench ID:</dt>
+              <dd class="col-sm-8"><code id="detail-workbench-id"></code></dd>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4">Build Type:</dt>
+              <dd class="col-sm-8" id="detail-build-type"></dd>
+
+              <dt class="col-sm-4">Workspace ID:</dt>
+              <dd class="col-sm-8" id="detail-workspace-id"></dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <h6 class="text-danger"><i class="fas fa-bug"></i> Error Information:</h6>
+            <div class="alert alert-danger">
+              <pre id="detail-error-info" style="white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-  function toggleDetails(activityId) {
-    const detailRow = document.getElementById(`details-${activityId}`);
-
-    if (detailRow.style.display === 'table-row') {
-      detailRow.style.display = 'none';
-    } else {
-      // Hide all other detail rows
-      const allDetailRows = document.querySelectorAll('.detail-row');
-      allDetailRows.forEach(row => {
-        row.style.display = 'none';
-      });
-
-      // Show the selected one
-      detailRow.style.display = 'table-row';
-    }
-  }
 
   // Handle sortable column header clicks
   document.addEventListener('DOMContentLoaded', function() {
@@ -344,6 +372,84 @@
 
         // Submit the form
         document.getElementById('filter-form').submit();
+      });
+    });
+
+    // Handle edit status button click
+    document.querySelectorAll('.edit-status-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const activityId = this.getAttribute('data-activity-id');
+        const currentStatus = this.getAttribute('data-current-status');
+
+        // Set the activity ID in the modal
+        document.getElementById('edit-activity-id').value = activityId;
+
+        // Set the current status display
+        document.getElementById('current-status-display').innerText = currentStatus;
+
+        // Show the modal
+        $('#editStatusModal').modal('show');
+      });
+    });
+
+    // Handle save status button click in modal
+    document.getElementById('save-status-btn').addEventListener('click', function() {
+      const activityId = document.getElementById('edit-activity-id').value;
+      const newStatus = document.getElementById('new-status').value;
+
+      if (!activityId || !newStatus) {
+        alert('Please select a status');
+        return;
+      }
+
+      // Make an AJAX request to update the status
+      fetch('{{ url_for("admin_panel_management.update_activity_status") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          activity_id: activityId,
+          new_status: newStatus
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close modal and reload page to show updated status
+          $('#editStatusModal').modal('hide');
+          alert('Status updated successfully!');
+          location.reload();
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the status.');
+      });
+    });
+
+    // Handle show details button click
+    document.querySelectorAll('.show-details-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const activityId = this.getAttribute('data-activity-id');
+        const workbenchId = this.getAttribute('data-workbench-id');
+        const email = this.getAttribute('data-email');
+        const buildType = this.getAttribute('data-build-type');
+        const workspaceId = this.getAttribute('data-workspace-id');
+        const errorInfo = this.getAttribute('data-error');
+
+        // Set the details in the modal
+        document.getElementById('detail-activity-id').innerText = activityId;
+        document.getElementById('detail-email').innerText = email;
+        document.getElementById('detail-workbench-id').innerText = workbenchId;
+        document.getElementById('detail-build-type').innerText = buildType;
+        document.getElementById('detail-workspace-id').innerText = workspaceId;
+        document.getElementById('detail-error-info').innerText = errorInfo;
+
+        // Show the modal
+        $('#errorDetailsModal').modal('show');
       });
     });
   });
