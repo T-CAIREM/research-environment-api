@@ -67,7 +67,6 @@
     </div>
   </div>
 
-  <!-- Search and Filters -->
   <div class="card shadow mb-4 filter-card">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Search and Filter</h6>
@@ -103,14 +102,12 @@
             <button type="submit" class="btn btn-primary btn-block">Apply</button>
           </div>
         </div>
-        <!-- Hidden fields to preserve sort state -->
         <input type="hidden" id="sort_by" name="sort_by" value="{{ filter_params.sort_by or 'id' }}">
         <input type="hidden" id="sort_direction" name="sort_direction" value="{{ filter_params.sort_direction or 'desc' }}">
       </form>
     </div>
   </div>
 
-  <!-- Activities Table -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
       <h6 class="m-0 font-weight-bold text-primary">Activities List ({{ total_count }} total)</h6>
@@ -201,7 +198,6 @@
       </div>
     </div>
     <div class="card-footer">
-      <!-- Pagination -->
       <div class="pagination-container">
         <nav>
           <ul class="pagination">
@@ -248,7 +244,6 @@
   </div>
 </div>
 
-<!-- Edit Status Modal -->
 <div class="modal fade" id="editStatusModal" tabindex="-1" role="dialog" aria-labelledby="editStatusModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -270,9 +265,6 @@
               {% endfor %}
             </select>
           </div>
-          <div class="alert alert-info">
-            <small><strong>Current Status:</strong> <span id="current-status-display"></span></small>
-          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -283,7 +275,6 @@
   </div>
 </div>
 
-<!-- Error Details Modal -->
 <div class="modal fade" id="errorDetailsModal" tabindex="-1" role="dialog" aria-labelledby="errorDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -384,8 +375,23 @@
         // Set the activity ID in the modal
         document.getElementById('edit-activity-id').value = activityId;
 
-        // Set the current status display
-        document.getElementById('current-status-display').innerText = currentStatus;
+        const statusDropdown = document.getElementById('new-status');
+        statusDropdown.innerHTML = '<option value="">-- Select Status --</option>';
+
+        const allStatuses = [
+          {% for status_name in summary.by_status.keys() %}
+            '{{ status_name }}'{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ];
+
+        allStatuses.forEach(status => {
+          if (status !== currentStatus) {
+            const option = document.createElement('option');
+            option.value = status;
+            option.textContent = status;
+            statusDropdown.appendChild(option);
+          }
+        });
 
         // Show the modal
         $('#editStatusModal').modal('show');
@@ -430,7 +436,6 @@
       });
     });
 
-    // Handle show details button click
     document.querySelectorAll('.show-details-btn').forEach(button => {
       button.addEventListener('click', function() {
         const activityId = this.getAttribute('data-activity-id');
@@ -440,7 +445,6 @@
         const workspaceId = this.getAttribute('data-workspace-id');
         const errorInfo = this.getAttribute('data-error');
 
-        // Set the details in the modal
         document.getElementById('detail-activity-id').innerText = activityId;
         document.getElementById('detail-email').innerText = email;
         document.getElementById('detail-workbench-id').innerText = workbenchId;
@@ -448,7 +452,6 @@
         document.getElementById('detail-workspace-id').innerText = workspaceId;
         document.getElementById('detail-error-info').innerText = errorInfo;
 
-        // Show the modal
         $('#errorDetailsModal').modal('show');
       });
     });
