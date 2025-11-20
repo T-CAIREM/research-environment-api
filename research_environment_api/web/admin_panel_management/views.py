@@ -37,6 +37,43 @@ def _get_dashboard_data():
     return task_counts, worker_stats, tasks, filter_params
 
 
+def _get_workbench_activities_data():
+    query_params = schemas.WorkbenchActivitiesQueryParams().load(request.args)
+
+    activities, total_count = services.get_workbench_activities(
+        page=query_params["page"],
+        per_page=query_params["per_page"],
+        status=query_params.get("status"),
+        build_type=query_params.get("build_type"),
+        workspace_id=query_params.get("workspace_id"),
+        workbench_id=query_params.get("workbench_id"),
+        email=query_params.get("email"),
+        search_query=query_params["q"] if query_params["q"] else None,
+        sort_by=query_params["sort_by"],
+        sort_direction=query_params["sort_direction"],
+    )
+
+    summary = services.get_workbench_activities_summary()
+
+    page = query_params["page"]
+    per_page = query_params["per_page"]
+    total_pages = (total_count + per_page - 1) // per_page
+
+    return {
+        "activities": activities,
+        "summary": summary,
+        "total_count": total_count,
+        "query_params": query_params,
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1,
+        },
+    }
+
+
 @admin_panel_management_bp.get("/")
 @validate_admin_page_auth
 @validate_token
@@ -248,79 +285,61 @@ def destroy_event_workbench():
 @validate_admin_page_auth
 @validate_token
 def workbench_activities():
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 10))
-    search_query = request.args.get("q", "")
-    status = request.args.get("status")
-    build_type = request.args.get("build_type")
-    workspace_id = request.args.get("workspace_id")
-    workbench_id = request.args.get("workbench_id")
-    email = request.args.get("email")
-    sort_by = request.args.get("sort_by", "id")
-    sort_direction = request.args.get("sort_direction", "desc")
-
-    activities, total_count = services.get_workbench_activities(
-        page=page,
-        per_page=per_page,
-        status=status,
-        build_type=build_type,
-        workspace_id=workspace_id,
-        workbench_id=workbench_id,
-        email=email,
-        search_query=search_query if search_query else None,
-        sort_by=sort_by,
-        sort_direction=sort_direction,
-    )
-
-    summary = services.get_workbench_activities_summary()
-
-    total_pages = (total_count + per_page - 1) // per_page
-    has_next = page < total_pages
-    has_prev = page > 1
+    data = _get_workbench_activities_data()
 
     filter_params = {
-        "search_query": search_query,
-        "status": status,
-        "build_type": build_type,
-        "workspace_id": workspace_id,
-        "workbench_id": workbench_id,
-        "email": email,
-        "sort_by": sort_by,
-        "sort_direction": sort_direction,
+        "search_query": data["query_params"]["q"],
+        "status": data["query_params"].get("status"),
+        "build_type": data["query_params"].get("build_type"),
+        "workspace_id": data["query_params"].get("workspace_id"),
+        "workbench_id": data["query_params"].get("workbench_id"),
+        "email": data["query_params"].get("email"),
+        "sort_by": data["query_params"]["sort_by"],
+        "sort_direction": data["query_params"]["sort_direction"],
     }
 
     return render_template(
         "admin_panel/workbench_activities.html",
-        activities=activities,
-        summary=summary,
-        total_count=total_count,
-        page=page,
-        per_page=per_page,
-        total_pages=total_pages,
-        has_next=has_next,
-        has_prev=has_prev,
+        activities=data["activities"],
+        summary=data["summary"],
+        total_count=data["total_count"],
+        page=data["pagination"]["page"],
+        per_page=data["pagination"]["per_page"],
+        total_pages=data["pagination"]["total_pages"],
+        has_next=data["pagination"]["has_next"],
+        has_prev=data["pagination"]["has_prev"],
         filter_params=filter_params,
         min=min,
         max=max,
     )
 
 
+@admin_panel_management_bp.get("/workbench-activities/data")
+@validate_admin_page_auth
+@validate_token
+def get_workbench_activities_data():
+    data = _get_workbench_activities_data()
+
+    return {
+        "activities": schemas.WorkbenchActivitySchema(many=True).dump(
+            data["activities"]
+        ),
+        "summary": schemas.WorkbenchActivitiesSummarySchema().dump(data["summary"]),
+        "pagination": data["pagination"],
+    }, 200
+
+
 @admin_panel_management_bp.post("/workbench-activities/update-status")
 @validate_admin_page_auth
 @validate_token
 def update_activity_status():
-    data = request.get_json()
-    activity_id = data.get("activity_id")
-    new_status = data.get("new_status")
-
-    if not activity_id or not new_status:
-        return {"success": False, "error": "Missing activity_id or new_status"}, 400
+    body = request.get_json()
+    update_request = schemas.WorkbenchActivityStatusUpdateRequest().load(body)
 
     try:
-        success = services.update_workbench_activity_status(activity_id, new_status)
-        if success:
-            return {"success": True, "message": "Status updated successfully"}, 200
-        else:
-            return {"success": False, "error": "Activity not found"}, 404
+        services.update_workbench_activity_status(
+            update_request["activity_id"], update_request["new_status"]
+        )
+        return {"success": True, "message": "Status updated successfully"}, 200
     except Exception as e:
         return {"success": False, "error": str(e)}, 500

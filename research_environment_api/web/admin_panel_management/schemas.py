@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
 
 class TaskResultSchema(Schema):
@@ -31,3 +31,52 @@ class WorkerStatsSchema(Schema):
     stats = fields.Dict()
     active_tasks = fields.Integer()
     registered_tasks = fields.List(fields.String())
+
+
+class WorkbenchActivitiesQueryParams(Schema):
+    page = fields.Int(missing=1, validate=validate.Range(min=1))
+    per_page = fields.Int(missing=20, validate=validate.Range(min=1, max=100))
+    q = fields.Str(missing="", allow_none=True)
+    status = fields.Str(allow_none=True)
+    build_type = fields.Str(allow_none=True)
+    workspace_id = fields.Str(allow_none=True)
+    workbench_id = fields.Str(allow_none=True)
+    email = fields.Str(allow_none=True)
+    sort_by = fields.Str(
+        missing="id",
+        validate=validate.OneOf(
+            [
+                "id",
+                "invoker_email",
+                "workbench_id",
+                "build_type",
+                "build_status",
+                "workspace_id",
+            ]
+        ),
+    )
+    sort_direction = fields.Str(
+        missing="desc", validate=validate.OneOf(["asc", "desc"])
+    )
+
+
+class WorkbenchActivitySchema(Schema):
+    id = fields.UUID(required=True)
+    invoker_email = fields.Str(allow_none=True)
+    workbench_id = fields.Str(allow_none=True)
+    build_type = fields.Str(allow_none=True)
+    build_status = fields.Str(allow_none=True)
+    workspace_id = fields.Str(allow_none=True)
+    build_error_information = fields.Str(allow_none=True)
+
+
+class WorkbenchActivitiesSummarySchema(Schema):
+    total = fields.Int(required=True)
+    recent = fields.Int(required=True)
+    by_build_type = fields.Dict(keys=fields.Str(), values=fields.Int())
+    by_status = fields.Dict(keys=fields.Str(), values=fields.Int())
+
+
+class WorkbenchActivityStatusUpdateRequest(Schema):
+    activity_id = fields.UUID(required=True)
+    new_status = fields.Str(required=True)
