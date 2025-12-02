@@ -4,7 +4,7 @@ import secrets
 from typing import Dict, List, Optional, Tuple, Any, Iterable
 
 from celery.result import AsyncResult
-from sqlalchemy import desc, asc, or_, func
+from sqlalchemy import desc, or_, func
 
 from research_environment_api.background.enums import BuildType, WorkflowStatus
 from research_environment_api.modules.admin_panel_management.cache import (
@@ -96,6 +96,81 @@ def _process_tasks(
                 )
             )
     return all_tasks
+
+
+def _apply_status_filter(query, status: Optional[str]):
+    if status:
+        try:
+            workflow_status = WorkflowStatus[status.upper().replace(" ", "_")]
+            return query.filter(WorkbenchActivity.build_status == workflow_status)
+        except (KeyError, ValueError):
+            pass
+    return query
+
+
+def _apply_build_type_filter(query, build_type: Optional[str]):
+    if build_type:
+        try:
+            build_type_enum = BuildType[build_type.upper().replace(" ", "_")]
+            return query.filter(WorkbenchActivity.build_type == build_type_enum)
+        except (KeyError, ValueError):
+            pass
+    return query
+
+
+def _apply_workspace_id_filter(query, workspace_id: Optional[str]):
+    if workspace_id:
+        return query.filter(WorkbenchActivity.workspace_id == workspace_id)
+    return query
+
+
+def _apply_workbench_id_filter(query, workbench_id: Optional[str]):
+    if workbench_id:
+        workbench_id_clean = workbench_id.strip() if workbench_id else None
+        if workbench_id_clean:
+            return query.filter(
+                WorkbenchActivity.workbench_id.ilike(f"%{workbench_id_clean}%")
+            )
+    return query
+
+
+def _apply_email_filter(query, email: Optional[str]):
+    if email:
+        email_clean = email.strip() if email else None
+        if email_clean:
+            return query.filter(
+                WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%")
+            )
+    return query
+
+
+def _apply_search_query_filter(query, search_query: Optional[str]):
+    if search_query:
+        search_pattern = f"%{search_query}%"
+        return query.filter(
+            or_(
+                WorkbenchActivity.invoker_email.ilike(search_pattern),
+                WorkbenchActivity.workbench_id.ilike(search_pattern),
+                WorkbenchActivity.workspace_id.ilike(search_pattern),
+                WorkbenchActivity.build_error_information.ilike(search_pattern),
+            )
+        )
+    return query
+
+
+def _apply_sorting(query, sort_by: str, sort_direction: str):
+    if hasattr(WorkbenchActivity, sort_by):
+        sort_attr = getattr(WorkbenchActivity, sort_by)
+        if sort_direction.lower() == "desc":
+            return query.order_by(desc(sort_attr))
+        else:
+            return query.order_by(sort_attr)
+    else:
+        return query.order_by(
+            desc(WorkbenchActivity.id)
+            if sort_direction.lower() == "desc"
+            else WorkbenchActivity.id
+        )
 
 
 def search_tasks_by_name(name_fragment: str) -> List[Task]:
@@ -343,66 +418,16 @@ def get_workbench_activities(
         with session.begin():
             query = session.query(WorkbenchActivity)
 
-            if status:
-                try:
-                    workflow_status = WorkflowStatus[status.upper().replace(" ", "_")]
-                    query = query.filter(
-                        WorkbenchActivity.build_status == workflow_status
-                    )
-                except (KeyError, ValueError):
-                    pass
-
-            if build_type:
-                try:
-                    build_type_enum = BuildType[build_type.upper().replace(" ", "_")]
-                    query = query.filter(
-                        WorkbenchActivity.build_type == build_type_enum
-                    )
-                except (KeyError, ValueError):
-                    pass
-
-            if workspace_id:
-                query = query.filter(WorkbenchActivity.workspace_id == workspace_id)
-
-            if workbench_id:
-                workbench_id_clean = workbench_id.strip() if workbench_id else None
-                if workbench_id_clean:
-                    query = query.filter(
-                        WorkbenchActivity.workbench_id.ilike(f"%{workbench_id_clean}%")
-                    )
-
-            if email:
-                email_clean = email.strip() if email else None
-                if email_clean:
-                    query = query.filter(
-                        WorkbenchActivity.invoker_email.ilike(f"%{email_clean}%")
-                    )
-
-            if search_query:
-                search_pattern = f"%{search_query}%"
-                query = query.filter(
-                    or_(
-                        WorkbenchActivity.invoker_email.ilike(search_pattern),
-                        WorkbenchActivity.workbench_id.ilike(search_pattern),
-                        WorkbenchActivity.workspace_id.ilike(search_pattern),
-                        WorkbenchActivity.build_error_information.ilike(search_pattern),
-                    )
-                )
+            query = _apply_status_filter(query, status)
+            query = _apply_build_type_filter(query, build_type)
+            query = _apply_workspace_id_filter(query, workspace_id)
+            query = _apply_workbench_id_filter(query, workbench_id)
+            query = _apply_email_filter(query, email)
+            query = _apply_search_query_filter(query, search_query)
 
             total_count = query.count()
 
-            if hasattr(WorkbenchActivity, sort_by):
-                sort_attr = getattr(WorkbenchActivity, sort_by)
-                if sort_direction.lower() == "desc":
-                    query = query.order_by(desc(sort_attr))
-                else:
-                    query = query.order_by(sort_attr)
-            else:
-                query = query.order_by(
-                    desc(WorkbenchActivity.id)
-                    if sort_direction.lower() == "desc"
-                    else WorkbenchActivity.id
-                )
+            query = _apply_sorting(query, sort_by, sort_direction)
 
             query = query.offset((page - 1) * per_page).limit(per_page)
 
