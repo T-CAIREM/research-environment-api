@@ -8,16 +8,13 @@ from research_environment_api.modules.workbench_management import (
     models as workbench_models
 )
 from research_environment_api.background import enums
-from research_environment_api.modules.app import app
 
-# Używamy aliasów dla długich ścieżek importów przy patchowaniu
 SCHEDULERS_PATH = "research_environment_api.modules.workbench_management.services.schedulers"
 SERVICES_PATH = "research_environment_api.modules.workbench_management.services"
 
 
 class TestWorkbenchServices:
 
-    # --- 1. LISTING WORKBENCHES ---
 
     def test_list_workbenches(self, mocker):
         """Sprawdza, czy maszyny z GCP są poprawnie zwracane."""
@@ -37,18 +34,15 @@ class TestWorkbenchServices:
 
     def test_list_workbenches_deduplication(self, mocker):
         """Sprawdza, czy maszyna istniejąca w GCP nie jest dublowana przez Scaffolding (Creating)."""
-        # 1. Maszyna już istnieje w GCP
         mock_instance = MagicMock(id="123")
         mocker.patch(f"{SERVICES_PATH}._fetch_gce_instances_raw", return_value=[mock_instance])
         mocker.patch.object(entities.Workbench, "from_gce_instance", return_value=MagicMock(id="123"))
 
-        # 2. Workflow twierdzi, że maszyna o tym samym ID (123) się tworzy
         workflow = MagicMock(workbench_id="123", build_type=enums.BuildType.WORKBENCH_CREATION)
         workflow.workspace_id = "proj"
 
         result = list(services.list_workbenches("proj", [workflow], "user@test.com", is_owner=True))
 
-        # Oczekujemy 1 elementu (istniejącego), a nie 2
         assert len(result) == 1
         assert result[0].id == "123"
 
@@ -62,7 +56,6 @@ class TestWorkbenchServices:
         mock_shared.assert_called_once()
         assert result == []
 
-    # --- 2. GPU VALIDATION ---
 
     @pytest.mark.parametrize("gpu_name, expected", [
         ("NVIDIA_TESLA_T4", True),
@@ -74,7 +67,6 @@ class TestWorkbenchServices:
     def test_validate_gpu_rstudio(self, mocker, mock_config):
         """Test walidacji GPU dla RStudio (wymaga zapytania do API)."""
         mock_client = MagicMock()
-        # Mock struktury: [(zone, {accelerator_types: [obj]})]
         mock_acc_type = MagicMock()
         mock_acc_type.name = "nvidia-tesla-t4"
         mock_client.aggregated_list.return_value = [("zone", MagicMock(accelerator_types=[mock_acc_type]))]
@@ -84,20 +76,17 @@ class TestWorkbenchServices:
         assert services.validate_gpu_accelerator("proj", "nvidia-tesla-t4", "rstudio") is True
         assert services.validate_gpu_accelerator("proj", "invalid", "rstudio") is False
 
-    # --- 3. COLLABORATORS MANAGEMENT ---
 
     def test_add_collaborators_success(self, mocker, mock_config, mock_db_session):
         """Sprawdza success path: IAM API OK -> DB Status SUCCESS."""
         mock_config.google_iam_client = MagicMock()
         mocker.patch(f"{SERVICES_PATH}.add_iam_binding", return_value=True)
 
-        # Mock brak istniejącego rekordu
         mock_db_session.query.return_value.filter_by.return_value.first.return_value = None
 
         req = entities.WorkbenchCollaboratorModification("proj", "sa", ["u@test.com"])
         services.add_collaborators_to_workbench(req)
 
-        # Sprawdź czy dodano obiekt do sesji
         assert mock_db_session.add.called
         args, _ = mock_db_session.add.call_args
         obj = args[0]
@@ -109,14 +98,12 @@ class TestWorkbenchServices:
         mock_config.google_iam_client = MagicMock()
         mocker.patch(f"{SERVICES_PATH}.remove_iam_binding", side_effect=Exception("IAM Error"))
 
-        # Mock istniejący rekord w bazie
         existing_record = MagicMock(spec=workbench_models.WorkbenchCollaboratorData)
         mock_db_session.query.return_value.filter_by.return_value.first.return_value = existing_record
 
         req = entities.WorkbenchCollaboratorModification("proj", "sa", ["u@test.com"])
         services.remove_collaborators_from_workbench(req)
 
-        # Status powinien zmienić się na FAILED, bo API rzuciło błąd
         assert existing_record.status == workbench_models.CollaboratorStatus.FAILED
 
     def test_remove_collaborators_success(self, mocker, mock_config, mock_db_session):
@@ -133,11 +120,9 @@ class TestWorkbenchServices:
         assert existing_record.status == workbench_models.CollaboratorStatus.REMOVED
         assert existing_record.viewed is True
 
-    # --- 4. NOTIFICATIONS ---
 
     def test_get_workbench_notifications(self, mock_db_session):
         """Test pobierania powiadomień."""
-        # Mock rekordu w bazie
         notification = MagicMock()
         notification.id = "notif-1"
         notification.collaborator_email = "test@example.com"
@@ -163,7 +148,6 @@ class TestWorkbenchServices:
         assert result is True
         assert notification.viewed is True
 
-    # --- 6. SCHEDULER ROUTING (DRY Version) ---
 
     @pytest.mark.parametrize("wb_type, expected_func", [
         ("jupyter", "create_jupyter_workbench"),
