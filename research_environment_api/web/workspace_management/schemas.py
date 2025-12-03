@@ -32,6 +32,11 @@ class ListActiveWorkspacesRequest(Schema):
     email = fields.Str(required=True, validate=validate.Email())
 
 
+class GetActiveWorkspace(Schema):
+    workspace_project_id = fields.Str(required=True)
+    email = fields.Str(required=True, validate=validate.Email())
+
+
 class EntityScaffolding(Schema):
     gcp_identifier = fields.Str(required=True, attribute="id")
     status = fields.Str(required=True)
@@ -68,6 +73,13 @@ class Workspace(Schema):
     service_errors = fields.Nested(ServiceErrorSchema, many=True, missing=[])
     is_accessible = fields.Bool(required=True)
     access_denial_reason = fields.Str(allow_none=True, missing=None)
+
+
+class SimplifiedWorkspace(Schema):
+    gcp_project_id = fields.Str(required=True)
+    region = fields.Enum(Region, by_value=True, required=False)
+    status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
+    owner = fields.Str(required=True)
 
 
 class SharedWorkspaceCreationRequest(Schema):

@@ -46,6 +46,11 @@ class SharedBucket(Schema):
     is_admin = fields.Bool(required=True)
 
 
+class GetSharedBucketRequest(Schema):
+    bucket_name = fields.Str(required=True)
+    user_email = fields.Str(required=True, validate=validate.Email())
+
+
 class SignedUrlGenerationRequest(Schema):
     filename = fields.Str(required=True)
     size = fields.Int(

@@ -127,3 +127,13 @@ class SharedBucketObject:
     full_path: str
     size: str = None
     modification_time: str = None
+
+
+@dataclass
+class GetSharedBucket:
+    bucket_name: str
+    user_email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.user_email.split("@")

@@ -2,7 +2,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Iterable, Union
+from typing import Iterable, Union, Optional
 
 from research_environment_api.modules.workbench_management.entities import (
     Workbench,
@@ -95,6 +95,16 @@ class WorkspaceListQuery:
 
 
 @dataclass
+class WorkspaceGetQuery:
+    workspace_project_id: str
+    email: str
+    username: str = field(init=False)
+
+    def __post_init__(self):
+        self.username, domain = self.email.split("@")
+
+
+@dataclass
 class SharedWorkspaceListQuery:
     email: str
     username: str = field(init=False)
@@ -119,6 +129,14 @@ class Workspace:
     service_errors: list[ServiceError] = field(default_factory=list)
     is_accessible: bool = True
     access_denial_reason: str | None = None
+
+
+@dataclass
+class SimplifiedWorkspace:
+    gcp_project_id: str
+    status: WorkspaceStatus
+    owner: str
+    region: Optional[str] = None
 
 
 @dataclass
