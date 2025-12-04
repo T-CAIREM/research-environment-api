@@ -9,7 +9,7 @@ from research_environment_api.library.google import workspace as google_workspac
 
 
 class TestIdentityServices:
-    """Test identity management business logic (Service Layer)."""
+
 
     def test_provision_cloud_identity_orchestration(self, mocker):
         """Ensure provision calls both user creation and billing permission steps."""
@@ -56,7 +56,6 @@ class TestIdentityServices:
         )
 
         # Act
-        # Should NOT raise exception, just log warning
         services._create_google_workspace_user(request)
 
         # Assert
