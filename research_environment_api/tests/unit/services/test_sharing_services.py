@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 from research_environment_api.modules.sharing_management import (
     entities,
     services,
@@ -128,28 +128,13 @@ class TestSharingServices:
             mock_config, "google_cloud_storage_client", mock_storage_client
         )
 
-        # Mock database session
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-
         mock_sharing_data1 = MagicMock(spec=models.SharingData)
         mock_sharing_data2 = MagicMock(spec=models.SharingData)
 
-        mock_session.query.return_value = mock_query
-        mock_query.filter_by.return_value = mock_filter
-        mock_filter.all.return_value = [mock_sharing_data1, mock_sharing_data2]
-
-        mock_db_context = MagicMock()
-        mock_db_context.__enter__.return_value = mock_session
-        mock_session.begin.return_value.__enter__ = MagicMock()
-        mock_session.begin.return_value.__exit__ = MagicMock()
-
-        mocker.patch.object(
-            mock_config.parent if hasattr(mock_config, "parent") else type(mock_config),
-            "database_session",
-            return_value=mock_db_context,
-        )
+        mock_db_session.query.return_value.filter_by.return_value.all.return_value = [
+            mock_sharing_data1,
+            mock_sharing_data2,
+        ]
 
         deletion_request = entities.SharedBucketDeletion(bucket_name="test-bucket")
 
@@ -158,6 +143,7 @@ class TestSharingServices:
 
         # Assert
         mock_storage_client.bucket.assert_called_once_with("test-bucket")
+        mock_db_session.query.assert_called()
 
     def test_insufficient_permissions_error(self):
         """Test InsufficientPermissionsError exception."""

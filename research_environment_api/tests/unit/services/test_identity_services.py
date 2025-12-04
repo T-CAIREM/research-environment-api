@@ -9,8 +9,6 @@ from research_environment_api.library.google import workspace as google_workspac
 
 
 class TestIdentityServices:
-
-
     def test_provision_cloud_identity_orchestration(self, mocker):
         """Ensure provision calls both user creation and billing permission steps."""
         # Arrange
