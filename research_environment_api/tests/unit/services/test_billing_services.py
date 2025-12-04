@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from research_environment_api.modules.billing_management import services, enums
 from research_environment_api.library.google import billing as billing_api
 
+
 class TestBillingServices:
     """Test billing service layer logic."""
 
@@ -14,11 +15,11 @@ class TestBillingServices:
         mock_acct.name = "billingAccounts/123"
         mock_acct.display_name = "Test Billing"
         mock_client.list_active_billing_accounts.return_value = [mock_acct]
-        mocker.patch.object(mock_config, 'google_billing_client', mock_client)
+        mocker.patch.object(mock_config, "google_billing_client", mock_client)
 
         mocker.patch(
             "research_environment_api.modules.billing_management.services._billing_account_role_for",
-            return_value=enums.BillingAccountRole.OWNER
+            return_value=enums.BillingAccountRole.OWNER,
         )
 
         # Act
@@ -33,7 +34,7 @@ class TestBillingServices:
         """Test delegation to Google library."""
         # Arrange
         mock_client = MagicMock()
-        mocker.patch.object(mock_config, 'google_billing_client', mock_client)
+        mocker.patch.object(mock_config, "google_billing_client", mock_client)
 
         # Act
         services.share_billing_account_to("owner@t.com", "user@t.com", "123")
@@ -47,7 +48,7 @@ class TestBillingServices:
         """Test revocation delegation."""
         # Arrange
         mock_client = MagicMock()
-        mocker.patch.object(mock_config, 'google_billing_client', mock_client)
+        mocker.patch.object(mock_config, "google_billing_client", mock_client)
 
         # Act
         services.revoke_billing_account_access("owner@t.com", "user@t.com", "123")
@@ -58,7 +59,9 @@ class TestBillingServices:
     def test_format_billing_account_resource_name(self):
         """Test billing account name formatting."""
         # Act
-        result = services._format_billing_account_resource_name("billingAccounts/123456-ABCDEF")
+        result = services._format_billing_account_resource_name(
+            "billingAccounts/123456-ABCDEF"
+        )
 
         # Assert
         assert result == "123456-ABCDEF"

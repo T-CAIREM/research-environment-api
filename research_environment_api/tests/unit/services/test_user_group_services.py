@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import MagicMock
 from research_environment_api.modules.user_group_management import entities, services
-from research_environment_api.modules.user_group_management.exceptions import GoogleGroupAlreadyExists
+from research_environment_api.modules.user_group_management.exceptions import (
+    GoogleGroupAlreadyExists,
+)
 from googleapiclient.errors import HttpError
 
 
 class TestUserGroupServices:
-
-
     def test_get_full_group_name(self):
         """Test group name formatting."""
         # Act
@@ -33,13 +33,15 @@ class TestUserGroupServices:
 
         mock_identity_client.groups.return_value = mock_groups
         mock_groups.create.return_value = mock_create
-        mock_create.execute.return_value = {"name": "groups/123", "displayName": "hdn-test-group"}
+        mock_create.execute.return_value = {
+            "name": "groups/123",
+            "displayName": "hdn-test-group",
+        }
 
-        mocker.patch.object(mock_config, 'cloud_identity_client', mock_identity_client)
+        mocker.patch.object(mock_config, "cloud_identity_client", mock_identity_client)
 
         creation_entity = entities.UserGroupCreation(
-            group_name="test-group",
-            description="Test group description"
+            group_name="test-group", description="Test group description"
         )
 
         # Act
@@ -59,19 +61,17 @@ class TestUserGroupServices:
         mock_create = MagicMock()
 
         http_error = HttpError(
-            resp=MagicMock(status=409),
-            content=b"Group already exists"
+            resp=MagicMock(status=409), content=b"Group already exists"
         )
 
         mock_identity_client.groups.return_value = mock_groups
         mock_groups.create.return_value = mock_create
         mock_create.execute.side_effect = http_error
 
-        mocker.patch.object(mock_config, 'cloud_identity_client', mock_identity_client)
+        mocker.patch.object(mock_config, "cloud_identity_client", mock_identity_client)
 
         creation_entity = entities.UserGroupCreation(
-            group_name="existing-group",
-            description="Test group"
+            group_name="existing-group", description="Test group"
         )
 
         # Act & Assert
@@ -86,19 +86,17 @@ class TestUserGroupServices:
         mock_create = MagicMock()
 
         http_error = HttpError(
-            resp=MagicMock(status=500),
-            content=b"Internal server error"
+            resp=MagicMock(status=500), content=b"Internal server error"
         )
 
         mock_identity_client.groups.return_value = mock_groups
         mock_groups.create.return_value = mock_create
         mock_create.execute.side_effect = http_error
 
-        mocker.patch.object(mock_config, 'cloud_identity_client', mock_identity_client)
+        mocker.patch.object(mock_config, "cloud_identity_client", mock_identity_client)
 
         creation_entity = entities.UserGroupCreation(
-            group_name="test-group",
-            description="Test group"
+            group_name="test-group", description="Test group"
         )
 
         # Act & Assert
@@ -120,11 +118,9 @@ class TestUserGroupServices:
         mock_groups.delete.return_value = mock_delete
         mock_delete.execute.return_value = {}
 
-        mocker.patch.object(mock_config, 'cloud_identity_client', mock_identity_client)
+        mocker.patch.object(mock_config, "cloud_identity_client", mock_identity_client)
 
-        deletion_entity = entities.UserGroupDeletion(
-            group_name="test-group"
-        )
+        deletion_entity = entities.UserGroupDeletion(group_name="test-group")
 
         # Act
         result = services.delete_group(deletion_entity)
@@ -142,7 +138,10 @@ class TestUserGroupServices:
         # Create mock bindings
         binding1 = MagicMock()
         binding1.role = "roles/viewer"
-        binding1.members = ["group:hdn-test-group@healthdatanexus.ai", "user:other@example.com"]
+        binding1.members = [
+            "group:hdn-test-group@healthdatanexus.ai",
+            "user:other@example.com",
+        ]
 
         binding2 = MagicMock()
         binding2.role = "roles/editor"
@@ -156,7 +155,7 @@ class TestUserGroupServices:
         mock_policy.bindings = [binding1, binding2, binding3]
 
         mock_org_client.get_iam_policy.return_value = mock_policy
-        mocker.patch.object(mock_config, 'organization_client', mock_org_client)
+        mocker.patch.object(mock_config, "organization_client", mock_org_client)
 
         # Act
         roles = services._get_roles_associated_with_group("test-group", "123456789")
@@ -177,7 +176,7 @@ class TestUserGroupServices:
         binding1.role = "roles/compute.admin"
         binding1.members = [
             "serviceAccount:test-sa@healthdatanexus.ai",
-            "user:other@example.com"
+            "user:other@example.com",
         ]
 
         binding2 = MagicMock()
@@ -188,10 +187,14 @@ class TestUserGroupServices:
         mock_policy.bindings = [binding1, binding2]
 
         mock_projects_client.get_iam_policy.return_value = mock_policy
-        mocker.patch.object(mock_config, 'google_cloud_resource_client', mock_projects_client)
+        mocker.patch.object(
+            mock_config, "google_cloud_resource_client", mock_projects_client
+        )
 
         # Act
-        roles = services.get_roles_associated_with_service_account("test-sa", "test-project")
+        roles = services.get_roles_associated_with_service_account(
+            "test-sa", "test-project"
+        )
 
         # Assert
         assert len(roles) == 1

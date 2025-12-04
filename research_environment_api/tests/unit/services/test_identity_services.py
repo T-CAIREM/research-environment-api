@@ -1,7 +1,12 @@
 import pytest
 from unittest.mock import MagicMock
-from research_environment_api.modules.identity_management import services, entities, exceptions
+from research_environment_api.modules.identity_management import (
+    services,
+    entities,
+    exceptions,
+)
 from research_environment_api.library.google import workspace as google_workspace
+
 
 class TestIdentityServices:
     """Test identity management business logic (Service Layer)."""
@@ -30,17 +35,24 @@ class TestIdentityServices:
         # Arrange
         mock_client = MagicMock()
         # Simulate Google throwing "User Exists"
-        mock_client.create_user.side_effect = google_workspace.UserAlreadyExistsError("Exists")
+        mock_client.create_user.side_effect = google_workspace.UserAlreadyExistsError(
+            "Exists"
+        )
 
         mocker.patch(
             "research_environment_api.modules.identity_management.services._build_google_workspace_client",
-            return_value=mock_client
+            return_value=mock_client,
         )
-        mock_logger = mocker.patch("research_environment_api.modules.identity_management.services.logger")
+        mock_logger = mocker.patch(
+            "research_environment_api.modules.identity_management.services.logger"
+        )
 
         request = entities.CloudIdentityCreation(
-            user_name="test", password="pw", recovery_email="rec@test.com",
-            given_name="A", family_name="B"
+            user_name="test",
+            password="pw",
+            recovery_email="rec@test.com",
+            given_name="A",
+            family_name="B",
         )
 
         # Act
@@ -55,13 +67,17 @@ class TestIdentityServices:
         """Test that GroupMembershipAlreadyExistsError is caught and logged."""
         # Arrange
         mock_client = MagicMock()
-        mock_client.add_user_to_group.side_effect = google_workspace.GroupMembershipAlreadyExistsError("Exists")
+        mock_client.add_user_to_group.side_effect = (
+            google_workspace.GroupMembershipAlreadyExistsError("Exists")
+        )
 
         mocker.patch(
             "research_environment_api.modules.identity_management.services._build_google_workspace_client",
-            return_value=mock_client
+            return_value=mock_client,
         )
-        mock_logger = mocker.patch("research_environment_api.modules.identity_management.services.logger")
+        mock_logger = mocker.patch(
+            "research_environment_api.modules.identity_management.services.logger"
+        )
         mock_config.billing_account_creator_group_id = "billing-group"
 
         request = MagicMock(primary_email="test@healthdatanexus.ai")

@@ -1,12 +1,15 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
-from research_environment_api.modules.monitoring_management import services, entities, exceptions
+from research_environment_api.modules.monitoring_management import (
+    services,
+    entities,
+    exceptions,
+)
 
 
 class TestMonitoringServices:
     """Test monitoring logic including time calculations and quota checks."""
-
 
     def test_calculate_total_time_simple_interval(self):
         """Test calculating duration for a single completed session."""
@@ -14,7 +17,9 @@ class TestMonitoringServices:
         end = datetime(2023, 1, 1, 12, 0, 0)  # 2 hours
         timestamps = [(start, end)]
 
-        with patch("research_environment_api.modules.monitoring_management.services.datetime") as mock_dt:
+        with patch(
+            "research_environment_api.modules.monitoring_management.services.datetime"
+        ) as mock_dt:
             mock_dt.now.return_value = datetime(2023, 1, 2, 0, 0, 0)
             result = services._calculate_total_time(timestamps)
 
@@ -27,7 +32,9 @@ class TestMonitoringServices:
         now_mock = datetime(2023, 1, 1, 11, 0, 0)
         timestamps = [(start, None)]
 
-        with patch("research_environment_api.modules.monitoring_management.services.datetime") as mock_dt:
+        with patch(
+            "research_environment_api.modules.monitoring_management.services.datetime"
+        ) as mock_dt:
             mock_dt.now.return_value = now_mock
             result = services._calculate_total_time(timestamps)
 
@@ -41,14 +48,15 @@ class TestMonitoringServices:
         t2_end = datetime(2023, 1, 1, 12, 30, 0)
         timestamps = [(t1_start, t1_end), (t2_start, t2_end)]
 
-        with patch("research_environment_api.modules.monitoring_management.services.datetime") as mock_dt:
+        with patch(
+            "research_environment_api.modules.monitoring_management.services.datetime"
+        ) as mock_dt:
             mock_dt.now.return_value = datetime(2023, 1, 2)
             result = services._calculate_total_time(timestamps)
 
         # 1.5 hours -> 1 Hour, 30 Minutes
         assert "1 Hour" in result
         assert "30 Minutes" in result
-
 
     def test_check_google_quotas(self, mocker, mock_config):
         """Test retrieving and checking quotas against limits."""
@@ -62,11 +70,11 @@ class TestMonitoringServices:
 
         mocker.patch(
             "research_environment_api.modules.monitoring_management.services._get_service_info",
-            return_value=mock_service_info
+            return_value=mock_service_info,
         )
         mocker.patch(
             "research_environment_api.modules.monitoring_management.services._get_current_metric_usage",
-            return_value=10  # Current usage
+            return_value=10,  # Current usage
         )
 
         base_entity = MagicMock(workspace_project_id="test-proj")
@@ -75,7 +83,9 @@ class TestMonitoringServices:
         quota_metrics = [metric_enum]
 
         # Act
-        results = services.check_google_quotas(base_entity, quota_metrics, "us-central1")
+        results = services.check_google_quotas(
+            base_entity, quota_metrics, "us-central1"
+        )
 
         # Assert
         assert len(results) == 1
@@ -87,14 +97,11 @@ class TestMonitoringServices:
         """Test that QuotaExceededError is raised when usage + new > limit."""
         # Arrange
         quota_info = entities.QuotaInfo(
-            metric_name="CPUs",
-            limit=10,
-            usage=8,
-            region="us-central1"
+            metric_name="CPUs", limit=10, usage=8, region="us-central1"
         )
         mocker.patch(
             "research_environment_api.modules.monitoring_management.services.check_google_quotas",
-            return_value=[quota_info]
+            return_value=[quota_info],
         )
 
         mock_machine = MagicMock()
@@ -104,7 +111,7 @@ class TestMonitoringServices:
         # Patch the resource map dictionary in services module
         mocker.patch.dict(
             "research_environment_api.modules.monitoring_management.services.MACHINE_TYPE_TO_RESOURCE_MAP",
-            {"n1-standard-4": mock_resources}
+            {"n1-standard-4": mock_resources},
         )
 
         # Act & Assert

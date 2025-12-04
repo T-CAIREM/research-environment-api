@@ -31,7 +31,7 @@ class MockMachineType(str, Enum):
 # Apply the patch to the utils module so when entities.py imports it, it gets the mock
 patcher = patch(
     "research_environment_api.modules.workbench_management.utils.generate_required_maps",
-    return_value=(mock_machine_map, MockMachineType)
+    return_value=(mock_machine_map, MockMachineType),
 )
 patcher.start()
 
@@ -60,14 +60,13 @@ def mock_config(mocker):
     config_mock.organization_domain = "healthdatanexus.ai"
 
     mocker.patch(
-        "research_environment_api.modules.app.create_config",
-        return_value=config_mock
+        "research_environment_api.modules.app.create_config", return_value=config_mock
     )
 
     # Also patch build_config for the Flask app
     mocker.patch(
         "research_environment_api.web.app.build_config",
-        return_value={"TESTING": True, "SECRET_KEY": "test-key"}
+        return_value={"TESTING": True, "SECRET_KEY": "test-key"},
     )
     return config_mock
 
@@ -117,7 +116,7 @@ def mock_db_session(mocker):
     mock_session = MagicMock()
     mocker.patch.object(
         core_app,
-        'database_session',
-        return_value=MagicMock(__enter__=MagicMock(return_value=mock_session))
+        "database_session",
+        return_value=MagicMock(__enter__=MagicMock(return_value=mock_session)),
     )
     return mock_session

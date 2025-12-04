@@ -1,16 +1,25 @@
 import pytest
 from unittest.mock import MagicMock, Mock
-from research_environment_api.modules.sharing_management import entities, services, enums, models
+from research_environment_api.modules.sharing_management import (
+    entities,
+    services,
+    enums,
+    models,
+)
 
 
 class TestSharingServices:
-
-
     def test_gcp_role_access_mapping(self):
         """Test bucket permissions are correctly mapped to IAM roles."""
         # Assert
-        assert services.GCP_ROLE_ACCESS_MAPPING[entities.BucketPermissions.READ_WRITE] == enums.IamSharingRole.ADMIN
-        assert services.GCP_ROLE_ACCESS_MAPPING[entities.BucketPermissions.READ] == enums.IamSharingRole.USER
+        assert (
+            services.GCP_ROLE_ACCESS_MAPPING[entities.BucketPermissions.READ_WRITE]
+            == enums.IamSharingRole.ADMIN
+        )
+        assert (
+            services.GCP_ROLE_ACCESS_MAPPING[entities.BucketPermissions.READ]
+            == enums.IamSharingRole.USER
+        )
 
     def test_list_accessible_buckets_in_project(self, mocker, mock_config):
         """Test listing buckets user has access to."""
@@ -29,35 +38,41 @@ class TestSharingServices:
         mock_bucket2.name = "bucket-2"
         mock_policy2 = MagicMock()
         mock_policy2.bindings = [
-            MagicMock(role="roles/storage.objectViewer", members=["user:other@example.com"])
+            MagicMock(
+                role="roles/storage.objectViewer", members=["user:other@example.com"]
+            )
         ]
         mock_bucket2.get_iam_policy.return_value = mock_policy2
 
         mock_storage_client.list_buckets.return_value = [mock_bucket1, mock_bucket2]
-        mocker.patch.object(mock_config, 'google_cloud_storage_client', mock_storage_client)
+        mocker.patch.object(
+            mock_config, "google_cloud_storage_client", mock_storage_client
+        )
 
         mocker.patch(
             "research_environment_api.modules.sharing_management.services._user_has_access_to_bucket",
-            side_effect=[True, False]
+            side_effect=[True, False],
         )
         mocker.patch(
             "research_environment_api.modules.sharing_management.services._user_is_bucket_admin",
-            return_value=True
+            return_value=True,
         )
 
         mock_shared_bucket = MagicMock()
         mocker.patch.object(
             entities.SharedBucket,
             "from_storage_instance",
-            return_value=mock_shared_bucket
+            return_value=mock_shared_bucket,
         )
 
         # Act
-        result = list(services.list_accessible_buckets_in_project(
-            gcp_project_id="test-project",
-            username="testuser",
-            caller_email="test@example.com"
-        ))
+        result = list(
+            services.list_accessible_buckets_in_project(
+                gcp_project_id="test-project",
+                username="testuser",
+                caller_email="test@example.com",
+            )
+        )
 
         # Assert
         assert len(result) == 1  # Only bucket-1 is accessible
@@ -70,8 +85,12 @@ class TestSharingServices:
         mock_bucket.labels = {}
 
         mock_storage_client.bucket.return_value = mock_bucket
-        mocker.patch.object(mock_config, 'google_cloud_storage_client', mock_storage_client)
-        mocker.patch.object(mock_config, 'gcp_cors_allowed_origins', 'https://example.com')
+        mocker.patch.object(
+            mock_config, "google_cloud_storage_client", mock_storage_client
+        )
+        mocker.patch.object(
+            mock_config, "gcp_cors_allowed_origins", "https://example.com"
+        )
 
         mock_add_iam = mocker.patch(
             "research_environment_api.modules.sharing_management.services._add_iam_permissions"
@@ -82,7 +101,7 @@ class TestSharingServices:
             storage_class="STANDARD",
             region=entities.Region.US_CENTRAL,
             workspace_project_id="test-project",
-            user_email="testuser@example.com"
+            user_email="testuser@example.com",
         )
 
         # Act
@@ -96,14 +115,18 @@ class TestSharingServices:
         mock_storage_client.create_bucket.assert_called_once()
         mock_add_iam.assert_called_once()
 
-    def test_delete_shared_bucket_with_sharing_metadata(self, mocker, mock_config, mock_db_session):
+    def test_delete_shared_bucket_with_sharing_metadata(
+        self, mocker, mock_config, mock_db_session
+    ):
         """Test deleting a shared bucket removes sharing metadata."""
         # Arrange
         mock_storage_client = MagicMock()
         mock_bucket = MagicMock()
         mock_storage_client.bucket.return_value = mock_bucket
 
-        mocker.patch.object(mock_config, 'google_cloud_storage_client', mock_storage_client)
+        mocker.patch.object(
+            mock_config, "google_cloud_storage_client", mock_storage_client
+        )
 
         # Mock database session
         mock_session = MagicMock()
@@ -123,14 +146,12 @@ class TestSharingServices:
         mock_session.begin.return_value.__exit__ = MagicMock()
 
         mocker.patch.object(
-            mock_config.parent if hasattr(mock_config, 'parent') else type(mock_config),
-            'database_session',
-            return_value=mock_db_context
+            mock_config.parent if hasattr(mock_config, "parent") else type(mock_config),
+            "database_session",
+            return_value=mock_db_context,
         )
 
-        deletion_request = entities.SharedBucketDeletion(
-            bucket_name="test-bucket"
-        )
+        deletion_request = entities.SharedBucketDeletion(bucket_name="test-bucket")
 
         # Act
         services.delete_shared_bucket(deletion_request)
