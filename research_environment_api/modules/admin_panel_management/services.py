@@ -509,7 +509,6 @@ def get_workbench_activities_summary() -> Dict[str, Any]:
 
 
 def update_workbench_activity_status(activity_ids: list, new_status: str) -> bool:
-    """Update workbench activity status for one or more activities."""
     try:
         workflow_status = WorkflowStatus[new_status.upper().replace(" ", "_")]
     except (KeyError, ValueError):
