@@ -337,9 +337,19 @@ def update_activity_status():
     update_request = schemas.WorkbenchActivityStatusUpdateRequest().load(body)
 
     try:
-        services.update_workbench_activity_status(
-            update_request["activity_id"], update_request["new_status"]
+        success = services.update_workbench_activity_status(
+            update_request["activity_ids"], update_request["new_status"]
         )
-        return {"success": True, "message": "Status updated successfully"}, 200
+
+        if success:
+            return {"success": True, "message": "Status updated successfully"}, 200
+        else:
+            return {
+                "success": False,
+                "error": "Could not update activities. Please check if they exist and the status is valid.",
+            }, 500
     except Exception as e:
-        return {"success": False, "error": str(e)}, 500
+        return {
+            "success": False,
+            "error": "Could not update activities. Please try again.",
+        }, 500

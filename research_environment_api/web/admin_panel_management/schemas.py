@@ -78,5 +78,7 @@ class WorkbenchActivitiesSummarySchema(Schema):
 
 
 class WorkbenchActivityStatusUpdateRequest(Schema):
-    activity_id = fields.UUID(required=True)
+    activity_ids = fields.List(
+        fields.UUID(), required=True, validate=validate.Length(min=1)
+    )
     new_status = fields.Str(required=True)

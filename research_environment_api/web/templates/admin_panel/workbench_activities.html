@@ -58,14 +58,23 @@
   </div>
 
   <div class="card shadow mb-4">
-    <div class="card-header py-3">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
       <h6 class="m-0 font-weight-bold text-primary">Activities List ({{ total_count }} total)</h6>
+      <button type="button" class="btn btn-primary btn-sm" id="bulk-update-status-btn" disabled>
+        <i class="fas fa-edit mr-1"></i> Update Status (<span id="selected-count">0</span>)
+      </button>
     </div>
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
           <thead>
             <tr>
+              <th width="40px">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="select-all-activities">
+                  <label class="custom-control-label" for="select-all-activities"></label>
+                </div>
+              </th>
               <th>ID</th>
               <th class="sortable-header" data-sort="invoker_email">
                 Email
@@ -98,6 +107,14 @@
             {% if activities %}
               {% for activity in activities %}
                 <tr>
+                  <td>
+                    <div class="custom-control custom-checkbox">
+                      <input type="checkbox" class="custom-control-input activity-checkbox"
+                             id="activity-{{ activity.id }}"
+                             data-activity-id="{{ activity.id }}">
+                      <label class="custom-control-label" for="activity-{{ activity.id }}"></label>
+                    </div>
+                  </td>
                   <td>{{ activity.id }}</td>
                   <td>{{ activity.invoker_email }}</td>
                   <td>
@@ -137,7 +154,7 @@
               {% endfor %}
             {% else %}
               <tr>
-                <td colspan="6" class="text-center p-4">
+                <td colspan="7" class="text-center p-4">
                   <div class="text-muted">No activities found matching your criteria.</div>
                 </td>
               </tr>
@@ -266,99 +283,53 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="bulkEditStatusModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Status for Multiple Activities</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to update the status for <strong><span id="bulk-activity-count">0</span></strong> activities.</p>
+        <form id="bulk-edit-status-form">
+          <div class="form-group">
+            <label for="bulk-new-status">Select New Status</label>
+            <select class="form-control" id="bulk-new-status" name="new_status" required>
+              <option value="">-- Select Status --</option>
+              {% for status_name in summary.by_status.keys() %}
+                <option value="{{ status_name }}">{{ status_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+        <div class="alert alert-info mt-3">
+          <small><i class="fas fa-info-circle"></i> This will update all selected activities to the new status.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="bulk-save-status-btn">Update All</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $().tooltip === 'function') {
-      $('[data-toggle="tooltip"]').tooltip();
-    }
+  const URLS = {
+    updateActivityStatus: "{{ url_for('admin_panel_management.update_activity_status') }}"
+  };
 
-    document.querySelectorAll('.sortable-header').forEach(header => {
-      header.addEventListener('click', function() {
-        const sortField = this.getAttribute('data-sort');
-        const currentSortBy = '{{ filter_params.sort_by or "id" }}';
-        const currentDirection = '{{ filter_params.sort_direction or "desc" }}';
-        const newDirection = sortField === currentSortBy ? (currentDirection === 'desc' ? 'asc' : 'desc') : 'desc';
-
-        document.getElementById('sort_by').value = sortField;
-        document.getElementById('sort_direction').value = newDirection;
-        document.getElementById('filter-form').submit();
-      });
-    });
-
-    document.querySelectorAll('.edit-status-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const activityId = this.getAttribute('data-activity-id');
-        const currentStatus = this.getAttribute('data-current-status');
-
-        document.getElementById('edit-activity-id').value = activityId;
-
-        const statusDropdown = document.getElementById('new-status');
-        statusDropdown.innerHTML = '<option value="">-- Select Status --</option>';
-
-        const allStatuses = [
-          {% for status_name in summary.by_status.keys() %}
-            '{{ status_name }}'{% if not loop.last %},{% endif %}
-          {% endfor %}
-        ];
-
-        allStatuses.forEach(status => {
-          if (status !== currentStatus) {
-            const option = document.createElement('option');
-            option.value = status;
-            option.textContent = status;
-            statusDropdown.appendChild(option);
-          }
-        });
-
-        $('#editStatusModal').modal('show');
-      });
-    });
-
-    document.getElementById('save-status-btn').addEventListener('click', function() {
-      const activityId = document.getElementById('edit-activity-id').value;
-      const newStatus = document.getElementById('new-status').value;
-
-      if (!activityId || !newStatus) {
-        alert('Please select a status');
-        return;
-      }
-
-      fetch('{{ url_for("admin_panel_management.update_activity_status") }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activity_id: activityId, new_status: newStatus })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          $('#editStatusModal').modal('hide');
-          alert('Status updated successfully!');
-          location.reload();
-        } else {
-          alert('Error updating status: ' + (data.error || 'Unknown error'));
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the status.');
-      });
-    });
-
-    document.querySelectorAll('.show-details-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        document.getElementById('detail-activity-id').innerText = this.getAttribute('data-activity-id');
-        document.getElementById('detail-email').innerText = this.getAttribute('data-email');
-        document.getElementById('detail-workbench-id').innerText = this.getAttribute('data-workbench-id');
-        document.getElementById('detail-build-type').innerText = this.getAttribute('data-build-type');
-        document.getElementById('detail-workspace-id').innerText = this.getAttribute('data-workspace-id');
-        document.getElementById('detail-error-info').innerText = this.getAttribute('data-error');
-
-        $('#errorDetailsModal').modal('show');
-      });
-    });
-  });
+  const AVAILABLE_STATUSES = [
+    {% for status_name in summary.by_status.keys() %}
+      '{{ status_name }}'{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
 </script>
+<script src="{{ url_for('static', filename='admin_panel/js/workbench-activities.js') }}"></script>
 {% endblock %}

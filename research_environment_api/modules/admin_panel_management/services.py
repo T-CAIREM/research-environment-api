@@ -508,22 +508,28 @@ def get_workbench_activities_summary() -> Dict[str, Any]:
             }
 
 
-def update_workbench_activity_status(activity_id: int, new_status: str) -> bool:
+def update_workbench_activity_status(activity_ids: list, new_status: str) -> bool:
+    """Update workbench activity status for one or more activities."""
+    try:
+        workflow_status = WorkflowStatus[new_status.upper().replace(" ", "_")]
+    except (KeyError, ValueError):
+        return False
+
     with app.database_session() as session:
         with session.begin():
-            activity = (
+            activities = (
                 session.query(WorkbenchActivity)
-                .filter(WorkbenchActivity.id == activity_id)
-                .first()
+                .filter(WorkbenchActivity.id.in_(activity_ids))
+                .all()
             )
 
-            if not activity:
+            if len(activities) != len(activity_ids):
+                session.rollback()
                 return False
 
-            try:
-                workflow_status = WorkflowStatus[new_status.upper().replace(" ", "_")]
+            for activity in activities:
                 activity.build_status = workflow_status
-                session.commit()
-                return True
-            except (KeyError, ValueError):
-                return False
+
+            session.commit()
+
+    return True
