@@ -448,5 +448,5 @@ def get_project(gcp_project_id: str, email: str):
         gcp_project_id=gcp_project_id,
         status=status,
         owner=owner,
-        **({"region": entities.Region(region)} if region else {})
+        **({"region": region} if region else {})
     )
