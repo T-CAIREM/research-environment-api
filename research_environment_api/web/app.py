@@ -54,6 +54,7 @@ def create_app():
     from research_environment_api.web.monitoring_management import (
         monitoring_management_bp,
     )
+    from research_environment_api.web.admin_panel_management import admin_panel_management_bp
     from research_environment_api.web.healthcheck import healthcheck_management_bp
 
     app.register_blueprint(identity_management_bp, url_prefix="/identity")
@@ -64,6 +65,7 @@ def create_app():
     app.register_blueprint(sharing_management_bp, url_prefix="/sharing")
     app.register_blueprint(user_group_bp, url_prefix="/group")
     app.register_blueprint(monitoring_management_bp, url_prefix="/monitoring")
+    app.register_blueprint(admin_panel_management_bp, url_prefix="/admin")
     app.register_blueprint(healthcheck_management_bp, url_prefix="/")
 
     cache.init_app(app)

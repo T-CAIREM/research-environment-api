@@ -1,0 +1,265 @@
+{% extends "admin_panel/admin_panel_base.html" %}
+
+{% block title %}Celery Management{% endblock %}
+
+{% block admin_head %}
+{% endblock %}
+
+{% block page_header %}
+Celery Management
+{% endblock %}
+
+{% block content %}
+<div class="row" id="task-counts-row">
+    <div class="col-xl-3 col-md-6 mb-4 task-counter">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Active Tasks</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 active-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-running fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4 task-counter">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Reserved Tasks</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 reserved-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-pause-circle fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4 task-counter">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Scheduled Tasks</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 scheduled-tasks-count">
+                            <div class="skeleton skeleton-count"></div>
+                        </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Task Management</h6>
+        {% if search_query %}
+        <div>
+            <span class="badge badge-info">Search results for: {{ search_query }}</span>
+            <a href="{{ url_for('admin_panel_management.celery_management') }}" class="btn btn-sm btn-outline-secondary ml-2">Clear</a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 flex-wrap">
+            <div class="d-flex align-items-center mb-2 mb-md-0">
+                <button type="button" class="btn btn-danger btn-sm" id="purge-tasks">
+                    <i class="fas fa-trash mr-1"></i> Purge Tasks
+                </button>
+
+                <button type="button" class="btn btn-danger btn-sm ml-2" id="delete-selected-tasks" disabled>
+                    <i class="fas fa-trash-alt mr-1"></i> Delete Selected (<span id="selected-count">0</span>)
+                </button>
+
+                <div class="dropdown ml-2" style="position: static;">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-filter mr-1"></i> Filters
+                        <span class="badge badge-primary ml-1" id="filter-badge" style="display: none;">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-left p-3 shadow-lg" aria-labelledby="filterDropdown" style="width: 280px; z-index: 1050;">
+                        <h6 class="dropdown-header px-0 mb-2">Filter Tasks</h6>
+                        <div class="form-group mb-3">
+                            <label for="status-filter" class="small font-weight-bold">Status</label>
+                            <select class="form-control form-control-sm" id="status-filter">
+                                <option value="">All Statuses</option>
+                                <option value="SUCCESS">Success</option>
+                                <option value="FAILURE">Failure</option>
+                                <option value="STARTED">Started</option>
+                                <option value="RECEIVED">Received</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="RETRY">Retry</option>
+                                <option value="REVOKED">Revoked</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="worker-filter" class="small font-weight-bold">Worker</label>
+                            <select class="form-control form-control-sm" id="worker-filter">
+                                <option value="">All Workers</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="task-type-filter" class="small font-weight-bold">Task Type</label>
+                            <select class="form-control form-control-sm" id="task-type-filter">
+                                <option value="">All Task Types</option>
+                            </select>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="reset-filters">
+                                <i class="fas fa-undo mr-1"></i> Reset
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" id="apply-filters">
+                                <i class="fas fa-check mr-1"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="task-search" name="q" placeholder="Search tasks..." value="{{ search_query }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="search-button">
+                            <i class="fas fa-search" id="search-icon"></i>
+                            <span id="search-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="active-filters" class="mb-3" style="display: none;">
+            <span class="mr-2"><strong>Active Filters:</strong></span>
+            <div class="d-inline-block" id="filter-tags"></div>
+            <button class="btn btn-sm btn-link text-danger" id="clear-all-filters">Clear All</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="tasksTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th width="40px">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="select-all-tasks">
+                                <label class="custom-control-label" for="select-all-tasks"></label>
+                            </div>
+                        </th>
+                        <th>Task ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Worker</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tasks-table-body">
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
+                    </tr>
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
+                    </tr>
+                    <tr class="skeleton-table-row">
+                        <td><div class="skeleton skeleton-circle"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-cell"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-cell-sm"></div></td>
+                        <td><div class="skeleton skeleton-action"></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Worker Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="workers-table" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Worker</th>
+                                <th>Status</th>
+                                <th>Active Tasks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workers-table-body">
+                            <tr class="skeleton-table-row">
+                                <td><div class="skeleton skeleton-cell"></div></td>
+                                <td><div class="skeleton skeleton-badge"></div></td>
+                                <td><div class="skeleton skeleton-cell-sm"></div></td>
+                            </tr>
+                            <tr class="skeleton-table-row">
+                                <td><div class="skeleton skeleton-cell"></div></td>
+                                <td><div class="skeleton skeleton-badge"></div></td>
+                                <td><div class="skeleton skeleton-cell-sm"></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the selected tasks?</p>
+                <p id="delete-task-ids" style="display: none;"></p>
+                <div class="alert alert-warning" role="alert">
+                    This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const URLS = {
+        celeryDashboardData: "{{ url_for('admin_panel_management.get_celery_dashboard_data') }}",
+        tasks: "{{ url_for('admin_panel_management.get_tasks') }}",
+        workers: "{{ url_for('admin_panel_management.get_workers') }}",
+        purgeTasks: "{{ url_for('admin_panel_management.purge_tasks') }}",
+        deleteTasks: "{{ url_for('admin_panel_management.delete_tasks') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='admin_panel/js/celery-management.js') }}"></script>
+{% endblock %}

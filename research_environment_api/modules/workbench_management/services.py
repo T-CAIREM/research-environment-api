@@ -3,7 +3,6 @@ import string
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional, Tuple, Union
 
-from google import api_core
 from google.cloud.compute_v1.types.compute import Instance as ComputeEngineInstance
 import google.cloud.resourcemanager_v3
 import google.cloud.notebooks_v2
@@ -28,6 +27,10 @@ from research_environment_api.modules.workbench_management.utils import (
     add_iam_binding,
     remove_iam_binding,
 )
+from research_environment_api.modules.common.error_handlers import (
+    safe_google_service_call,
+    ServiceError,
+)
 from google.cloud.notebooks_v2.types import AcceleratorConfig
 
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
@@ -39,7 +42,15 @@ def list_workbenches(
     user_email: Optional[str] = None,
     is_owner: bool = True,
 ) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
-    gce_instances = _fetch_gce_instances(gcp_project_id)
+    """
+    List workbenches for a project.
+    
+    Note: This function maintains its original signature for API compatibility.
+    Google Cloud service errors will bubble up to be handled by the caller.
+    """
+    # Fetch GCE instances - let any Google Cloud errors bubble up
+    # The caller (workspace management) will handle them with safe_google_service_call
+    gce_instances = _fetch_gce_instances_raw(gcp_project_id)
 
     if not is_owner:
         shared_workbench_entries = _get_shared_workbenches_for_project(
@@ -71,6 +82,7 @@ def list_workbenches(
         and workflow.build_type == enums.BuildType.WORKBENCH_CREATION
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
+    
     return provisioned_workbenches + workbench_scaffoldings
 
 
@@ -80,7 +92,14 @@ def get_compute_engine_workbench(
     user_email: str,
 ) -> entities.Workbench:
     # The API exposes instance IDs as strings for compatibility reasons.
-    gce_instances = _fetch_gce_instances(gcp_project_id)
+    # Use safe_google_service_call to handle any Google Cloud errors
+    gce_instances, _ = safe_google_service_call(
+        func=lambda: _fetch_gce_instances_raw(gcp_project_id),
+        resource_id=gcp_project_id,
+        service_name="Compute Engine",
+        operation="get_instance",
+        default_return=[]
+    )
     gce_instance = next(
         filter(lambda instance: instance.name == instance_name, gce_instances)
     )
@@ -88,19 +107,19 @@ def get_compute_engine_workbench(
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
 
-def _fetch_gce_instances(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
-    try:
-        gce_instances_per_zone = (
-            app.config.google_compute_engine_instances_client.aggregated_list(
-                project=gcp_project_id
-            )
+def _fetch_gce_instances_raw(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
+    """
+    Fetch GCE instances from Google Cloud without error handling.
+    
+    This function is called by the centralized error handling framework.
+    All Google Cloud service errors (billing, API not enabled, permissions, etc.)
+    are handled by the safe_google_service_call wrapper.
+    """
+    gce_instances_per_zone = (
+        app.config.google_compute_engine_instances_client.aggregated_list(
+            project=gcp_project_id
         )
-    except api_core.exceptions.Forbidden as e:
-        # HACK: Workspaces in the middle of provisioning are visible but do not have the required APIs enabled yet.
-        if "Compute Engine API has not been used in project" in e.message:
-            return []
-        else:
-            raise e
+    )
 
     return [
         instance
@@ -209,6 +228,12 @@ def schedule_workbench_destroy(
         )
 
 
+def schedule_workbench_ssl_certificate_renewal(
+    workbench_renewal_request: entities.WorkbenchRenewSSLCertificate,
+):
+    return schedulers.renew_rstudio_ssl_certificate(workbench_renewal_request)
+
+
 def generate_resource_name_from_dataset_identifier(dataset_identifier: str) -> str:
     return f"{dataset_identifier[:10]}-{''.join(random.choices(string.ascii_lowercase, k=5))}"
 
@@ -222,38 +247,36 @@ def get_available_zones(region: str) -> Tuple[str, Iterable[str]]:
 def start_stopped_workbenches(folder_id: str):
     projects_client = app.config.google_cloud_resource_client
 
-    project_ids = []
-    for project in projects_client.list_projects(parent=f"folders/{folder_id}"):
-        if project.state == google.cloud.resourcemanager.Project.State.ACTIVE:
-            project_ids.append((project.project_id, project.labels["region"]))
+    active_project_ids = [
+        project.project_id
+        for project in projects_client.list_projects(parent=f"folders/{folder_id}")
+        if project.state == google.cloud.resourcemanager.Project.State.ACTIVE
+    ]
 
     notebooks_client = app.config.google_cloud_notebooks_client
     instances_to_start = []
-    for project_id, region in project_ids:
-        if region == "":
-            continue
 
-        for zone in constants.AVAILABLE_ZONES.get(region, ""):
-            for instance in notebooks_client.list_instances(
-                parent=f"projects/{project_id}/locations/{zone}"
-            ):
-                if (
-                    instance.state
-                    != google.cloud.notebooks_v2.types.instance.State.STOPPED
+    for project_id in active_project_ids:
+        for region, zones in constants.AVAILABLE_ZONES.items():
+            for zone in zones:
+                for nb_instance in notebooks_client.list_instances(
+                    parent=f"projects/{project_id}/locations/{zone}"
                 ):
-                    continue
+                    if (
+                        nb_instance.state
+                        != google.cloud.notebooks_v2.types.instance.State.STOPPED
+                    ):
+                        continue
 
-                update_time = instance.update_time
-                current_time = datetime.now(timezone.utc)
-                if current_time - update_time > timedelta(days=3):
-                    continue
+                    update_time = nb_instance.update_time
+                    current_time = datetime.now(timezone.utc)
+                    if current_time - update_time > timedelta(days=3):
+                        continue
 
-                instances_to_start.append(instance.name)
+                    instances_to_start.append(nb_instance.name)
 
     for instance_name in instances_to_start:
-        notebooks_client.start_instance(
-            {"name": instance_name},
-        )
+        notebooks_client.start_instance({"name": instance_name})
 
     return f"Started {len(instances_to_start)} instances."
 

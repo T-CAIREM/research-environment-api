@@ -110,7 +110,9 @@ def _display_time(seconds: float) -> str:
 
 
 def check_google_quotas(
-    base_quota_entity: entities.BaseQuotaMetricsEntity, quota_metrics_entity
+    base_quota_entity: entities.BaseQuotaMetricsEntity,
+    quota_metrics_entity,
+    region: str,
 ) -> List[entities.QuotaInfo]:
     project_id = base_quota_entity.workspace_project_id
     service_info = _get_service_info(project_id)
@@ -120,9 +122,8 @@ def check_google_quotas(
         entities.QuotaInfo(
             metric_name=limit.display_name,
             limit=limit.values["DEFAULT"],
-            usage=_get_current_metric_usage(
-                project_id, base_quota_entity.region, limit.metric
-            ),
+            usage=_get_current_metric_usage(project_id, region, limit.metric),
+            region=region,
         )
         for limit in service_info.config.quota.limits
         if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
@@ -192,10 +193,10 @@ def check_workbench_update_quotas(
     workspace_project_id: str, region: str, machine_type: MachineType
 ):
     base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
-        workspace_project_id=workspace_project_id, region=region
+        workspace_project_id=workspace_project_id
     )
     quotas = check_google_quotas(
-        base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity
+        base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity, region
     )
     machine_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type.value)
     additional_quotas_dict = {"CPUs": machine_resources.cpu}

@@ -1,3 +1,4 @@
+import json
 from typing import Optional, List
 
 from google.cloud.devtools import cloudbuild_v1
@@ -156,7 +157,6 @@ def create_workspace_build(
     billing_account_id: str,
     workspace_project_id: str,
     user_email: str,
-    region: Region,
     user_permissions_list: list[str],
 ):
     cloud_build = _base_build()
@@ -165,7 +165,6 @@ def create_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
-        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
@@ -320,7 +319,7 @@ def destroy_collaborative_workbench_build(
 
 
 def destroy_workspace_build(
-    billing_account_id: str, workspace_project_id: str, user_email: str, region: Region
+    billing_account_id: str, workspace_project_id: str, user_email: str
 ):
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_WORKSPACE_STEPS
@@ -328,7 +327,6 @@ def destroy_workspace_build(
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
-        "_WORKSPACE_REGION": region.value,
         "_WORKSPACE_CONTROLLER_PROJECT_NAME": app.config.project_id,
         "_PERIMETER_NAME": app.config.vpc_secure_perimeter_name,
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
@@ -363,6 +361,14 @@ def _normalize_gpu_accelerator_type(gpu_accelerator_type: Optional[str]) -> str:
     return gpu_accelerator_type or ""
 
 
+def _fetch_rstudio_certificate(secret_resource_name: str) -> dict:
+    response = app.config.google_secret_manager_client.access_secret_version(
+        request={"name": secret_resource_name}
+    )
+    secret_json = response.payload.data.decode("UTF-8")
+    return json.loads(secret_json)
+
+
 def create_rstudio_workbench_build(
     workspace_project_id: str,
     workspace_numeric_id: str,
@@ -380,6 +386,9 @@ def create_rstudio_workbench_build(
     user_permissions_list: list[str],
     associated_event: str,
 ) -> cloudbuild_v1.Build:
+    rstudio_certificate_data = _fetch_rstudio_certificate(
+        secret_resource_name=app.config.rstudio_certificate_secret_id
+    )
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -401,8 +410,9 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
+        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -434,6 +444,9 @@ def update_rstudio_workbench_build(
     sharing_bucket_permission_dict: dict[str, str],
     user_permissions_list: list[str],
 ) -> cloudbuild_v1.Build:
+    rstudio_certificate_data = _fetch_rstudio_certificate(
+        secret_resource_name=app.config.rstudio_certificate_secret_id
+    )
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -455,8 +468,9 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
+        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
         "_SHARING_BUCKET_PERMISSIONS": ",".join(
@@ -486,6 +500,9 @@ def destroy_rstudio_workbench_build(
     brand_name: str,
     sharing_bucket_identifiers: list[str],
 ) -> cloudbuild_v1.Build:
+    rstudio_certificate_data = _fetch_rstudio_certificate(
+        secret_resource_name=app.config.rstudio_certificate_secret_id
+    )
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
@@ -507,8 +524,9 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_DNS_PROJECT": app.config.rstudio_dns_project,
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
-        "_RSTUDIO_SSL_PRIVATE_KEY": app.config.rstudio_ssl_private_key,
-        "_RSTUDIO_SSL_CERTIFICATE": app.config.rstudio_ssl_certificate,
+        "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
+        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
+        "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,

@@ -178,7 +178,6 @@ def create_workspace(
         billing_account_id=workspace_creation_request.billing_account_id,
         workspace_project_id=workspace_creation_request.workspace_project_id,
         user_email=workspace_creation_request.user_email,
-        region=workspace_creation_request.region,
         user_permissions_list=user_permissions_list,
     )
 
@@ -238,7 +237,6 @@ def destroy_workspace(
         billing_account_id=workspace_deletion_request.billing_account_id,
         workspace_project_id=workspace_deletion_request.workspace_project_id,
         user_email=workspace_deletion_request.user_email,
-        region=workspace_deletion_request.region,
     )
 
     with app.database_session() as session:
@@ -962,3 +960,75 @@ def destroy_rstudio_workbench(
         workbench_destroy_request.user_email,
     )
     destroy_rstudio_workbench_flow(workbench_destroy_request, workbench)
+
+
+def renew_rstudio_ssl_certificate(
+    workbench_renewal_request: entities.WorkbenchRenewSSLCertificate,
+) -> uuid.UUID:
+    workbench = services.get_compute_engine_workbench(
+        workbench_renewal_request.workspace_project_id,
+        workbench_renewal_request.workbench_resource_id,
+        workbench_renewal_request.user_email,
+    )
+
+    shared_bucket_user_permissions_dict = specify_buckets_fusing_permissions(
+        workbench.sharing_bucket_identifiers,
+        workbench_renewal_request.user_email,
+    )
+
+    user_permissions_list = (
+        user_group_services.get_roles_associated_with_service_account(
+            workbench.service_account_name,
+            workbench_renewal_request.workspace_project_id,
+        )
+    )
+
+    monitoring_services.clear_quotas_cache(
+        workbench_renewal_request.workspace_project_id,
+        workbench.region,
+        GeneralQuotaMetrics,
+    )
+
+    monitoring_services.check_workbench_update_quotas(
+        workbench_renewal_request.workspace_project_id,
+        workbench.region,
+        workbench.machine_type,
+    )
+
+    build = builds.update_rstudio_workbench_build(
+        workspace_project_id=workbench_renewal_request.workspace_project_id,
+        instance_name=workbench.id,
+        machine_type=workbench.machine_type,
+        user_email=workbench_renewal_request.user_email,
+        region=workbench.region,
+        disk_size=workbench.disk_size,
+        gpu_accelerator_type=workbench.gpu_accelerator_type,
+        dataset_identifier=workbench.dataset_identifier,
+        bucket_name=workbench.bucket_name,
+        zone=workbench.zone,
+        vm_image=workbench.vm_image,
+        brand_name=workbench.brand_name,
+        service_account_name=workbench.service_account_name,
+        sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
+        user_permissions_list=user_permissions_list,
+    )
+
+    with app.database_session() as session:
+        with session.begin():
+            workbench_activity = monitoring_models.WorkbenchActivity(
+                id=uuid.uuid4(),
+                workbench_id=workbench.id,
+                workspace_id=workbench_renewal_request.workspace_project_id,
+                invoker_email=workbench_renewal_request.user_email,
+                build_type=enums.BuildType.WORKBENCH_UPDATE,
+                build_status=enums.WorkflowStatus.IN_PROGRESS,
+            )
+            session.add(workbench_activity)
+
+            workflows.update_rstudio_workbench(
+                build=build,
+                workbench_activity_id=workbench_activity.id,
+                user_email=workbench_renewal_request.user_email,
+            )()
+
+            return workbench_activity.id
