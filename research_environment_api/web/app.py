@@ -6,6 +6,8 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
+from flask_cors import CORS
+import time
 
 from research_environment_api.web.cache import cache
 from research_environment_api.web.websocket import socketio
@@ -36,6 +38,7 @@ def persist_apispec(app: Flask) -> APISpec:
 def create_app():
     app = Flask(__name__)
     app.config.from_mapping(build_config())
+    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp

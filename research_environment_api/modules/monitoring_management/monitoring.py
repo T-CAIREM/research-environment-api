@@ -19,6 +19,16 @@ def list_active_workflows(user_email: str) -> Iterable[models.WorkbenchActivity]
     return workbench_activities
 
 
+def list_all_active_workflows() -> Iterable[models.WorkbenchActivity]:
+    with app.database_session() as session:
+        workbench_activities = (
+            session.query(models.WorkbenchActivity)
+            .filter_by(build_status=enums.WorkflowStatus.IN_PROGRESS)
+            .all()
+        )
+    return workbench_activities
+
+
 def get_workflow(workflow_id: str) -> models.WorkbenchActivity:
     with app.database_session() as session:
         workbench_activity = (
