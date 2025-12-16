@@ -6,7 +6,6 @@ from research_environment_api.web.admin_panel_management import (
     schemas,
 )
 from research_environment_api.web.decorators import (
-    validate_token,
     validate_admin_page_auth,
 )
 
@@ -76,14 +75,12 @@ def _get_workbench_activities_data():
 
 @admin_panel_management_bp.get("/")
 @validate_admin_page_auth
-@validate_token
 def admin_home():
     return render_template("admin_panel/home.html")
 
 
 @admin_panel_management_bp.get("/celery")
 @validate_admin_page_auth
-@validate_token
 def celery_management():
     search_query = request.args.get("q", "")
 
@@ -95,7 +92,6 @@ def celery_management():
 
 @admin_panel_management_bp.get("/celery-dashboard-data")
 @validate_admin_page_auth
-@validate_token
 def get_celery_dashboard_data():
     task_counts, worker_stats, tasks, _ = _get_dashboard_data()
 
@@ -160,14 +156,12 @@ def get_workers():
 
 @admin_panel_management_bp.get("/events/workbenches")
 @validate_admin_page_auth
-@validate_token
 def event_workbenches():
     return render_template("admin_panel/event_workbenches.html")
 
 
 @admin_panel_management_bp.get("/events/workbenches/data")
 @validate_admin_page_auth
-@validate_token
 def get_workbenches_data():
     workbenches_list, errors = services.get_event_workbenches()
 
@@ -199,7 +193,6 @@ def get_workbenches_data():
 
 @admin_panel_management_bp.post("/events/workbenches/stop")
 @validate_admin_page_auth
-@validate_token
 def stop_event_workbench():
     data = request.get_json()
     if not data:
@@ -241,7 +234,6 @@ def stop_event_workbench():
 
 @admin_panel_management_bp.post("/events/workbenches/destroy")
 @validate_admin_page_auth
-@validate_token
 def destroy_event_workbench():
     data = request.get_json()
     if not data:
@@ -283,7 +275,6 @@ def destroy_event_workbench():
 
 @admin_panel_management_bp.get("/workbench-activities")
 @validate_admin_page_auth
-@validate_token
 def workbench_activities():
     data = _get_workbench_activities_data()
 
@@ -316,7 +307,6 @@ def workbench_activities():
 
 @admin_panel_management_bp.get("/workbench-activities/data")
 @validate_admin_page_auth
-@validate_token
 def get_workbench_activities_data():
     data = _get_workbench_activities_data()
 
@@ -331,7 +321,6 @@ def get_workbench_activities_data():
 
 @admin_panel_management_bp.post("/workbench-activities/update-status")
 @validate_admin_page_auth
-@validate_token
 def update_activity_status():
     body = request.get_json()
     update_request = schemas.WorkbenchActivityStatusUpdateRequest().load(body)
