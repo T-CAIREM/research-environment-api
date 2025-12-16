@@ -32,10 +32,12 @@ body {
     font-weight: 500;
     color: rgba(255, 255, 255, .75);
     padding: .75rem 1rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar .nav-link:hover {
     color: #fff;
+    background-color: rgba(255, 255, 255, .05);
 }
 
 .sidebar .nav-link.active {
@@ -58,6 +60,95 @@ body {
     text-transform: uppercase;
     color: rgba(255, 255, 255, .5);
     padding: 1rem;
+}
+
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: rgba(255, 255, 255, .75);
+    padding: .75rem 1rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    user-select: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-dropdown-toggle:hover {
+    color: #fff;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, .05);
+}
+
+.nav-dropdown-toggle:focus {
+    outline: none;
+}
+
+.nav-dropdown-toggle span {
+    display: flex;
+    align-items: center;
+}
+
+.nav-dropdown-toggle i.fas:not(.dropdown-arrow) {
+    margin-right: 8px;
+}
+
+.nav-dropdown-toggle .dropdown-arrow {
+    transition: transform 0.2s ease;
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+.nav-dropdown-toggle.expanded .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    background-color: rgba(0, 0, 0, .2);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.nav-dropdown-menu.open {
+    max-height: 500px;
+}
+
+.nav-dropdown-menu .nav-item {
+    border-left: 2px solid transparent;
+}
+
+.nav-dropdown-menu .nav-link {
+    padding: .6rem 1rem .6rem 2.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.nav-dropdown-menu .nav-link:hover {
+    background-color: rgba(255, 255, 255, .08);
+    border-left-color: rgba(255, 255, 255, .3);
+}
+
+.nav-dropdown-menu .nav-link.active {
+    background-color: rgba(255, 255, 255, .15);
+    border-left-color: #fff;
+}
+
+.nav-dropdown.active > .nav-dropdown-toggle {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .05);
 }
 
 .main-content {

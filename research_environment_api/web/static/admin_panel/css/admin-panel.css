@@ -50,75 +50,67 @@
     border-bottom: 1px solid #e3e6f0;
 }
 
-@keyframes skeleton-loading {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: 200px 0;
-  }
+.workbench-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    min-height: 300px;
 }
 
-.skeleton {
-  display: inline-block;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
-  height: 1.2em;
-  width: 100%;
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
 }
 
-.skeleton-count {
-  height: 1.5em;
-  width: 40%;
-  margin: 0 auto;
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
 }
 
-.skeleton-text-sm {
-  height: 1em;
-  width: 60%;
+.btn-loading .btn-text {
+    visibility: hidden;
 }
 
-.skeleton-text-md {
-  height: 1em;
-  width: 80%;
+.btn-loading .spinner-border {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
 }
 
-.skeleton-circle {
-  border-radius: 50%;
-  height: 24px;
-  width: 24px;
+.skeleton-loader {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
 }
 
-.skeleton-table-row td {
-  padding: 1rem 0.75rem !important;
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }
 
-.skeleton-cell {
-  height: 1.2em;
-  width: 80%;
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
 }
 
-.skeleton-cell-sm {
-  width: 40%;
-}
-
-.skeleton-cell-lg {
-  width: 100%;
-}
-
-.skeleton-badge {
-  display: inline-block;
-  width: 60px;
-  height: 18px;
-  border-radius: 10px;
-}
-
-.skeleton-action {
-  height: 30px;
-  width: 30px;
-  border-radius: 4px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 768px) {
