@@ -58,6 +58,24 @@
                                 </li>
                             </ul>
                         </li>
+
+                        <li class="nav-item nav-dropdown {% if request.path.startswith(url_for('admin_panel_management.workbench_activities')) %}active{% endif %}">
+                            <a class="nav-dropdown-toggle" href="javascript:void(0);" role="button">
+                                <span>
+                                    <i class="fas fa-database"></i>
+                                    Entries Management
+                                </span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </a>
+                            <ul class="nav-dropdown-menu" id="eventsDropdown">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.path == url_for('admin_panel_management.workbench_activities') %}active{% endif %}" href="{{ url_for('admin_panel_management.workbench_activities') }}">
+                                        <i class="fas fa-cogs"></i>
+                                        Workbench Activities
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </nav>
