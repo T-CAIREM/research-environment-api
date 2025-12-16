@@ -1,4 +1,6 @@
 import logging
+import secrets
+
 from typing import List, Optional
 
 from celery.result import AsyncResult
@@ -12,7 +14,15 @@ from research_environment_api.modules.admin_panel_management.entities import (
     WorkerStats,
 )
 from research_environment_api.modules.admin_panel_management import utils
+from research_environment_api.modules.app import app
 from research_environment_api.worker import app as celery_app
+
+
+def authenticate_admin(username: str, password: str) -> bool:
+    return (
+        secrets.compare_digest(username, app.config.admin_panel_username)
+        and secrets.compare_digest(password, app.config.admin_panel_password)
+    )
 
 
 def _process_tasks(
@@ -209,3 +219,4 @@ def get_tasks(
         tasks = utils.sort_tasks_by_date(tasks, reverse=reverse)
 
     return tasks
+
