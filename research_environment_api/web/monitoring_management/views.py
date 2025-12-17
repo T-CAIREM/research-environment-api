@@ -4,6 +4,8 @@ from research_environment_api.web.monitoring_management import (
     monitoring_management_bp,
     schemas,
 )
+from research_environment_api.modules.app import app
+from flask import Response, stream_with_context
 
 
 @monitoring_management_bp.get("/datasets")
@@ -56,3 +58,15 @@ def list_active_users_per_dataset():
     )
 
     return serialized_users_per_dataset_entries, 200
+
+
+@monitoring_management_bp.route("/events")
+def server_side_event():
+    def generate():
+        pubsub = app.config.redis_client.pubsub()
+        pubsub.subscribe("workflow_events")
+        for message in pubsub.listen():
+            if message["type"] == "message":
+                yield f"event: workflow_update\ndata: {message['data'].decode()}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")

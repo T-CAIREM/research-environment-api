@@ -6,9 +6,10 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
+from flask_cors import CORS
+
 
 from research_environment_api.web.cache import cache
-from research_environment_api.web.websocket import socketio
 from research_environment_api.web.config import build_config
 
 SWAGGER_SPEC_FILE_NAME = "swagger.json"
@@ -36,6 +37,11 @@ def persist_apispec(app: Flask) -> APISpec:
 def create_app():
     app = Flask(__name__)
     app.config.from_mapping(build_config())
+    CORS(
+        app,
+        origins=["http://localhost:3000"],
+        supports_credentials=True
+    )
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp
@@ -71,11 +77,5 @@ def create_app():
         f"{app.static_url_path}/{SWAGGER_SPEC_FILE_NAME}",
     )
     app.register_blueprint(swagger_bp)
-    socketio.init_app(
-        app,
-        message_queue=environ.get("CELERY_BROKER_URL"),
-        ping_interval=25,
-        ping_timeout=60,
-    )
 
     return app
