@@ -39,6 +39,7 @@ class QuotaInfo:
     metric_name: str
     limit: int
     usage: int
+    region: str
 
 
 @dataclass
@@ -53,7 +54,6 @@ class GeneralQuotaMetrics(StrEnum):
 @dataclass
 class BaseQuotaMetricsEntity:
     workspace_project_id: str
-    region: str
 
 
 @dataclass

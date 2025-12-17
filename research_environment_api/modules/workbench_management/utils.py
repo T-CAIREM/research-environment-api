@@ -1,5 +1,6 @@
 from collections import namedtuple
 from enum import Enum as StrEnum
+from typing import Optional
 
 from google.iam.v1 import policy_pb2
 from google.cloud.compute_v1.types.compute import AggregatedListMachineTypesRequest
@@ -102,3 +103,7 @@ def remove_iam_binding(iam_client, resource: str, user_email: str, role: str):
     updated_policy = policy_pb2.Policy(bindings=bindings)
     iam_client.set_iam_policy(request={"resource": resource, "policy": updated_policy})
     return True
+
+
+def normalize_associated_event(associated_event: Optional[str]) -> str:
+    return associated_event or ""

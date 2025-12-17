@@ -103,14 +103,6 @@ variable "network_name" {
   type = string
 }
 
-variable "rstudio_ssl_private_key" {
-  type = string
-}
-
-variable "rstudio_ssl_certificate" {
-  type = string
-}
-
 variable "sharing_folder_id" {
   type = string
 }
@@ -140,6 +132,18 @@ variable "gcp_customer_id" {
 }
 
 variable "github_ssh_key_ksm_id" {
+  type = string
+}
+
+variable "admin_panel_username" {
+  type = string
+}
+
+variable "admin_panel_password" {
+  type = string
+}
+
+variable "admin_panel_cache_ttl" {
   type = string
 }
 
@@ -205,4 +209,8 @@ variable "flower_basic_auth" {
 variable "root_postgres_password" {
   default = "postgres"
   type = string
+}
+
+variable "rstudio_certificate_secret_id" {
+  type    = string
 }

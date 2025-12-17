@@ -82,6 +82,8 @@ class Workbench:
     zone: Optional[str] = None
     gpu_accelerator_type: Optional[str] = None
     workbench_owner_username: Optional[str] = None
+    rstudio_ssl_certificate_expiration_date: Optional[str] = None
+    associated_event: Optional[str] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
@@ -101,6 +103,9 @@ class Workbench:
         bucket_name = metadata["bucket_name"]
         vm_image = metadata["vm_image"]
         service_account_name = metadata["service_account_name"]
+        rstudio_ssl_certificate_expiration_date = metadata.get(
+            "certificate_expiration_date"
+        )
         machine_type_name = instance.machine_type.split("/")[-1]
         computing_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type_name)
         gpu_accelerator_type = (
@@ -134,6 +139,7 @@ class Workbench:
             else []
         )
         workbench_owner_username = instance.labels.get("owner")
+        associated_event = instance.labels.get("associated_event_slug")
         return cls(
             id=name,
             resource_id=instance.id,
@@ -154,6 +160,8 @@ class Workbench:
             service_account_name=service_account_name,
             sharing_bucket_identifiers=sharing_bucket_identifiers,
             workbench_owner_username=workbench_owner_username,
+            rstudio_ssl_certificate_expiration_date=rstudio_ssl_certificate_expiration_date,
+            associated_event=associated_event,
         )
 
 
@@ -181,6 +189,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     memory: float
     cpu: int
     disk_size: int
+    region: Region
     dataset_identifier: str
     bucket_name: str
     region: Region
@@ -191,6 +200,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
     collaborators: Optional[List[str]] = None
+    associated_event: Optional[str] = None
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
@@ -206,6 +216,15 @@ class WorkbenchDestroy(BaseWorkbenchEntity):
 @dataclass
 class WorkbenchUpdate(BaseWorkbenchEntity):
     machine_type: MachineType
+    workbench_resource_id: str
+    organization_id: str = field(init=False)
+
+    def __post_init__(self):
+        self.organization_id = app.config.organization_id
+
+
+@dataclass
+class WorkbenchRenewSSLCertificate(BaseWorkbenchEntity):
     workbench_resource_id: str
     organization_id: str = field(init=False)
 

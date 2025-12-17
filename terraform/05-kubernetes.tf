@@ -144,8 +144,7 @@ locals {
     RSTUDIO_DNS_PROJECT                 = var.rstudio_dns_project
     RSTUDIO_DNS_ZONE                    = var.dns_zone
     RSTUDIO_DOMAIN_NAME                 = var.rstudio_domain_name
-    RSTUDIO_SSL_PRIVATE_KEY             = var.rstudio_ssl_private_key
-    RSTUDIO_SSL_CERTIFICATE             = var.rstudio_ssl_certificate
+    RSTUDIO_CERTIFICATE_SECRET_ID       = var.rstudio_certificate_secret_id
     SHARING_FOLDER_ID                   = var.sharing_folder_id
     WORKBENCHES_PARENT_PROJECT_ID       = var.workbenches_parent_project_id
     GCP_SIGNED_URL_EXPIRATION_TIME      = var.gcp_signed_url_expiration_time
@@ -155,6 +154,9 @@ locals {
     CUSTOMER_ID                         = var.gcp_customer_id
     GITHUB_SSH_KEY_KSM_ID               = var.github_ssh_key_ksm_id
     MONITORING_CSV_EXPORTS_ROOT_BUCKET  = var.monitoring_csv_exports_root_bucket
+    ADMIN_PANEL_USERNAME                = var.admin_panel_username
+    ADMIN_PANEL_PASSWORD                = var.admin_panel_password
+    ADMIN_PANEL_CACHE_TTL               = var.admin_panel_cache_ttl
   }
 
   _backend_volumes = {

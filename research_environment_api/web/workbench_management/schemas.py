@@ -3,6 +3,7 @@ from marshmallow import Schema, fields
 from research_environment_api.modules.workbench_management.entities import (
     MachineType,
     WorkbenchType,
+    Region,
 )
 
 from research_environment_api.modules.workbench_management.entities import (
@@ -27,6 +28,8 @@ class WorkbenchCreateRequest(WorkbenchBase):
     gpu_accelerator_type = fields.Str(allow_none=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
+    associated_event = fields.Str(required=False)
+    region = fields.Enum(Region, by_value=True, required=True)
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):
@@ -55,10 +58,14 @@ class Workbench(Schema):
         WorkbenchType, by_value=True, required=True, attribute="type"
     )
     zone = fields.Str()
+    region = fields.Enum(Region, by_value=True, required=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
     service_account_name = fields.Str(required=True)
     workbench_owner_username = fields.Str(required=False)
+    rstudio_ssl_certificate_expiration_date = fields.Str(
+        required=False, allow_none=True
+    )
 
 
 class WorkbenchWorkflowIdentifier(Schema):
@@ -93,3 +100,9 @@ class WorkbenchNotification(Schema):
 
 class WorkbenchNotificationList(Schema):
     notifications = fields.List(fields.Nested(WorkbenchNotification), required=True)
+
+
+class WorkbenchRenewSSLCertificateRequest(Schema):
+    workspace_project_id = fields.Str(required=True)
+    user_email = fields.Str(required=True)
+    workbench_resource_id = fields.Str(required=True)
