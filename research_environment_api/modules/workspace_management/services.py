@@ -192,6 +192,13 @@ def _list_active_google_projects(
     return _filter_google_projects(filtering_query)
 
 
+def _list_all_active_google_projects() -> Iterable[GoogleProject]:
+    filtering_query = (
+        f"lifecycleState:ACTIVE parent.id:{app.config.workbenches_parent_project_id}"
+    )
+    return _filter_google_projects(filtering_query)
+
+
 def _list_active_shared_google_projects(
     username: str,
 ) -> Iterable[GoogleProject]:

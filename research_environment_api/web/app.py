@@ -6,6 +6,8 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
+from flask_cors import CORS
+import time
 
 from research_environment_api.web.cache import cache
 from research_environment_api.web.websocket import socketio
@@ -36,6 +38,7 @@ def persist_apispec(app: Flask) -> APISpec:
 def create_app():
     app = Flask(__name__)
     app.config.from_mapping(build_config())
+    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp
@@ -51,6 +54,7 @@ def create_app():
     from research_environment_api.web.monitoring_management import (
         monitoring_management_bp,
     )
+    from research_environment_api.web.admin_panel_management import admin_panel_management_bp
     from research_environment_api.web.healthcheck import healthcheck_management_bp
 
     app.register_blueprint(identity_management_bp, url_prefix="/identity")
@@ -61,6 +65,7 @@ def create_app():
     app.register_blueprint(sharing_management_bp, url_prefix="/sharing")
     app.register_blueprint(user_group_bp, url_prefix="/group")
     app.register_blueprint(monitoring_management_bp, url_prefix="/monitoring")
+    app.register_blueprint(admin_panel_management_bp, url_prefix="/admin")
     app.register_blueprint(healthcheck_management_bp, url_prefix="/")
 
     cache.init_app(app)

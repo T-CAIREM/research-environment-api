@@ -83,6 +83,7 @@ class Workbench:
     gpu_accelerator_type: Optional[str] = None
     workbench_owner_username: Optional[str] = None
     rstudio_ssl_certificate_expiration_date: Optional[str] = None
+    associated_event: Optional[str] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
 
     @classmethod
@@ -138,6 +139,7 @@ class Workbench:
             else []
         )
         workbench_owner_username = instance.labels.get("owner")
+        associated_event = instance.labels.get("associated_event_slug")
         return cls(
             id=name,
             resource_id=instance.id,
@@ -159,6 +161,7 @@ class Workbench:
             sharing_bucket_identifiers=sharing_bucket_identifiers,
             workbench_owner_username=workbench_owner_username,
             rstudio_ssl_certificate_expiration_date=rstudio_ssl_certificate_expiration_date,
+            associated_event=associated_event,
         )
 
 
@@ -197,6 +200,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     vm_image: str = field(init=False)
     rstudio_image_url: str = field(init=False)
     collaborators: Optional[List[str]] = None
+    associated_event: Optional[str] = None
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url

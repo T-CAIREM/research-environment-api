@@ -1,0 +1,475 @@
+{% extends "admin_panel/admin_panel_base.html" %}
+
+{% block title %}Event Workbenches - Admin Panel{% endblock %}
+
+{% block page_header %}Event Workbenches{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted">Manage workbenches associated with events</p>
+        </div>
+    </div>
+
+    <div id="error-container"></div>
+
+    <div id="loading-container">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="workbench-loader">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading workbenches...</span>
+                    </div>
+                    <span class="ml-3 text-muted">Loading workbenches...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="workbenches-container" style="display: none;"></div>
+</div>
+
+<div class="modal fade" id="confirmActionModal" tabindex="-1" role="dialog" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmActionModalLabel">Confirm Action</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmActionMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmActionBtn">Destroy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        let currentAction = null;
+        let currentData = null;
+        let isBulkAction = false;
+
+        // Load workbenches on page load
+        loadWorkbenches();
+
+        function loadWorkbenches() {
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_workbenches_data") }}',
+                method: 'GET',
+                success: function(response) {
+                    renderWorkbenches(response.workbenches, response.errors);
+                    $('#loading-container').hide();
+                    $('#workbenches-container').show().addClass('fade-in');
+                },
+                error: function(xhr) {
+                    $('#loading-container').hide();
+                    showError('Failed to load workbenches: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                }
+            });
+        }
+
+        function showError(message) {
+            const errorHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $('#error-container').html(errorHtml);
+            setTimeout(() => $('#error-container .alert').alert('close'), 5000);
+        }
+
+        function showSuccess(message) {
+            const successHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $('#error-container').html(successHtml);
+            setTimeout(() => $('#error-container .alert').alert('close'), 5000);
+        }
+
+        function showInfo(message) {
+            const infoHtml = `
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle"></i> ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $('#error-container').html(infoHtml);
+            setTimeout(() => $('#error-container .alert').alert('close'), 5000);
+        }
+
+        function renderWorkbenches(workbenches, errors) {
+            let html = '';
+
+            if (errors && errors.length > 0) {
+                html += `
+                    <div class="alert alert-warning" role="alert">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Workbench Issues Detected</h5>
+                        <p class="mb-2">There are problems with workbenches in the following projects:</p>
+                        <ul class="mb-0">
+                `;
+                errors.forEach(error => {
+                    html += `
+                        <li>
+                            <strong>${error.project_id}</strong> -
+                            <a href="${error.gcp_console_url}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fas fa-external-link-alt"></i> View in GCP Console
+                            </a>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (workbenches && Object.keys(workbenches).length > 0) {
+                for (const [eventSlug, eventWorkbenches] of Object.entries(workbenches)) {
+                    html += renderEventWorkbenchGroup(eventSlug, eventWorkbenches);
+                }
+            } else {
+                html += `
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Workbenches with Associated Events</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle"></i> No workbenches with associated events found.
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            $('#workbenches-container').html(html);
+            attachEventHandlers();
+        }
+
+        function renderEventWorkbenchGroup(eventSlug, eventWorkbenches) {
+            const count = eventWorkbenches.length;
+            const plural = count !== 1 ? 'es' : '';
+
+            let html = `
+                <div class="card shadow mb-4 fade-in">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <span class="badge badge-primary mr-2">${eventSlug}</span>
+                            <span class="text-muted">(${count} workbench${plural})</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3 flex-wrap">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <button type="button" class="btn btn-warning btn-sm bulk-stop-workbenches" data-event-slug="${eventSlug}" disabled>
+                                    <i class="fas fa-stop mr-1"></i> Stop Selected (<span class="selected-count-stop">0</span>)
+                                </button>
+
+                                <button type="button" class="btn btn-danger btn-sm ml-2 bulk-destroy-workbenches" data-event-slug="${eventSlug}" disabled>
+                                    <i class="fas fa-trash-alt mr-1"></i> Destroy Selected (<span class="selected-count-destroy">0</span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th width="40px">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input select-all-workbenches" id="select-all-${eventSlug}" data-event-slug="${eventSlug}">
+                                                <label class="custom-control-label" for="select-all-${eventSlug}"></label>
+                                            </div>
+                                        </th>
+                                        <th>Workbench ID</th>
+                                        <th>Type</th>
+                                        <th>Owner</th>
+                                        <th>Project ID</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+
+            eventWorkbenches.forEach((item, index) => {
+                const projectId = item[0];
+                const workbench = item[1];
+                const statusBadge = workbench.status === 'ACTIVE' ? 'success' :
+                                  workbench.status === 'STOPPED' ? 'secondary' : 'warning';
+
+                html += `
+                    <tr data-workbench-row="${projectId}-${workbench.id}">
+                        <td>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input workbench-checkbox"
+                                       id="workbench-${eventSlug}-${index}"
+                                       data-project-id="${projectId}"
+                                       data-workbench-id="${workbench.id}"
+                                       data-event-slug="${eventSlug}">
+                                <label class="custom-control-label" for="workbench-${eventSlug}-${index}"></label>
+                            </div>
+                        </td>
+                        <td><code>${workbench.id}</code></td>
+                        <td><span class="badge badge-info">${workbench.type}</span></td>
+                        <td>${workbench.workbench_owner_username}</td>
+                        <td><small class="text-muted">${projectId}</small></td>
+                        <td class="status-cell"><span class="badge badge-${statusBadge}">${workbench.status}</span></td>
+                        <td class="action-buttons-cell">
+                            <div class="btn-group" role="group">
+                                <button type="button"
+                                        class="btn btn-sm btn-warning stop-workbench-btn"
+                                        data-project-id="${projectId}"
+                                        data-workbench-id="${workbench.id}"
+                                        data-workbench-type="${workbench.type}"
+                                        data-event-slug="${eventSlug}"
+                                        data-owner="${workbench.workbench_owner_username}"
+                                        title="Stop workbench">
+                                    <i class="fas fa-stop"></i> Stop
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger destroy-workbench-btn"
+                                        data-project-id="${projectId}"
+                                        data-workbench-id="${workbench.id}"
+                                        data-workbench-type="${workbench.type}"
+                                        data-event-slug="${eventSlug}"
+                                        data-owner="${workbench.workbench_owner_username}"
+                                        title="Destroy workbench">
+                                    <i class="fas fa-trash"></i> Destroy
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function attachEventHandlers() {
+            // Stop button - no modal, run immediately
+            $('.stop-workbench-btn').on('click', function() {
+                const btn = $(this);
+                const projectId = btn.data('project-id');
+                const workbenchId = btn.data('workbench-id');
+                const eventSlug = btn.data('event-slug');
+
+                executeStopAction([{
+                    project_id: projectId,
+                    workbench_id: workbenchId
+                }], eventSlug);
+            });
+
+            // Destroy button - show modal
+            $('.destroy-workbench-btn').on('click', function() {
+                const btn = $(this);
+                isBulkAction = false;
+                currentData = {
+                    project_id: btn.data('project-id'),
+                    workbench_id: btn.data('workbench-id'),
+                    event_slug: btn.data('event-slug'),
+                    owner: btn.data('owner')
+                };
+                currentAction = 'destroy';
+
+                $('#confirmActionMessage').text(
+                    `Are you sure you want to DESTROY workbench "${currentData.workbench_id}" owned by ${currentData.owner}? This action cannot be undone!`
+                );
+                $('#confirmActionBtn').text('Destroy');
+                $('#confirmActionModal').modal('show');
+            });
+
+            $('.workbench-checkbox').on('change', function() {
+                const eventSlug = $(this).data('event-slug');
+                updateBulkActionButtons(eventSlug);
+
+                const totalCheckboxes = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]`).length;
+                const checkedCheckboxes = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+                $(`.select-all-workbenches[data-event-slug="${eventSlug}"]`).prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+
+            $('.select-all-workbenches').on('change', function() {
+                const eventSlug = $(this).data('event-slug');
+                $(`.workbench-checkbox[data-event-slug="${eventSlug}"]`).prop('checked', this.checked);
+                updateBulkActionButtons(eventSlug);
+            });
+
+            // Bulk stop - no modal, run immediately
+            $('.bulk-stop-workbenches').on('click', function() {
+                const eventSlug = $(this).data('event-slug');
+                const workbenches = [];
+
+                $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).each(function() {
+                    workbenches.push({
+                        project_id: $(this).data('project-id'),
+                        workbench_id: $(this).data('workbench-id')
+                    });
+                });
+
+                if (workbenches.length > 0) {
+                    executeStopAction(workbenches, eventSlug);
+                }
+            });
+
+            // Bulk destroy - show modal
+            $('.bulk-destroy-workbenches').on('click', function() {
+                isBulkAction = true;
+                currentAction = 'destroy';
+                const eventSlug = $(this).data('event-slug');
+                const selectedCount = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+                currentData = { event_slug: eventSlug };
+
+                $('#confirmActionMessage').html(
+                    `Are you sure you want to DESTROY <strong>${selectedCount}</strong> selected workbench(es) from event <strong>${eventSlug}</strong>? This action cannot be undone!`
+                );
+                $('#confirmActionBtn').text('Destroy All');
+                $('#confirmActionModal').modal('show');
+            });
+        }
+
+        function updateBulkActionButtons(eventSlug) {
+            const selectedCount = $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).length;
+            $(`.bulk-stop-workbenches[data-event-slug="${eventSlug}"]`).find('.selected-count-stop').text(selectedCount);
+            $(`.bulk-destroy-workbenches[data-event-slug="${eventSlug}"]`).find('.selected-count-destroy').text(selectedCount);
+            $(`.bulk-stop-workbenches[data-event-slug="${eventSlug}"]`).prop('disabled', selectedCount === 0);
+            $(`.bulk-destroy-workbenches[data-event-slug="${eventSlug}"]`).prop('disabled', selectedCount === 0);
+        }
+
+        function updateWorkbenchStatus(projectId, workbenchId, status) {
+            const row = $(`tr[data-workbench-row="${projectId}-${workbenchId}"]`);
+            if (row.length) {
+                const statusBadge = status === 'ACTIVE' ? 'success' :
+                                  status === 'STOPPED' ? 'secondary' :
+                                  status === 'PROVISIONING' ? 'info' : 'warning';
+                row.find('.status-cell').html(`<span class="badge badge-${statusBadge}">${status}</span>`);
+            }
+        }
+
+        function executeStopAction(workbenches, eventSlug) {
+            showInfo('Initiating stop for ' + workbenches.length + ' workbench(es)...');
+
+            // Update status for all workbenches
+            workbenches.forEach(wb => {
+                updateWorkbenchStatus(wb.project_id, wb.workbench_id, 'PROVISIONING');
+            });
+
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.stop_event_workbench") }}',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    workbenches: workbenches,
+                    event_slug: eventSlug
+                }),
+                success: function(response) {
+                    showSuccess(response.message || 'Stop operation initiated successfully!');
+                    setTimeout(() => refreshWorkbenchesData(), 2000);
+                },
+                error: function(xhr) {
+                    showError(xhr.responseJSON?.error || 'Failed to stop workbench(es)');
+                    setTimeout(() => refreshWorkbenchesData(), 1000);
+                }
+            });
+        }
+
+        function executeDestroyAction(workbenches, eventSlug) {
+            showInfo('Initiating destroy for ' + workbenches.length + ' workbench(es)...');
+
+            // Update status for all workbenches
+            workbenches.forEach(wb => {
+                updateWorkbenchStatus(wb.project_id, wb.workbench_id, 'PROVISIONING');
+            });
+
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.destroy_event_workbench") }}',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    workbenches: workbenches,
+                    event_slug: eventSlug
+                }),
+                success: function(response) {
+                    showSuccess(response.message || 'Destroy operation initiated successfully!');
+                    setTimeout(() => refreshWorkbenchesData(), 2000);
+                },
+                error: function(xhr) {
+                    showError(xhr.responseJSON?.error || 'Failed to destroy workbench(es)');
+                    setTimeout(() => refreshWorkbenchesData(), 1000);
+                }
+            });
+        }
+
+        $('#confirmActionBtn').on('click', function() {
+            if (!currentAction || currentAction !== 'destroy') return;
+
+            // Close modal
+            $('#confirmActionModal').modal('hide');
+
+            let workbenches = [];
+            let eventSlug = null;
+
+            if (isBulkAction) {
+                eventSlug = currentData.event_slug;
+                $(`.workbench-checkbox[data-event-slug="${eventSlug}"]:checked`).each(function() {
+                    workbenches.push({
+                        project_id: $(this).data('project-id'),
+                        workbench_id: $(this).data('workbench-id')
+                    });
+                });
+            } else {
+                workbenches.push({
+                    project_id: currentData.project_id,
+                    workbench_id: currentData.workbench_id
+                });
+                eventSlug = currentData.event_slug;
+            }
+
+            if (workbenches.length > 0) {
+                executeDestroyAction(workbenches, eventSlug);
+            }
+        });
+
+        function refreshWorkbenchesData() {
+            $.ajax({
+                url: '{{ url_for("admin_panel_management.get_workbenches_data") }}',
+                method: 'GET',
+                success: function(response) {
+                    renderWorkbenches(response.workbenches, response.errors);
+                },
+                error: function(xhr) {
+                    showError('Failed to refresh workbenches: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

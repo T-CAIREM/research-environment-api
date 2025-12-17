@@ -28,6 +28,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     gpu_accelerator_type = fields.Str(allow_none=True)
     sharing_bucket_identifiers = fields.List(fields.Str())
     collaborators = fields.List(fields.Str(), allow_none=True)
+    associated_event = fields.Str(required=False)
     region = fields.Enum(Region, by_value=True, required=True)
 
 
