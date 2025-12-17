@@ -77,7 +77,7 @@ class Workspace(Schema):
 
 class SimplifiedWorkspace(Schema):
     gcp_project_id = fields.Str(required=True)
-    region = fields.Enum(Region, by_value=True, required=False)
+    region = fields.Str(required=False)
     status = fields.Enum(WorkspaceStatus, by_value=True, required=True)
     owner = fields.Str(required=True)
 
