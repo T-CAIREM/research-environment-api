@@ -1,22 +1,10 @@
-import os
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from enum import Enum
+from dotenv import load_dotenv
 
-# 1. Set environment variables BEFORE importing app modules
-# This is crucial because entities.py reads PROJECT_ID at the top level (import time)
-os.environ["PROJECT_ID"] = "test-project-id"
-os.environ["RSTUDIO_IMAGE_URL"] = "test-image-url"
-os.environ["ORGANIZATION_ID"] = "test-org-id"
-os.environ["APP_ENV"] = "development"
-os.environ["DATABASE_URL"] = "postgresql://user:pass@localhost/dbname"
-# Add other keys from your Config if they cause import errors...
-
-# 2. Mock 'generate_required_maps' BEFORE it gets imported by entities.py
-# This prevents the code from trying to call Google APIs at import time.
-# We must do this import patch before importing create_app or the views.
-import sys
-from unittest.mock import patch
+# 1. Load environment variables from .env file BEFORE importing app modules
+load_dotenv()
 
 # Create a mock result for generate_required_maps
 # It expects to return: (ResourceMap, MachineTypeEnum)
@@ -27,14 +15,12 @@ class MockMachineType(str, Enum):
     N1_STANDARD_1 = "n1-standard-1"
 
 
-# Apply the patch to the utils module so when entities.py imports it, it gets the mock
 patcher = patch(
     "research_environment_api.modules.workbench_management.utils.generate_required_maps",
-    return_value=(mock_machine_map, MockMachineType)
+    return_value=(mock_machine_map, MockMachineType),
 )
 patcher.start()
 
-# --- Now it is safe to import your app modules ---
 from research_environment_api.web.app import create_app
 from research_environment_api.modules.app import app as core_app
 
@@ -59,14 +45,12 @@ def mock_config(mocker):
     config_mock.organization_domain = "healthdatanexus.ai"
 
     mocker.patch(
-        "research_environment_api.modules.app.create_config",
-        return_value=config_mock
+        "research_environment_api.modules.app.create_config", return_value=config_mock
     )
 
-    # Also patch build_config for the Flask app
     mocker.patch(
         "research_environment_api.web.app.build_config",
-        return_value={"TESTING": True, "SECRET_KEY": "test-key"}
+        return_value={"TESTING": True, "SECRET_KEY": "test-key"},
     )
     return config_mock
 
@@ -116,7 +100,7 @@ def mock_db_session(mocker):
     mock_session = MagicMock()
     mocker.patch.object(
         core_app,
-        'database_session',
-        return_value=MagicMock(__enter__=MagicMock(return_value=mock_session))
+        "database_session",
+        return_value=MagicMock(__enter__=MagicMock(return_value=mock_session)),
     )
     return mock_session
