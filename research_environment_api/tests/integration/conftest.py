@@ -15,7 +15,9 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.postgres import PostgresContainer
 
 from research_environment_api.modules.app import app as core_app
-from research_environment_api.tests.integration.helpers.test_env import integration_env_vars
+from research_environment_api.tests.integration.helpers.test_env import (
+    integration_env_vars,
+)
 from research_environment_api.web.app import create_app
 
 # Disable Testcontainers Ryuk (reaper) to avoid connection issues in some environments.
