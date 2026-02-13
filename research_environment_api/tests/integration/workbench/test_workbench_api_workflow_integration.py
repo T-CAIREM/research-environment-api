@@ -1,14 +1,42 @@
+"""Integration tests for Workbench API workflow endpoints.
+
+Scope
+-----
+These tests exercise the HTTP endpoints under `/workbench/*` using:
+- a real Flask app (test client)
+- a real Postgres DB (container + Alembic migrations)
+- Celery in eager mode (tasks executed in-process)
+
+We treat all GCP clients as *external boundaries* and mock them.
+
+What we validate
+----------------
+- endpoint accepts request payload and returns a workflow identifier
+- a monitoring row (`WorkbenchActivity`) is created with the expected build_type
+- stop/start/destroy create the expected build record
+
+What we don't validate
+----------------------
+- long-running async/polling behavior (we patch follow-up tasks in eager mode)
+"""
+
 from unittest.mock import MagicMock
 
 import pytest
 
 
 class TestWorkbenchWorkflowIntegration:
-    """Integration-level tests for workbench lifecycle endpoints.
-    """
+    """Workflow endpoints: create/stop/start/destroy integration behavior."""
+
+    # ---------------------------------------------------------------------
+    # helpers (avoid copy/paste)
+    # ---------------------------------------------------------------------
 
     @staticmethod
-    def _assert_activity_by_workflow_id(db_session, monitoring_models, workflow_id, expected_build_type_value: str):
+    def _assert_activity_by_workflow_id(
+        db_session, monitoring_models, workflow_id, expected_build_type_value: str
+    ):
+        """Assert a WorkflowActivity row exists for the workflow_id + build type."""
         with db_session() as session:
             activity = (
                 session.query(monitoring_models.WorkbenchActivity)
@@ -20,7 +48,10 @@ class TestWorkbenchWorkflowIntegration:
             assert str(activity.build_type.value) == expected_build_type_value
 
     @staticmethod
-    def _assert_destroy_activity(db_session, monitoring_models, enums, request_data, workflow_id):
+    def _assert_destroy_activity(
+        db_session, monitoring_models, enums, request_data, workflow_id
+    ):
+        """Destroy may return null workflow_id; fall back to lookup by identifiers."""
         with db_session() as session:
             if workflow_id:
                 activity = (
@@ -42,8 +73,20 @@ class TestWorkbenchWorkflowIntegration:
             assert activity is not None
             assert str(activity.build_type.value) == "workbench_destroy"
 
+    # ---------------------------------------------------------------------
+    # External boundaries (GCP) mocks
+    # ---------------------------------------------------------------------
+
     @pytest.fixture
     def mock_gcp_clients(self, mocker):
+        """Patch GCP clients/tasks so tests stay offline and deterministic.
+
+        This fixture intentionally mocks:
+        - Cloud Build scheduling + status
+        - Compute Engine instances listing (stop/start/destroy needs lookup)
+        - Secret Manager (used by template/build generation)
+        - follow-up background tasks that would otherwise poll/retry in eager mode
+        """
         # Prevent delayed follow-up task from running in eager mode (it starts its own DB tx)
         mocker.patch(
             "research_environment_api.background.tasks.check_and_process_cloud_build_operation.apply_async",
@@ -65,11 +108,9 @@ class TestWorkbenchWorkflowIntegration:
 
         # Cloud build get_build used by process_cloud_build_result
         mock_build = MagicMock()
-        # Default: success so workflow can finish
         from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
         mock_build.status = CloudBuild.Status.SUCCESS
-        # steps list accessed only on FAILURE path, but keep safe
         mock_build.steps = [MagicMock(exit_code=0)]
         mock_build_client.get_build.return_value = mock_build
 
@@ -88,13 +129,15 @@ class TestWorkbenchWorkflowIntegration:
         # Compute Engine instances client used by get_compute_engine_workbench -> aggregated_list
         mock_ce_instances_client = MagicMock(spec=compute_v1.InstancesClient)
 
-        # Minimal fake instance so stop/start/destroy calls can resolve workbench
+        # Minimal fake instance so stop/start/destroy calls resolve a workbench.
         fake_instance = MagicMock()
         fake_instance.name = "workbench-abc"
         fake_instance.id = "123"
         fake_instance.status = "RUNNING"
         fake_instance.zone = "projects/x/zones/us-central1-a"
-        fake_instance.machine_type = "projects/x/zones/us-central1-a/machineTypes/n1-standard-1"
+        fake_instance.machine_type = (
+            "projects/x/zones/us-central1-a/machineTypes/n1-standard-1"
+        )
 
         meta_item = MagicMock()
         meta_item.key = "dataset_identifier"
@@ -112,15 +155,22 @@ class TestWorkbenchWorkflowIntegration:
         meta_item5.key = "type"
         meta_item5.value = "jupyter"
 
-        fake_instance.metadata.items = [meta_item, meta_item2, meta_item3, meta_item4, meta_item5]
+        fake_instance.metadata.items = [
+            meta_item,
+            meta_item2,
+            meta_item3,
+            meta_item4,
+            meta_item5,
+        ]
         fake_instance.disks = [MagicMock(disk_size_gb=100)]
         fake_instance.guest_accelerators = []
         fake_instance.labels = {"owner": "owner", "associated_event_slug": ""}
 
-        # aggregated_list yields tuples: (zone, scoped_list) where scoped_list.instances exists
         scoped_list = MagicMock()
         scoped_list.instances = [fake_instance]
-        mock_ce_instances_client.aggregated_list.return_value = [("zones/us-central1-a", scoped_list)]
+        mock_ce_instances_client.aggregated_list.return_value = [
+            ("zones/us-central1-a", scoped_list)
+        ]
 
         mocker.patch(
             "research_environment_api.modules.app.app.config.google_compute_engine_instances_client",
@@ -141,19 +191,19 @@ class TestWorkbenchWorkflowIntegration:
             secret_client,
         )
 
-        # Keep this internal validation deterministic (doesn't affect business flow)
+        # Keep internal validation deterministic.
         mocker.patch(
             "research_environment_api.web.workbench_management.views.services.validate_gpu_accelerator",
             return_value=True,
         )
 
-        # Stabilize zone selection
+        # Stabilize zone selection.
         mocker.patch(
             "research_environment_api.modules.workbench_management.services.get_available_zones",
             return_value=("us-central1-a", ["us-central1-b", "us-central1-c"]),
         )
 
-        # Group permissions / sharing buckets are external-ish integrations
+        # Group permissions / sharing buckets are external-ish integrations.
         mocker.patch(
             "research_environment_api.background.schedulers.user_group_services.get_user_permissions",
             return_value=[],
@@ -163,28 +213,21 @@ class TestWorkbenchWorkflowIntegration:
             return_value={},
         )
 
-        # In eager mode, we don't want polling/retry tasks to raise Retry and fail the request.
+        # In eager mode, avoid retry/poll looping tasks.
         mocker.patch(
             "research_environment_api.background.tasks.check_vertex_ai_setup_status",
             return_value=None,
         )
-
-        # process_cloud_build_result touches DB and can conflict with test transaction scoping;
-        # we only need to validate that the endpoint schedules a workflow + creates activity.
         mocker.patch(
             "research_environment_api.background.tasks.process_cloud_build_result",
             return_value=None,
         )
-
-        # set_workflow_status writes final status to DB; in eager mode it can conflict
-        # with the request-scoped transaction/session.
         mocker.patch(
             "research_environment_api.background.tasks.set_workflow_status",
             return_value=None,
         )
 
-        # RStudio destroy build creation is proto-heavy and fails under MagicMocked env.
-        # For API workflow integration we only need to ensure endpoint schedules a flow.
+        # Proto-heavy RStudio destroy build is out of scope for these API-level assertions.
         mocker.patch(
             "research_environment_api.background.builds.destroy_rstudio_workbench_build",
             return_value=MagicMock(),
@@ -195,9 +238,19 @@ class TestWorkbenchWorkflowIntegration:
             "notebooks": mock_notebooks_client,
         }
 
+    # ---------------------------------------------------------------------
+    # Create flows
+    # ---------------------------------------------------------------------
+
     def test_create_jupyter_workbench_integration(
-        self, client, db_session, mock_gcp_clients, celery_eager, mock_workspace_services
+        self,
+        client,
+        db_session,
+        mock_gcp_clients,
+        celery_eager,
+        mock_workspace_services,
     ):
+        """POST /workbench/create returns workflow_id and creates a monitoring row."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -221,7 +274,6 @@ class TestWorkbenchWorkflowIntegration:
         response = client.post("/workbench/create", json=request_data)
 
         assert response.status_code == 200
-        # Contract test: response must match schema
         loaded = schemas.WorkbenchWorkflowIdentifier().load(response.json)
         workflow_id = loaded["workflow_id"]
         assert workflow_id
@@ -237,14 +289,18 @@ class TestWorkbenchWorkflowIntegration:
             assert activity.workspace_id == "test-project-create-integ"
             assert activity.invoker_email == "creator@example.com"
             assert activity.build_type == enums.BuildType.WORKBENCH_CREATION
-            # eager celery should complete chain and set final status
             assert activity.build_status in [
                 enums.WorkflowStatus.SUCCESS,
                 enums.WorkflowStatus.IN_PROGRESS,
             ]
 
     def test_create_jupyter_workbench_workflow_failure_marks_activity_failure(
-        self, client, db_session, mock_gcp_clients, celery_eager, mock_workspace_services
+        self,
+        client,
+        db_session,
+        mock_gcp_clients,
+        celery_eager,
+        mock_workspace_services,
     ):
         """Celery eager mode should surface failures and mark workflow as FAILURE."""
         from research_environment_api.modules.monitoring_management import (
@@ -296,7 +352,12 @@ class TestWorkbenchWorkflowIntegration:
             ]
 
     def test_create_collaborative_workbench_with_collaborators_integration(
-        self, client, db_session, mock_gcp_clients, celery_eager, mock_workspace_services
+        self,
+        client,
+        db_session,
+        mock_gcp_clients,
+        celery_eager,
+        mock_workspace_services,
     ):
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
@@ -336,7 +397,12 @@ class TestWorkbenchWorkflowIntegration:
             assert activity.workspace_id == "test-project-collab-integ"
 
     def test_create_rstudio_workbench_integration(
-        self, client, db_session, mock_gcp_clients, celery_eager, mock_workspace_services
+        self,
+        client,
+        db_session,
+        mock_gcp_clients,
+        celery_eager,
+        mock_workspace_services,
     ):
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
@@ -374,10 +440,15 @@ class TestWorkbenchWorkflowIntegration:
             assert activity is not None
             assert activity.workspace_id == "test-project-rstudio-integ"
 
+    # ---------------------------------------------------------------------
+    # Stop flows
+    # ---------------------------------------------------------------------
+
     @pytest.mark.parametrize("workbench_type", ["jupyter", "collaborative"])
     def test_stop_workbench_integration(
         self, client, db_session, mock_gcp_clients, workbench_type
     ):
+        """PUT /workbench/stop triggers stop workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -402,6 +473,7 @@ class TestWorkbenchWorkflowIntegration:
     def test_stop_rstudio_workbench_integration(
         self, client, db_session, mock_gcp_clients
     ):
+        """PUT /workbench/stop triggers stop workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -423,10 +495,15 @@ class TestWorkbenchWorkflowIntegration:
             expected_build_type_value="workbench_stop",
         )
 
+    # ---------------------------------------------------------------------
+    # Start flows
+    # ---------------------------------------------------------------------
+
     @pytest.mark.parametrize("workbench_type", ["jupyter", "collaborative"])
     def test_start_workbench_integration(
         self, client, db_session, mock_gcp_clients, workbench_type
     ):
+        """PUT /workbench/start triggers start workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -451,6 +528,7 @@ class TestWorkbenchWorkflowIntegration:
     def test_start_rstudio_workbench_integration(
         self, client, db_session, mock_gcp_clients
     ):
+        """PUT /workbench/start triggers start workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -472,10 +550,15 @@ class TestWorkbenchWorkflowIntegration:
             expected_build_type_value="workbench_start",
         )
 
+    # ---------------------------------------------------------------------
+    # Destroy flows
+    # ---------------------------------------------------------------------
+
     @pytest.mark.parametrize("workbench_type", ["jupyter", "collaborative"])
     def test_destroy_workbench_integration(
         self, client, db_session, mock_gcp_clients, workbench_type
     ):
+        """DELETE /workbench/destroy triggers destroy workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
@@ -499,6 +582,7 @@ class TestWorkbenchWorkflowIntegration:
     def test_destroy_rstudio_workbench_integration(
         self, client, db_session, mock_gcp_clients
     ):
+        """DELETE /workbench/destroy triggers destroy workflow + activity update."""
         from research_environment_api.modules.monitoring_management import (
             models as monitoring_models,
         )
