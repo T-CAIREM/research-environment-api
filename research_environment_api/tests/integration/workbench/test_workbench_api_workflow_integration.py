@@ -13,10 +13,11 @@ What we validate
 ----------------
 - endpoint accepts request payload and returns a workflow identifier
 - a monitoring row (`WorkbenchActivity`) is created with the expected build_type
-- stop/start/destroy create the expected build record
+- stop/start/destroy endpoints create the expected monitoring/build records
 
 What we don't validate
 ----------------------
+- correctness of GCP services (Compute / Cloud Build / Secret Manager / Notebooks)
 - long-running async/polling behavior (we patch follow-up tasks in eager mode)
 """
 
@@ -79,13 +80,15 @@ class TestWorkbenchWorkflowIntegration:
 
     @pytest.fixture
     def mock_gcp_clients(self, mocker):
-        """Patch GCP clients/tasks so tests stay offline and deterministic.
+        """Patch GCP boundaries so tests stay offline and deterministic.
 
-        This fixture intentionally mocks:
-        - Cloud Build scheduling + status
-        - Compute Engine instances listing (stop/start/destroy needs lookup)
-        - Secret Manager (used by template/build generation)
-        - follow-up background tasks that would otherwise poll/retry in eager mode
+        Notes
+        -----
+        - Client mocks use `spec=` to catch API drift (typos/missing methods).
+        - The fake Compute Engine instance uses an Instance spec as well, but we
+          mock nested message fields (like `.metadata`) to keep setup compact.
+        - Several follow-up Celery tasks are patched because in eager mode they'd
+          poll/retry and introduce flaky timing/DB-session interactions.
         """
         # Prevent delayed follow-up task from running in eager mode (it starts its own DB tx)
         mocker.patch(
@@ -129,48 +132,61 @@ class TestWorkbenchWorkflowIntegration:
         # Compute Engine instances client used by get_compute_engine_workbench -> aggregated_list
         mock_ce_instances_client = MagicMock(spec=compute_v1.InstancesClient)
 
-        # Minimal fake instance so stop/start/destroy calls resolve a workbench.
-        fake_instance = MagicMock()
-        fake_instance.name = "workbench-abc"
-        fake_instance.id = "123"
-        fake_instance.status = "RUNNING"
-        fake_instance.zone = "projects/x/zones/us-central1-a"
-        fake_instance.machine_type = (
-            "projects/x/zones/us-central1-a/machineTypes/n1-standard-1"
+        def _metadata_items(values_by_key: dict[str, str]):
+            """Build a `metadata.items` list (objects exposing `.key`/`.value`)."""
+            items = []
+            for k, v in values_by_key.items():
+                item = MagicMock()
+                item.key = k
+                item.value = v
+                items.append(item)
+            return items
+
+        def _fake_compute_instance(*, workbench_type: str = "jupyter"):
+            """Return a minimal instance-like object used by workbench lookup.
+
+            This mirrors the subset of `compute_v1.types.Instance` fields our
+            services read (id/name/status/zone/machine_type + metadata keys).
+            """
+            instance = MagicMock(spec=compute_v1.types.Instance)
+            instance.name = "workbench-abc"
+            instance.id = "123"
+            instance.status = "RUNNING"
+            instance.zone = "projects/x/zones/us-central1-a"
+            instance.machine_type = (
+                "projects/x/zones/us-central1-a/machineTypes/n1-standard-1"
+            )
+
+            # `Instance.metadata` is itself a message; for tests we only need `.items`.
+            instance.metadata = MagicMock()
+            instance.metadata.items = _metadata_items(
+                {
+                    "dataset_identifier": "dataset-123",
+                    "bucket_name": "test-bucket",
+                    "vm_image": "workbench-instances-v20240214",
+                    "service_account_name": "sa-123",
+                    "type": workbench_type,
+                }
+            )
+
+            instance.disks = [MagicMock(disk_size_gb=100)]
+            instance.guest_accelerators = []
+            instance.labels = {"owner": "owner", "associated_event_slug": ""}
+            return instance
+
+        def _aggregated_list_result(instances):
+            """Return the shape produced by `InstancesClient.aggregated_list()`.
+
+            The code under test iterates tuples of (scope, scoped_list) and expects
+            `scoped_list.instances` to be a list.
+            """
+            scoped_list = MagicMock()
+            scoped_list.instances = list(instances)
+            return [("zones/us-central1-a", scoped_list)]
+
+        mock_ce_instances_client.aggregated_list.return_value = _aggregated_list_result(
+            [_fake_compute_instance(workbench_type="jupyter")]
         )
-
-        meta_item = MagicMock()
-        meta_item.key = "dataset_identifier"
-        meta_item.value = "dataset-123"
-        meta_item2 = MagicMock()
-        meta_item2.key = "bucket_name"
-        meta_item2.value = "test-bucket"
-        meta_item3 = MagicMock()
-        meta_item3.key = "vm_image"
-        meta_item3.value = "workbench-instances-v20240214"
-        meta_item4 = MagicMock()
-        meta_item4.key = "service_account_name"
-        meta_item4.value = "sa-123"
-        meta_item5 = MagicMock()
-        meta_item5.key = "type"
-        meta_item5.value = "jupyter"
-
-        fake_instance.metadata.items = [
-            meta_item,
-            meta_item2,
-            meta_item3,
-            meta_item4,
-            meta_item5,
-        ]
-        fake_instance.disks = [MagicMock(disk_size_gb=100)]
-        fake_instance.guest_accelerators = []
-        fake_instance.labels = {"owner": "owner", "associated_event_slug": ""}
-
-        scoped_list = MagicMock()
-        scoped_list.instances = [fake_instance]
-        mock_ce_instances_client.aggregated_list.return_value = [
-            ("zones/us-central1-a", scoped_list)
-        ]
 
         mocker.patch(
             "research_environment_api.modules.app.app.config.google_compute_engine_instances_client",
