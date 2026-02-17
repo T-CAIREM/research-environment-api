@@ -85,6 +85,11 @@ resource "kubernetes_manifest" "issuer" {
 resource "kubernetes_manifest" "certificate" {
   depends_on = [kubernetes_manifest.issuer]
 
+  field_manager {
+    name            = "terraform-research-environment-api"
+    force_conflicts = true
+  }
+
   manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
