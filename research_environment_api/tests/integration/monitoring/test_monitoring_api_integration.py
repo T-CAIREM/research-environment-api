@@ -27,6 +27,7 @@ What we validate
 import uuid
 from datetime import datetime, timedelta
 
+
 class TestMonitoringAPIIntegration:
     """Dataset monitoring and active-user endpoints."""
 
@@ -95,7 +96,8 @@ class TestMonitoringAPIIntegration:
 
         data = response.json
         matching = [
-            e for e in data
+            e
+            for e in data
             if e["user_email"] == email and e["dataset_identifier"] == dataset
         ]
         assert len(matching) == 1
@@ -150,11 +152,11 @@ class TestMonitoringAPIIntegration:
         assert response.status_code == 200
 
         matching = [
-            e for e in response.json
+            e
+            for e in response.json
             if e["user_email"] == email and e["dataset_identifier"] == dataset
         ]
         assert len(matching) == 1
-        # Should have some time recorded (at least seconds)
         assert matching[0]["total_time"] != ""
 
     def test_list_datasets_aggregates_multiple_sessions_for_same_identifier(
@@ -189,12 +191,11 @@ class TestMonitoringAPIIntegration:
         assert response.status_code == 200
 
         matching = [
-            e for e in response.json
+            e
+            for e in response.json
             if e["user_email"] == email and e["dataset_identifier"] == dataset
         ]
-        # Both sessions belong to the same identifier -> one aggregated row
         assert len(matching) == 1
-        # Combined 3 hours
         assert "3" in matching[0]["total_time"]
         assert "Hour" in matching[0]["total_time"]
 
@@ -208,9 +209,7 @@ class TestMonitoringAPIIntegration:
         assert response.status_code == 200
         assert isinstance(response.json, list)
 
-    def test_active_users_includes_user_with_running_session(
-        self, client, db_session
-    ):
+    def test_active_users_includes_user_with_running_session(self, client, db_session):
         """A user whose session is still running appears in active_users."""
         from research_environment_api.background.enums import InstanceType
 
@@ -252,7 +251,6 @@ class TestMonitoringAPIIntegration:
         response = client.get("/monitoring/active_users")
         assert response.status_code == 200
 
-        # This specific dataset should not appear (only finished row)
         matching = [e for e in response.json if e["dataset_identifier"] == dataset]
         assert len(matching) == 0
 
@@ -325,5 +323,3 @@ class TestMonitoringAPIIntegration:
         returned_datasets = {e["dataset_identifier"] for e in response.json}
         for ds in datasets:
             assert ds in returned_datasets
-
-
