@@ -28,7 +28,8 @@
 #   make coverage-html         run all tests + open HTML report in browser
 # ---------------------------------------------------------------------------
 
-PYTHON   := venv/python/bin/python
+# Use the local venv when available (dev), fall back to system python3 (CI).
+PYTHON   ?= $(shell [ -f venv/python/bin/python ] && echo venv/python/bin/python || echo python3)
 PYTEST   := $(PYTHON) -m pytest
 
 UNIT_PATH        := research_environment_api/tests/unit
