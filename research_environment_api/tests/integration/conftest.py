@@ -90,18 +90,39 @@ def db_engine(postgres_container):
     alembic_cfg.set_main_option("script_location", "alembic")
 
     # `alembic/env.py` initializes the app and reads DATABASE_URL.
-    old_db_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = database_url
+    # We patch environment variables so app.initialize() can succeed.
+    env_vars = integration_env_vars(database_url=database_url)
 
-    try:
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
-    finally:
-        if old_db_url:
-            os.environ["DATABASE_URL"] = old_db_url
-        else:
-            del os.environ["DATABASE_URL"]
+    class MockCredentials(AnonymousCredentials):
+        def __init__(self, project_id=None):
+            super(MockCredentials, self).__init__()
+            self._project_id = project_id
+            self._quota_project_id = project_id
+
+        @property
+        def project_id(self):
+            return self._project_id
+
+        @project_id.setter
+        def project_id(self, value):
+            self._project_id = value
+
+        @property
+        def quota_project_id(self):
+            return self._quota_project_id
+
+        @quota_project_id.setter
+        def quota_project_id(self, value):
+            self._quota_project_id = value
+
+    mock_creds = MockCredentials(project_id="test-project-id")
+
+    with patch.dict(os.environ, env_vars):
+        with patch("google.oauth2.service_account.Credentials.from_service_account_file", return_value=mock_creds):
+            try:
+                command.upgrade(alembic_cfg, "head")
+            except Exception as e:
+                pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
 
     return engine
 
