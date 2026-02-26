@@ -1,5 +1,7 @@
 import os
 import time
+
+os.environ.setdefault("PROJECT_ID", "test-project")
 from collections import namedtuple
 from enum import Enum as StrEnum
 from unittest.mock import MagicMock, patch
