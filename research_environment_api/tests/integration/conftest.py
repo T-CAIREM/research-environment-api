@@ -24,6 +24,17 @@ from research_environment_api.web.app import create_app
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 # -----------------------------------------------------------------------------
+# Module-level env bootstrap
+# -----------------------------------------------------------------------------
+# session-scoped fixtures (db_engine) and alembic/env.py call app.initialize()
+# before any per-test fixture can set env vars via mocker.patch.dict.
+# We use setdefault so real values already in the environment are never overwritten.
+# DATABASE_URL placeholder is overwritten by db_engine with the real container URL.
+_bootstrap_env = integration_env_vars(database_url="postgresql://placeholder/placeholder")
+for _k, _v in _bootstrap_env.items():
+    os.environ.setdefault(_k, _v)
+
+# -----------------------------------------------------------------------------
 # Import-time patching
 # -----------------------------------------------------------------------------
 # Workbench code builds a machine-type map at import time via `generate_required_maps()`.
