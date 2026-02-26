@@ -1,7 +1,10 @@
 import os
 import time
 
+# Set required env vars early to support import-time logic in modules
 os.environ.setdefault("PROJECT_ID", "test-project")
+os.environ.setdefault("APP_ENV", "development")
+
 from collections import namedtuple
 from enum import Enum as StrEnum
 from unittest.mock import MagicMock, patch
