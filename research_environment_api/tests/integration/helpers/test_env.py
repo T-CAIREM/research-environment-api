@@ -65,4 +65,6 @@ def integration_env_vars(*, database_url: str) -> Dict[str, str]:
         # Celery config required by Config initialization
         "CELERY_BROKER_URL": "memory://",
         "CELERY_RESULT_BACKEND": "cache+memory://",
+        # Flask Caching
+        "CACHE_TYPE": "SimpleCache",
     }
