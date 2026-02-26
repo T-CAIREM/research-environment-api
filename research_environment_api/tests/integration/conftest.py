@@ -49,6 +49,51 @@ patcher = patch(
 )
 patcher.start()
 
+
+# -----------------------------------------------------------------------------
+# Auth Bypass
+# -----------------------------------------------------------------------------
+# Integration tests run against the Flask app without a real auth provider.
+# We patch `validate_token` globally to ensure it's a pass-through decorator
+# even if the code inside it is active. This avoids 401 errors in CI.
+
+auth_patcher = patch(
+    "research_environment_api.web.decorators.validate_token",
+    side_effect=lambda f: f
+)
+auth_patcher.start()
+
+
+# -----------------------------------------------------------------------------
+# Shared Mocks
+# -----------------------------------------------------------------------------
+
+class MockCredentials(AnonymousCredentials):
+    def __init__(self, project_id=None):
+        super(MockCredentials, self).__init__()
+        self._project_id = project_id
+        self._quota_project_id = project_id
+
+    @property
+    def project_id(self):
+        return self._project_id
+
+    @project_id.setter
+    def project_id(self, value):
+        self._project_id = value
+
+    @property
+    def quota_project_id(self):
+        return self._quota_project_id
+
+    @quota_project_id.setter
+    def quota_project_id(self, value):
+        self._quota_project_id = value
+
+# Global mock instance to be used by fixtures
+mock_creds = MockCredentials(project_id="test-project-id")
+
+
 # -----------------------------------------------------------------------------
 # Containers / Infra
 # -----------------------------------------------------------------------------
@@ -92,30 +137,6 @@ def db_engine(postgres_container):
     # `alembic/env.py` initializes the app and reads DATABASE_URL.
     # We patch environment variables so app.initialize() can succeed.
     env_vars = integration_env_vars(database_url=database_url)
-
-    class MockCredentials(AnonymousCredentials):
-        def __init__(self, project_id=None):
-            super(MockCredentials, self).__init__()
-            self._project_id = project_id
-            self._quota_project_id = project_id
-
-        @property
-        def project_id(self):
-            return self._project_id
-
-        @project_id.setter
-        def project_id(self, value):
-            self._project_id = value
-
-        @property
-        def quota_project_id(self):
-            return self._quota_project_id
-
-        @quota_project_id.setter
-        def quota_project_id(self, value):
-            self._quota_project_id = value
-
-    mock_creds = MockCredentials(project_id="test-project-id")
 
     with patch.dict(os.environ, env_vars):
         with patch("google.oauth2.service_account.Credentials.from_service_account_file", return_value=mock_creds):
@@ -173,7 +194,7 @@ def app(db_engine, mock_gcp_environment, mocker):
     # Avoid reading real SA JSON from disk.
     mocker.patch(
         "google.oauth2.service_account.Credentials.from_service_account_file",
-        return_value=MagicMock(),
+        return_value=mock_creds,
     )
 
     core_app.initialize(init_db=True)
