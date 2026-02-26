@@ -89,13 +89,19 @@ def db_engine(postgres_container):
     alembic_cfg.set_main_option("sqlalchemy.url", database_url)
     alembic_cfg.set_main_option("script_location", "alembic")
 
-    env_vars = integration_env_vars(database_url=database_url)
-    with patch.dict(os.environ, env_vars):
-        with patch("google.oauth2.service_account.Credentials.from_service_account_file", return_value=MagicMock()):
-            try:
-                command.upgrade(alembic_cfg, "head")
-            except Exception as e:
-                pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
+    # `alembic/env.py` initializes the app and reads DATABASE_URL.
+    old_db_url = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = database_url
+
+    try:
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
+    finally:
+        if old_db_url:
+            os.environ["DATABASE_URL"] = old_db_url
+        else:
+            del os.environ["DATABASE_URL"]
 
     return engine
 
