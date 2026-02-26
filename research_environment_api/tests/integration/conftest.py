@@ -92,6 +92,8 @@ def db_engine(postgres_container):
     # `alembic/env.py` initializes the app and reads DATABASE_URL.
     old_db_url = os.environ.get("DATABASE_URL")
     os.environ["DATABASE_URL"] = database_url
+    old_app_env = os.environ.get("APP_ENV")
+    os.environ["APP_ENV"] = "development"
 
     try:
         command.upgrade(alembic_cfg, "head")
@@ -102,6 +104,11 @@ def db_engine(postgres_container):
             os.environ["DATABASE_URL"] = old_db_url
         else:
             del os.environ["DATABASE_URL"]
+
+        if old_app_env:
+            os.environ["APP_ENV"] = old_app_env
+        else:
+            del os.environ["APP_ENV"]
 
     return engine
 
