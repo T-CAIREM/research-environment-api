@@ -11,8 +11,8 @@ from __future__ import annotations
 from typing import Dict
 
 
-def integration_env_vars(*, database_url: str) -> Dict[str, str]:
-    """Return env vars required to bootstrap the app during integration tests.
+def test_env_vars(*, database_url: str) -> Dict[str, str]:
+    """Return env vars required to bootstrap the app during tests.
 
     Args:
         database_url: SQLAlchemy database URL for the test Postgres container.

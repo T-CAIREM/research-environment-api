@@ -4,13 +4,13 @@ from unittest.mock import MagicMock, patch
 from enum import Enum
 from dotenv import load_dotenv
 
-from research_environment_api.tests.integration.helpers.test_env import (
-    integration_env_vars,
+from research_environment_api.tests.helpers.test_env import (
+    test_env_vars,
 )
 
 # 1. Load environment variables from .env file BEFORE importing app modules
 load_dotenv()
-os.environ.update(integration_env_vars(database_url="postgresql://dummy:5432/db"))
+os.environ.update(test_env_vars(database_url="postgresql://dummy:5432/db"))
 
 # Create a mock result for generate_required_maps
 # It expects to return: (ResourceMap, MachineTypeEnum)
