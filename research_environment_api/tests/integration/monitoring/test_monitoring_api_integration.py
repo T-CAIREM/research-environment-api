@@ -26,6 +26,7 @@ What we validate
 
 import uuid
 from datetime import datetime, timedelta
+from research_environment_api.background.enums import InstanceType
 
 
 class TestMonitoringAPIIntegration:
@@ -159,6 +160,33 @@ class TestMonitoringAPIIntegration:
         assert len(matching) == 1
         assert matching[0]["total_time"] != ""
 
+    def test_list_datasets_count_matches_distinct_identifiers(self, client, db_session):
+        """The number of entries in /datasets matches the number of distinct user+dataset combos seeded."""
+        combos = [
+            ("user-a@example.com", "ds-cnt-1"),
+            ("user-b@example.com", "ds-cnt-2"),
+            ("user-c@example.com", "ds-cnt-3"),
+        ]
+        for email, ds in combos:
+            self._seed_monitoring_row(
+                db_session,
+                user_email=email,
+                dataset_identifier=ds,
+                instance_type=InstanceType.JUPYTER,
+                created_at=datetime(2025, 7, 1, 10, 0, 0),
+                deleted_at=datetime(2025, 7, 1, 11, 0, 0),
+            )
+
+        response = client.get("/monitoring/datasets")
+        assert response.status_code == 200
+
+        seeded_entries = [
+            e
+            for e in response.json
+            if (e["user_email"], e["dataset_identifier"]) in combos
+        ]
+        assert len(seeded_entries) == len(combos)
+
     def test_list_datasets_aggregates_multiple_sessions_for_same_identifier(
         self, client, db_session
     ):
@@ -208,6 +236,30 @@ class TestMonitoringAPIIntegration:
         response = client.get("/monitoring/active_users")
         assert response.status_code == 200
         assert isinstance(response.json, list)
+
+    def test_active_users_user_emails_count_matches_seeded_users(
+        self, client, db_session
+    ):
+        """user_emails list length for a dataset equals the number of distinct users seeded."""
+        dataset = "ds-email-count"
+        emails = [f"email-count-{i}@example.com" for i in range(4)]
+
+        for email in emails:
+            self._seed_monitoring_row(
+                db_session,
+                user_email=email,
+                dataset_identifier=dataset,
+                instance_type=InstanceType.JUPYTER,
+                created_at=datetime.now() - timedelta(hours=1),
+                deleted_at=None,
+            )
+
+        response = client.get("/monitoring/active_users")
+        assert response.status_code == 200
+
+        matching = [e for e in response.json if e["dataset_identifier"] == dataset]
+        assert len(matching) == 1
+        assert len(matching[0]["user_emails"]) == len(emails)
 
     def test_active_users_includes_user_with_running_session(self, client, db_session):
         """A user whose session is still running appears in active_users."""
