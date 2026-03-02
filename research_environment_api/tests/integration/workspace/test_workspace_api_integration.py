@@ -23,6 +23,15 @@ What we don't validate
 from unittest.mock import MagicMock
 
 import pytest
+import marshmallow
+from google.cloud.devtools import cloudbuild_v1
+from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
+
+from research_environment_api.modules.monitoring_management import (
+    models as monitoring_models,
+)
+from research_environment_api.background import enums
+from research_environment_api.web.workspace_management import schemas
 
 
 class TestWorkspaceWorkflowIntegration:
@@ -66,8 +75,6 @@ class TestWorkspaceWorkflowIntegration:
             return_value=None,
         )
 
-        from google.cloud.devtools import cloudbuild_v1
-
         # Cloud Build client used by background.tasks.start_cloud_build
         mock_build_client = MagicMock(spec=cloudbuild_v1.CloudBuildClient)
         mock_operation = MagicMock()
@@ -77,7 +84,6 @@ class TestWorkspaceWorkflowIntegration:
 
         # Successful build result
         mock_build = MagicMock()
-        from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
         mock_build.status = CloudBuild.Status.SUCCESS
         mock_build.steps = [MagicMock(exit_code=0)]
@@ -122,11 +128,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """POST /workspace/create returns workflow_id and creates a monitoring row."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
 
         request_data = {
             "user_email": "creator@example.com",
@@ -164,12 +165,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """When Cloud Build fails the activity should be FAILURE or IN_PROGRESS."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
-        from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
         # Force build failure
         mock_build = MagicMock()
@@ -216,11 +211,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """DELETE /workspace/delete returns workflow_id and creates WORKSPACE_DELETION activity."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
 
         request_data = {
             "user_email": "owner@example.com",
@@ -260,12 +250,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """When Cloud Build fails during deletion the activity should be FAILURE or IN_PROGRESS."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
-        from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
         mock_build = MagicMock()
         mock_build.status = CloudBuild.Status.FAILURE
@@ -311,11 +295,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """POST /workspace/shared/create returns workflow_id and creates a monitoring row."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
 
         request_data = {
             "user_email": "sharedowner@example.com",
@@ -352,10 +331,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """workspace_id on the activity should be auto-generated and contain '-shared-'."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.web.workspace_management import schemas
 
         request_data = {
             "user_email": "sharedowner2@example.com",
@@ -390,11 +365,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """DELETE /workspace/shared/delete returns workflow_id and SHARED_WORKSPACE_DELETION activity."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
 
         request_data = {
             "user_email": "sharedowner@example.com",
@@ -434,12 +404,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """When Cloud Build fails during shared workspace deletion the activity reflects it."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.background import enums
-        from research_environment_api.web.workspace_management import schemas
-        from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild
 
         mock_build = MagicMock()
         mock_build.status = CloudBuild.Status.FAILURE
@@ -485,10 +449,6 @@ class TestWorkspaceWorkflowIntegration:
         celery_eager,
     ):
         """Each create call must produce a distinct workflow_id / activity row."""
-        from research_environment_api.modules.monitoring_management import (
-            models as monitoring_models,
-        )
-        from research_environment_api.web.workspace_management import schemas
 
         workflow_ids = []
         for i in range(3):
@@ -531,7 +491,6 @@ class TestWorkspaceWorkflowIntegration:
         than swallowing it — we assert the exception is a ValidationError and
         that the messages reference the missing field.
         """
-        import marshmallow
 
         request_data = {
             "user_email": "creator@example.com",
@@ -550,7 +509,6 @@ class TestWorkspaceWorkflowIntegration:
         mock_gcp_workspace_clients,
     ):
         """POST /workspace/create with a non-email string raises a ValidationError."""
-        import marshmallow
 
         request_data = {
             "user_email": "not-an-email",
@@ -569,7 +527,6 @@ class TestWorkspaceWorkflowIntegration:
         mock_gcp_workspace_clients,
     ):
         """DELETE /workspace/delete without workspace_project_id raises a ValidationError."""
-        import marshmallow
 
         request_data = {
             "user_email": "owner@example.com",
