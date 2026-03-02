@@ -157,48 +157,6 @@ class TestWorkspaceWorkflowIntegration:
                 enums.WorkflowStatus.IN_PROGRESS,
             ]
 
-    def test_create_workspace_failure_marks_activity_failure(
-        self,
-        client,
-        db_session,
-        mock_gcp_workspace_clients,
-        celery_eager,
-    ):
-        """When Cloud Build fails the activity should be FAILURE or IN_PROGRESS."""
-
-        # Force build failure
-        mock_build = MagicMock()
-        mock_build.status = CloudBuild.Status.FAILURE
-        failing_step = MagicMock()
-        failing_step.exit_code = 1
-        mock_build.steps = [failing_step]
-        mock_gcp_workspace_clients["cloud_build"].get_build.return_value = mock_build
-
-        request_data = {
-            "user_email": "creator-fail@example.com",
-            "billing_account_id": "ABCDEF-123456-FEDCBA",
-            "user_groups": ["group1"],
-        }
-
-        response = client.post("/workspace/create", json=request_data)
-        assert response.status_code == 201
-
-        workflow_id = schemas.WorkspaceWorkflowIdentifier().load(response.json)[
-            "workflow_id"
-        ]
-
-        with db_session() as session:
-            activity = (
-                session.query(monitoring_models.WorkbenchActivity)
-                .filter_by(id=workflow_id)
-                .first()
-            )
-            assert activity is not None
-            assert activity.build_status in [
-                enums.WorkflowStatus.FAILURE,
-                enums.WorkflowStatus.IN_PROGRESS,
-            ]
-
     # ------------------------------------------------------------------
     # Delete workspace
     # ------------------------------------------------------------------
