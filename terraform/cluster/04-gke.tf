@@ -1,5 +1,5 @@
 variable "gke_machine_type" {
-  default = "e2-medium"
+  default = "e2-standard-2"
   type    = string
 }
 
@@ -50,8 +50,8 @@ module "gke" {
       machine_type       = var.gke_machine_type
       e2machine_type     = var.gke_machine_type
       node_locations     = var.zones[0]
-      min_count          = 1
-      max_count          = 5
+      min_count          = 5
+      max_count          = 10
       local_ssd_count    = 0
       disk_size_gb       = 50
       disk_type          = "pd-standard"
