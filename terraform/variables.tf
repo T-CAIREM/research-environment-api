@@ -214,3 +214,13 @@ variable "root_postgres_password" {
 variable "rstudio_certificate_secret_id" {
   type    = string
 }
+
+variable "gunicorn_workers" {
+  default = 3
+  type    = number
+}
+
+variable "gunicorn_threads" {
+  default = 8
+  type    = number
+}
