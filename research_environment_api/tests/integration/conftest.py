@@ -1,5 +1,16 @@
 import os
 import time
+
+# Set required env vars early to support import-time logic in modules
+from research_environment_api.tests.helpers.test_env import (
+    test_env_vars,
+)
+
+# Pre-load all integration test env vars so early imports (provoked by patchers)
+# find what they expect in Config. We use a dummy DB URL here; the real one
+# comes later in the `db_engine` fixture or is patched again.
+os.environ.update(test_env_vars(database_url="postgresql://dummy:5432/db"))
+
 from collections import namedtuple
 from enum import Enum as StrEnum
 from unittest.mock import MagicMock, patch
@@ -15,20 +26,55 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.postgres import PostgresContainer
 
 from research_environment_api.modules.app import app as core_app
-from research_environment_api.tests.integration.helpers.test_env import (
-    integration_env_vars,
-)
 from research_environment_api.web.app import create_app
 
 # Disable Testcontainers Ryuk (reaper) to avoid connection issues in some environments.
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 # -----------------------------------------------------------------------------
+# Shared Mocks (Early Definition)
+# -----------------------------------------------------------------------------
+
+
+class MockCredentials(AnonymousCredentials):
+    def __init__(self, project_id=None):
+        super(MockCredentials, self).__init__()
+        self._project_id = project_id
+        self._quota_project_id = project_id
+
+    @property
+    def project_id(self):
+        return self._project_id
+
+    @project_id.setter
+    def project_id(self, value):
+        self._project_id = value
+
+    @property
+    def quota_project_id(self):
+        return self._quota_project_id
+
+    @quota_project_id.setter
+    def quota_project_id(self, value):
+        self._quota_project_id = value
+
+
+# Global mock instance to be used by fixtures
+mock_creds = MockCredentials(project_id="test-project-id")
+
+
+# -----------------------------------------------------------------------------
 # Import-time patching
 # -----------------------------------------------------------------------------
-# Workbench code builds a machine-type map at import time via `generate_required_maps()`.
-# For integration tests we patch it early to keep startup fast + deterministic.
 
+# Patch credentials early so Config initialization (triggered by auth_patcher)
+credentials_patcher = patch(
+    "google.oauth2.service_account.Credentials.from_service_account_file",
+    return_value=mock_creds,
+)
+credentials_patcher.start()
+
+# Workbench code builds a machine-type map at import time via `generate_required_maps()`.
 ComputeEngineMachineResources = namedtuple(
     "ComputeEngineMachineResources", ["cpu", "memory"]
 )
@@ -48,6 +94,20 @@ patcher = patch(
     side_effect=mock_generate_required_maps,
 )
 patcher.start()
+
+
+# -----------------------------------------------------------------------------
+# Auth Bypass
+# -----------------------------------------------------------------------------
+# Integration tests run against the Flask app without a real auth provider.
+# We patch `validate_token` globally to ensure it's a pass-through decorator
+# even if the code inside it is active. This avoids 401 errors in CI.
+
+auth_patcher = patch(
+    "research_environment_api.web.decorators.validate_token", side_effect=lambda f: f
+)
+auth_patcher.start()
+
 
 # -----------------------------------------------------------------------------
 # Containers / Infra
@@ -90,18 +150,18 @@ def db_engine(postgres_container):
     alembic_cfg.set_main_option("script_location", "alembic")
 
     # `alembic/env.py` initializes the app and reads DATABASE_URL.
-    old_db_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = database_url
+    # We patch environment variables so app.initialize() can succeed.
+    env_vars = test_env_vars(database_url=database_url)
 
-    try:
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
-    finally:
-        if old_db_url:
-            os.environ["DATABASE_URL"] = old_db_url
-        else:
-            del os.environ["DATABASE_URL"]
+    with patch.dict(os.environ, env_vars):
+        with patch(
+            "google.oauth2.service_account.Credentials.from_service_account_file",
+            return_value=mock_creds,
+        ):
+            try:
+                command.upgrade(alembic_cfg, "head")
+            except Exception as e:
+                pytest.fail(f"Failed to apply Alembic migrations: {str(e)}")
 
     return engine
 
@@ -147,12 +207,12 @@ def app(db_engine, mock_gcp_environment, mocker):
     )
     mocker.patch("research_environment_api.modules.app.create_cloud_sql_engine")
 
-    mocker.patch.dict(os.environ, integration_env_vars(database_url=str(db_engine.url)))
+    mocker.patch.dict(os.environ, test_env_vars(database_url=str(db_engine.url)))
 
     # Avoid reading real SA JSON from disk.
     mocker.patch(
         "google.oauth2.service_account.Credentials.from_service_account_file",
-        return_value=MagicMock(),
+        return_value=mock_creds,
     )
 
     core_app.initialize(init_db=True)
