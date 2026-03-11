@@ -251,6 +251,7 @@ resource "kubernetes_deployment" "core" {
               port = 5000
               path = "/"
             }
+            timeout_seconds = 5
           }
 
           liveness_probe {
