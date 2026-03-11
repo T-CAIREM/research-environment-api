@@ -514,7 +514,7 @@ def destroy_jupyter_workbench(
         user_email=workbench_destroy_request.user_email,
     )
 
-    destroy_jupyter_workbench_flow(workbench_destroy_request, workbench)
+    return destroy_jupyter_workbench_flow(workbench_destroy_request, workbench)
 
 
 def stop_collaborative_workbench(
@@ -723,7 +723,7 @@ def destroy_collaborative_workbench(
         instance_name=workbench_destroy_request.workbench_resource_id,
         user_email=workbench_destroy_request.user_email,
     )
-    destroy_collaborative_workbench_flow(workbench_destroy_request, workbench)
+    return destroy_collaborative_workbench_flow(workbench_destroy_request, workbench)
 
 
 def create_rstudio_workbench(
@@ -959,7 +959,7 @@ def destroy_rstudio_workbench(
         workbench_destroy_request.workbench_resource_id,
         workbench_destroy_request.user_email,
     )
-    destroy_rstudio_workbench_flow(workbench_destroy_request, workbench)
+    return destroy_rstudio_workbench_flow(workbench_destroy_request, workbench)
 
 
 def renew_rstudio_ssl_certificate(
