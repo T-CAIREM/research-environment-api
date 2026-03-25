@@ -26,6 +26,20 @@ intervals = (
 )
 
 
+def stream_workflow_events():
+    pubsub = app.config.redis_client.pubsub()
+    pubsub.subscribe("workflow_events")
+    try:
+        while True:
+            message = pubsub.get_message(timeout=30)
+            if message and message["type"] == "message":
+                yield f"event: workflow_update\ndata: {message['data'].decode()}\n\n"
+            else:
+                yield ": keepalive\n\n"
+    finally:
+        pubsub.close()
+
+
 def list_workbench_monitoring_data_entries() -> (
     List[entities.WorkbenchMonitoringDataEntry]
 ):

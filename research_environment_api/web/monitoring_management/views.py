@@ -1,11 +1,11 @@
+from flask import Response, stream_with_context
+
 from research_environment_api.modules.monitoring_management import services
 from research_environment_api.web.decorators import validate_token
 from research_environment_api.web.monitoring_management import (
     monitoring_management_bp,
     schemas,
 )
-from research_environment_api.modules.app import app
-from flask import Response, stream_with_context
 
 
 @monitoring_management_bp.get("/datasets")
@@ -62,21 +62,8 @@ def list_active_users_per_dataset():
 
 @monitoring_management_bp.route("/events")
 def server_side_event():
-    def generate():
-        pubsub = app.config.redis_client.pubsub()
-        pubsub.subscribe("workflow_events")
-        try:
-            while True:
-                message = pubsub.get_message(timeout=30)
-                if message and message["type"] == "message":
-                    yield f"event: workflow_update\ndata: {message['data'].decode()}\n\n"
-                else:
-                    yield ": keepalive\n\n"
-        finally:
-            pubsub.close()
-
     return Response(
-        stream_with_context(generate()),
+        stream_with_context(services.stream_workflow_events()),
         mimetype="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
