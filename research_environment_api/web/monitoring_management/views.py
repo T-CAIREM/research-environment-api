@@ -65,8 +65,21 @@ def server_side_event():
     def generate():
         pubsub = app.config.redis_client.pubsub()
         pubsub.subscribe("workflow_events")
-        for message in pubsub.listen():
-            if message["type"] == "message":
-                yield f"event: workflow_update\ndata: {message['data'].decode()}\n\n"
+        try:
+            while True:
+                message = pubsub.get_message(timeout=30)
+                if message and message["type"] == "message":
+                    yield f"event: workflow_update\ndata: {message['data'].decode()}\n\n"
+                else:
+                    yield ": keepalive\n\n"
+        finally:
+            pubsub.close()
 
-    return Response(stream_with_context(generate()), mimetype="text/event-stream")
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
