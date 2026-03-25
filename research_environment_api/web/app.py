@@ -7,10 +7,9 @@ from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
-import time
+
 
 from research_environment_api.web.cache import cache
-from research_environment_api.web.websocket import socketio
 from research_environment_api.web.config import build_config
 
 SWAGGER_SPEC_FILE_NAME = "swagger.json"
@@ -76,11 +75,5 @@ def create_app():
         f"{app.static_url_path}/{SWAGGER_SPEC_FILE_NAME}",
     )
     app.register_blueprint(swagger_bp)
-    socketio.init_app(
-        app,
-        message_queue=environ.get("CELERY_BROKER_URL"),
-        ping_interval=25,
-        ping_timeout=60,
-    )
 
     return app
