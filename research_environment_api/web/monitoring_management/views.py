@@ -1,4 +1,4 @@
-from flask import Response, stream_with_context
+from flask import Response, stream_with_context, request
 
 from research_environment_api.modules.monitoring_management import services
 from research_environment_api.web.decorators import validate_token
@@ -68,5 +68,7 @@ def server_side_event():
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": request.headers.get("Origin", ""),
+            "Access-Control-Allow-Credentials": "true",
         },
     )

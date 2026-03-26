@@ -37,7 +37,8 @@ def persist_apispec(app: Flask) -> APISpec:
 def create_app():
     app = Flask(__name__)
     app.config.from_mapping(build_config())
-    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+    allowed_origins = environ.get("GCP_CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    CORS(app, origins=allowed_origins, supports_credentials=True)
 
     from research_environment_api.web.billing_management import billing_management_bp
     from research_environment_api.web.identity_management import identity_management_bp
