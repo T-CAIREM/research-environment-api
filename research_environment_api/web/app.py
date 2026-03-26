@@ -38,6 +38,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_mapping(build_config())
     allowed_origins = environ.get("GCP_CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    app.config["CORS_ALLOWED_ORIGINS"] = allowed_origins
     CORS(app, origins=allowed_origins, supports_credentials=True)
 
     from research_environment_api.web.billing_management import billing_management_bp

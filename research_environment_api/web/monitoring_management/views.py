@@ -1,4 +1,4 @@
-from flask import Response, stream_with_context, request
+from flask import Response, stream_with_context, request, current_app
 
 from research_environment_api.modules.monitoring_management import services
 from research_environment_api.web.decorators import validate_token
@@ -62,13 +62,15 @@ def list_active_users_per_dataset():
 
 @monitoring_management_bp.route("/events")
 def server_side_event():
+    origin = request.headers.get("Origin", "")
+    allowed_origin = origin if origin in current_app.config["CORS_ALLOWED_ORIGINS"] else ""
     return Response(
         stream_with_context(services.stream_workflow_events()),
         mimetype="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
-            "Access-Control-Allow-Origin": request.headers.get("Origin", ""),
+            "Access-Control-Allow-Origin": allowed_origin,
             "Access-Control-Allow-Credentials": "true",
         },
     )
