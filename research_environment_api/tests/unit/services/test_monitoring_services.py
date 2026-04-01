@@ -94,7 +94,7 @@ class TestMonitoringServices:
         assert results[0].usage == 10
 
     def test_check_workbench_update_quotas_exceeded(self, mocker):
-        """Test that QuotaExceededError is raised when usage + new > limit."""
+        """Test that QuotaExceededError is raised when usage - current_cpu + new_cpu > limit."""
         # Arrange
         quota_info = entities.QuotaInfo(
             metric_name="CPUs", limit=10, usage=8, region="us-central1"
@@ -104,17 +104,53 @@ class TestMonitoringServices:
             return_value=[quota_info],
         )
 
-        mock_machine = MagicMock()
-        mock_machine.value = "n1-standard-4"
-        mock_resources = MagicMock(cpu=4)
+        mock_new_machine = MagicMock()
+        mock_new_machine.value = "n1-standard-4"
+        mock_current_machine = MagicMock()
+        mock_current_machine.value = "n1-standard-1"
 
         # Patch the resource map dictionary in services module
         mocker.patch.dict(
             "research_environment_api.modules.monitoring_management.services.MACHINE_TYPE_TO_RESOURCE_MAP",
-            {"n1-standard-4": mock_resources},
+            {
+                "n1-standard-4": MagicMock(cpu=4),
+                "n1-standard-1": MagicMock(cpu=1),
+            },
         )
 
         # Act & Assert
-        # 8 (usage) + 4 (new) = 12 > 10 (limit) -> Error
+        # 8 (usage) - 1 (current) + 4 (new) = 11 > 10 (limit) -> Error
         with pytest.raises(exceptions.QuotaExceededError):
-            services.check_workbench_update_quotas("proj", "region", mock_machine)
+            services.check_workbench_update_quotas(
+                "proj", "region", mock_new_machine, mock_current_machine
+            )
+
+    def test_check_workbench_update_quotas_not_exceeded_when_replacing(self, mocker):
+        """Test that no error is raised when replacing an instance stays within limit."""
+        # Arrange: limit=32, usage=2 (current 2-CPU instance), upgrading to 32-CPU machine
+        quota_info = entities.QuotaInfo(
+            metric_name="CPUs", limit=32, usage=2, region="us-central1"
+        )
+        mocker.patch(
+            "research_environment_api.modules.monitoring_management.services.check_google_quotas",
+            return_value=[quota_info],
+        )
+
+        mock_new_machine = MagicMock()
+        mock_new_machine.value = "n1-standard-32"
+        mock_current_machine = MagicMock()
+        mock_current_machine.value = "n1-standard-2"
+
+        mocker.patch.dict(
+            "research_environment_api.modules.monitoring_management.services.MACHINE_TYPE_TO_RESOURCE_MAP",
+            {
+                "n1-standard-32": MagicMock(cpu=32),
+                "n1-standard-2": MagicMock(cpu=2),
+            },
+        )
+
+        # Act & Assert
+        # 2 (usage) - 2 (current) + 32 (new) = 32, 32 < 32 is False -> no error
+        services.check_workbench_update_quotas(
+            "proj", "region", mock_new_machine, mock_current_machine
+        )
