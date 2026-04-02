@@ -204,7 +204,10 @@ def clear_quotas_cache(project_id: str, region: str, quota_metrics_entity) -> No
 
 
 def check_workbench_update_quotas(
-    workspace_project_id: str, region: str, machine_type: MachineType
+    workspace_project_id: str,
+    region: str,
+    machine_type: MachineType,
+    current_machine_type: MachineType,
 ):
     base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
         workspace_project_id=workspace_project_id
@@ -212,8 +215,9 @@ def check_workbench_update_quotas(
     quotas = check_google_quotas(
         base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity, region
     )
-    machine_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type.value)
-    additional_quotas_dict = {"CPUs": machine_resources.cpu}
+    new_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type.value)
+    current_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(current_machine_type.value)
+    additional_quotas_dict = {"CPUs": new_resources.cpu - current_resources.cpu}
     for quota in quotas:
         estimated_usage = quota.usage + additional_quotas_dict[quota.metric_name]
         if quota.limit < estimated_usage:
