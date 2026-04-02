@@ -10,7 +10,6 @@ import google.cloud.resourcemanager_v3
 import requests
 
 from celery import Task, shared_task
-from flask_socketio import SocketIO
 from google.cloud.devtools.cloudbuild_v1 import Build as CloudBuild, Build
 
 from research_environment_api.background import (
@@ -165,11 +164,8 @@ def set_workflow_status(operation: operations.Operation, workbench_activity_id: 
             )
             workbench_activity.build_status = operation.status()
     workbench_activity_str = str(workbench_activity_id)
-    _emit_websocket_event(
-        "workflow_update",
-        {"workbench_activity_id": workbench_activity_str},
-        workbench_activity_str,
-    )
+    msg = f"{workbench_activity_str}"
+    app.config.redis_client.publish("workflow_events", msg)
     return operation
 
 
@@ -666,14 +662,3 @@ def _fetch_gce_instance(gcp_project_id: str, workbench_id):
         for instance in instances_in_region.instances
         if instance.name == workbench_id
     ][0]
-
-
-def _emit_websocket_event(event_name: str, data: dict, room: str) -> None:
-    # we need local socketio instance for celery to avoid
-    # `NoneType` is not callable error
-    socketio = SocketIO(message_queue=environ.get("CELERY_BROKER_URL"), logger=True)
-    socketio.emit(
-        event_name,
-        data,
-        to=room,
-    )

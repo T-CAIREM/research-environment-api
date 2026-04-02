@@ -1,5 +1,6 @@
 from enum import StrEnum
 from os import environ
+import redis
 
 import google.auth
 import google.cloud.billing
@@ -160,6 +161,7 @@ class Config:
                 credentials=self.service_account_credentials
             )
         )
+        self.redis_client = redis.StrictRedis.from_url(environ["CELERY_BROKER_URL"])
 
 
 def create_config() -> Config:

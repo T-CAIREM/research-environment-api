@@ -424,6 +424,7 @@ def update_jupyter_workbench(
         workbench_update_request.workspace_project_id,
         workbench.region,
         workbench_update_request.machine_type,
+        workbench.machine_type,
     )
     build = builds.update_jupyter_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -616,6 +617,7 @@ def update_collaborative_workbench(
         workbench_update_request.workspace_project_id,
         workbench.region,
         workbench_update_request.machine_type,
+        workbench.machine_type,
     )
     build = builds.update_collaborative_workbench_build(
         workspace_project_id=workbench_update_request.workspace_project_id,
@@ -863,6 +865,7 @@ def update_rstudio_workbench(
         workbench_update_request.workspace_project_id,
         workbench.region,
         workbench_update_request.machine_type,
+        workbench.machine_type,
     )
 
     build = builds.update_rstudio_workbench_build(
@@ -992,6 +995,7 @@ def renew_rstudio_ssl_certificate(
     monitoring_services.check_workbench_update_quotas(
         workbench_renewal_request.workspace_project_id,
         workbench.region,
+        workbench.machine_type,
         workbench.machine_type,
     )
 
