@@ -141,8 +141,6 @@ research-environment-api-top-folder/
 ├── pytest.ini                       # Test discovery + marker + coverage config
 ├── alembic.ini                      # Alembic DB URL placeholder
 ├── requirements.txt                 # Pinned dependencies (only this file is used)
-├── requirements2.txt                # STALE — leftover snapshots, not used by anything
-├── requirements3.txt                # STALE — leftover snapshots, not used by anything
 ├── celery_endpoint.sh               # Starts celery worker + beat locally
 ├── flower_endpoint.sh               # Starts Celery Flower monitoring UI
 ├── grant_privileges.sh              # One-shot psql grant for load-test DB setup
@@ -582,17 +580,25 @@ Browser (admin)           Flask /admin             Celery
   │                         │                        │
   │ POST /admin/events/     │                        │
   │ workbenches/stop        │                        │
-  │ {Basic Auth header,     │                        │
-  │  event_slug, …}         │                        │
+  │ Authorization: Basic …  │                        │
+  │ {                       │                        │
+  │   "workbenches": [      │                        │
+  │     {"project_id": …,   │                        │
+  │      "workbench_id": …} │                        │
+  │   ],                    │                        │
+  │   "event_slug": "…"     │                        │
+  │ }                       │                        │
   │────────────────────────>│                        │
   │                         │ @validate_admin_page_auth
   │                         │ secrets.compare_digest()
   │                         │ services.stop_event_workbenches()
-  │                         │   for each active workbench:
+  │                         │   for each matched workbench:
   │                         │     schedulers.stop_{type}_workbench()
   │                         │       WorkbenchActivity(IN_PROGRESS)
   │                         │       chain() queued ──────────────>
-  │ {success: true}         │                        │ (async execution)
+  │ {success: true,         │                        │ (async execution)
+  │  message: "Stop         │                        │
+  │  initiated for N wb(s)"}│                        │
   │<────────────────────────│                        │
 ```
 
@@ -625,7 +631,7 @@ def validate_token(func):
 
 **`@validate_admin_page_auth`** — used for all `/admin/*` routes. Reads `Authorization: Basic <base64>` and calls `services.authenticate_admin(username, password)`, which uses `secrets.compare_digest` to constant-time compare against `ADMIN_PANEL_USERNAME` / `ADMIN_PANEL_PASSWORD` env vars. Returns `WWW-Authenticate: Basic realm="Admin Panel"` + 401 on failure.
 
-**`/monitoring/events`** — the SSE endpoint has **no token validation**. It performs a manual CORS origin check against `CORS_ALLOWED_ORIGINS` and returns 403 if the `Origin` header is not on the list.
+**`/monitoring/events`** — the SSE endpoint has **no token validation**. It performs a manual CORS origin check: if the `Origin` header is not in `CORS_ALLOWED_ORIGINS`, the response sets `Access-Control-Allow-Origin: ""` (empty string). The server always returns HTTP 200 with `text/event-stream` — browsers will block the stream due to the CORS policy, but non-browser clients can connect regardless. There is no 403 response.
 
 ---
 
@@ -1425,12 +1431,6 @@ celery -A research_environment_api.worker worker    # task execution
 
 ---
 
-### Stale `requirements2.txt` / `requirements3.txt`
-
-These files are leftover snapshots. Only `requirements.txt` is used by the `Dockerfile` and CI. Ignore the others.
-
----
-
 ### Credential JSON files checked into repo
 
 `credentials-api.json`, `credentials-api-prod.json`, `research-environment-api-dev-*.json`, and `workspace-controller-dev-*.json` are service account keys committed directly to the repository. This is a security concern — if these are active keys, they should be rotated and moved to a secrets manager. The preferred approach is sops-encrypted files in `credentials/dev/` and `credentials/prod/`.
@@ -1440,12 +1440,6 @@ These files are leftover snapshots. Only `requirements.txt` is used by the `Dock
 ### Celery `pickle` serializer
 
 The Celery configuration uses `task_serializer = "pickle"`, `result_serializer = "pickle"`, and `accept_content = ["application/json", "application/x-python-serialize", "pickle"]`. This allows Python dataclasses and GCP API response objects to be passed between tasks without explicit JSON serialization. However, **pickle deserialization of untrusted data is a security risk** — the Redis broker should be access-controlled.
-
----
-
-### `api.db` SQLite file
-
-`research_environment_api/api.db` is a 12 KB SQLite file in the package directory. This is a legacy/dev artifact. The application uses PostgreSQL in all real environments. The file should not be committed.
 
 ---
 
