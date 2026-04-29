@@ -883,11 +883,11 @@ This is the only signal handler in the codebase.
 
 ### Beat schedule (periodic tasks)
 
-| Task | Schedule | Purpose |
-|---|---|---|
-| `export_active_users_per_dataset` | Sundays 00:00 UTC | Exports CSV of users per dataset → GCS `active_users_per_dataset/` |
-| `export_datasets_total_usage_time` | Sundays 00:00 UTC | Exports CSV of total usage time → GCS `datasets_total_usage_time/` |
-| `mark_monitoring_entry_for_stale_workbenches` | Every 6 hours | Sets `deleted_at` on `WorkbenchMonitoringData` for GCE instances that are stopped |
+| Task | Schedule            | Purpose |
+|---|---------------------|---|
+| `export_active_users_per_dataset` | Saturdays 00:00 UTC | Exports CSV of users per dataset → GCS `active_users_per_dataset/` |
+| `export_datasets_total_usage_time` | Saturdays 00:00 UTC | Exports CSV of total usage time → GCS `datasets_total_usage_time/` |
+| `mark_monitoring_entry_for_stale_workbenches` | Every 6 hours       | Sets `deleted_at` on `WorkbenchMonitoringData` for GCE instances that are stopped |
 
 ### Task inventory
 
