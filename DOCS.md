@@ -665,7 +665,7 @@ Returns `"App available"`, HTTP 200. Used by load balancer health probes.
 
 | Method | Path | Handler | Auth | Notes |
 |---|---|---|---|---|
-| GET | `/billing/<email>` | `list_billing_accounts` | `@validate_token` + `@cache.cached(300s)` | Lists billing accounts for user |
+| GET | `/billing/<email>` | `list_billing_accounts` | `@validate_token` + `@cache.cached(300)` | Lists billing accounts for user |
 | POST | `/billing/share` | `share_billing_account` | `@validate_token` | Body: `ShareBillingAccountRequest` |
 | POST | `/billing/revoke_access` | `revoke_billing_account_access` | `@validate_token` | Body: `RevokeBillingAccountAccessRequest` |
 
