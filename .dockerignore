@@ -20,3 +20,13 @@ coverage.xml
 .hypothesis
 terraform/
 .env
+
+# Secrets / credentials — defense in depth (never bake into the image)
+.env.*
+credentials.json
+credentials/
+
+# Local virtual environments
+.venv/
+venv/
+ENV/
