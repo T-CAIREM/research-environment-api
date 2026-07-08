@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Optional, List
 
 from google.cloud.devtools import cloudbuild_v1
@@ -362,12 +363,37 @@ def _normalize_gpu_accelerator_type(gpu_accelerator_type: Optional[str]) -> str:
     return gpu_accelerator_type or ""
 
 
+def _trim_certificate_chain(pem_chain: str, keep: int = 2) -> str:
+    """Return only the first ``keep`` certificates (leaf + intermediate) of a PEM
+    chain.
+
+    The wildcard cert's full Let's Encrypt chain is leaf + intermediate +
+    cross-signed root (~5.7k chars), which exceeds Cloud Build's 4000-char
+    substitution limit and makes RStudio workbench creation fail at submission.
+    A served TLS chain should not include the root anyway, so leaf + intermediate
+    is both correct and safely under the limit.
+    """
+    blocks = re.findall(
+        r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----",
+        pem_chain,
+        re.DOTALL,
+    )
+    if not blocks:
+        return pem_chain
+    return "\n".join(blocks[:keep]) + "\n"
+
+
 def _fetch_rstudio_certificate(secret_resource_name: str) -> dict:
     response = app.config.google_secret_manager_client.access_secret_version(
         request={"name": secret_resource_name}
     )
     secret_json = response.payload.data.decode("UTF-8")
-    return json.loads(secret_json)
+    certificate_data = json.loads(secret_json)
+    if "tls_crt" in certificate_data:
+        certificate_data["tls_crt"] = _trim_certificate_chain(
+            certificate_data["tls_crt"]
+        )
+    return certificate_data
 
 
 def create_rstudio_workbench_build(
