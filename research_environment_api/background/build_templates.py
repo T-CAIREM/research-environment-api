@@ -607,6 +607,30 @@ DESTROY_COLLABORATIVE_WORKBENCH_STEPS_PARTIAL = [
 ]
 
 
+# Writes the full TLS certificate chain from Secret Manager into a tfvars file
+# that Terraform auto-loads (workbench/rstudio/*.auto.tfvars). The chain is too
+# long (>4000 chars) to pass as a Cloud Build substitution, and a trimmed chain
+# fails validation for clients that don't do AIA fetching. The build service
+# account has secretAccessor, so the secret is injected via secret_env.
+RSTUDIO_WRITE_CERTIFICATE_STEP = {
+    "id": "rstudio_workbench_write_certificate",
+    "name": "python",
+    "args": [
+        "python3",
+        "-c",
+        (
+            "import json, os; "
+            "open('workbench/rstudio/certificate.auto.tfvars', 'w').write("
+            "'certificate = ' + json.dumps("
+            "json.loads(os.environ['RSTUDIO_CERTIFICATE_SECRET'])['tls_crt']"
+            ") + '\\n')"
+        ),
+    ],
+    "secret_env": ["RSTUDIO_CERTIFICATE_SECRET"],
+    "dir_": "terraform-workbench-creation",
+}
+
+
 CREATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
     {
         "id": "rstudio_workbench_creation_set_backend_bucket",
@@ -630,6 +654,7 @@ CREATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
         ],
         "dir_": "terraform-workbench-creation",
     },
+    RSTUDIO_WRITE_CERTIFICATE_STEP,
     {
         "id": "rstudio_workbench_creation_terraform_init",
         "name": "hashicorp/terraform",
@@ -658,7 +683,6 @@ CREATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_rstudio_domain_name=${_RSTUDIO_DOMAIN_NAME}",
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
-            "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_certificate_expiration_date=${_RSTUDIO_SSL_EXPIRATION_DATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
@@ -702,6 +726,7 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
         ],
         "dir_": "terraform-workbench-creation",
     },
+    RSTUDIO_WRITE_CERTIFICATE_STEP,
     {
         "id": "rstudio_workbench_update_terraform_init",
         "name": "hashicorp/terraform",
@@ -730,7 +755,6 @@ UPDATE_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_rstudio_domain_name=${_RSTUDIO_DOMAIN_NAME}",
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
-            "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_certificate_expiration_date=${_RSTUDIO_SSL_EXPIRATION_DATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
@@ -753,6 +777,7 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
         ],
         "dir_": "terraform-workbench-creation",
     },
+    RSTUDIO_WRITE_CERTIFICATE_STEP,
     {
         "id": "rstudio_workbench_destruction_terraform_init",
         "name": "hashicorp/terraform",
@@ -781,7 +806,6 @@ DESTROY_RSTUDIO_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_rstudio_domain_name=${_RSTUDIO_DOMAIN_NAME}",
             "TF_VAR_dns_zone=${_RSTUDIO_DNS_ZONE}",
             "TF_VAR_private_key=${_RSTUDIO_SSL_PRIVATE_KEY}",
-            "TF_VAR_certificate=${_RSTUDIO_SSL_CERTIFICATE}",
             "TF_VAR_certificate_expiration_date=${_RSTUDIO_SSL_EXPIRATION_DATE}",
             "TF_VAR_service_account_name=${_SERVICE_ACCOUNT_NAME}",
             "TF_VAR_brand_name=${_BRAND_NAME}",
