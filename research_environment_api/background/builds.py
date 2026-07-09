@@ -1,5 +1,4 @@
 import json
-import re
 from typing import Optional, List
 
 from google.cloud.devtools import cloudbuild_v1
@@ -27,6 +26,28 @@ def _base_build() -> cloudbuild_v1.Build:
                 "version_name": app.config.github_ssh_key_ksm_id,
                 "env": "GITHUB_SSH_KEY",
             }
+        ]
+    }
+
+    return cloud_build
+
+
+def _rstudio_base_build() -> cloudbuild_v1.Build:
+    # RStudio builds additionally expose the TLS cert secret to the build so the
+    # full certificate chain can be written to a tfvars file at build time. The
+    # chain is too long (>4000 chars) for a Cloud Build substitution, and a
+    # trimmed chain fails validation for clients without AIA fetching.
+    cloud_build = _base_build()
+    cloud_build.available_secrets = {
+        "secret_manager": [
+            {
+                "version_name": app.config.github_ssh_key_ksm_id,
+                "env": "GITHUB_SSH_KEY",
+            },
+            {
+                "version_name": app.config.rstudio_certificate_secret_id,
+                "env": "RSTUDIO_CERTIFICATE_SECRET",
+            },
         ]
     }
 
@@ -363,37 +384,12 @@ def _normalize_gpu_accelerator_type(gpu_accelerator_type: Optional[str]) -> str:
     return gpu_accelerator_type or ""
 
 
-def _trim_certificate_chain(pem_chain: str, keep: int = 2) -> str:
-    """Return only the first ``keep`` certificates (leaf + intermediate) of a PEM
-    chain.
-
-    The wildcard cert's full Let's Encrypt chain is leaf + intermediate +
-    cross-signed root (~5.7k chars), which exceeds Cloud Build's 4000-char
-    substitution limit and makes RStudio workbench creation fail at submission.
-    A served TLS chain should not include the root anyway, so leaf + intermediate
-    is both correct and safely under the limit.
-    """
-    blocks = re.findall(
-        r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----",
-        pem_chain,
-        re.DOTALL,
-    )
-    if not blocks:
-        return pem_chain
-    return "\n".join(blocks[:keep]) + "\n"
-
-
 def _fetch_rstudio_certificate(secret_resource_name: str) -> dict:
     response = app.config.google_secret_manager_client.access_secret_version(
         request={"name": secret_resource_name}
     )
     secret_json = response.payload.data.decode("UTF-8")
-    certificate_data = json.loads(secret_json)
-    if "tls_crt" in certificate_data:
-        certificate_data["tls_crt"] = _trim_certificate_chain(
-            certificate_data["tls_crt"]
-        )
-    return certificate_data
+    return json.loads(secret_json)
 
 
 def create_rstudio_workbench_build(
@@ -416,7 +412,7 @@ def create_rstudio_workbench_build(
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
     )
-    cloud_build = _base_build()
+    cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_PROJECT_ID": workspace_project_id,
@@ -438,7 +434,6 @@ def create_rstudio_workbench_build(
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
-        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
         "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
@@ -474,7 +469,7 @@ def update_rstudio_workbench_build(
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
     )
-    cloud_build = _base_build()
+    cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_PROJECT_ID": workspace_project_id,
@@ -496,7 +491,6 @@ def update_rstudio_workbench_build(
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
-        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
         "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_permission_dict.keys()),
@@ -530,7 +524,7 @@ def destroy_rstudio_workbench_build(
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
     )
-    cloud_build = _base_build()
+    cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
         "_PROJECT_ID": workspace_project_id,
@@ -552,7 +546,6 @@ def destroy_rstudio_workbench_build(
         "_RSTUDIO_DNS_ZONE": app.config.rstudio_dns_zone,
         "_RSTUDIO_DOMAIN_NAME": app.config.rstudio_domain_name,
         "_RSTUDIO_SSL_PRIVATE_KEY": rstudio_certificate_data["tls_key"],
-        "_RSTUDIO_SSL_CERTIFICATE": rstudio_certificate_data["tls_crt"],
         "_RSTUDIO_SSL_EXPIRATION_DATE": rstudio_certificate_data["expiration_date"],
         "_WORKBENCH_TYPE": WorkbenchType.RSTUDIO,
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
