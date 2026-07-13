@@ -16,6 +16,19 @@ from research_environment_api.modules.workbench_management.entities import (
 )
 
 
+def _state_bucket_substitutions(*kinds: str) -> dict:
+    """Substitutions consumed by the backend-rewrite (python3.py) steps: which
+    GCS bucket each terraform root stores its per-instance state in."""
+    buckets = {
+        "workspace": ("_WORKSPACE_STATE_BUCKET", app.config.workspace_state_bucket),
+        "vpc": ("_VPC_STATE_BUCKET", app.config.vpc_state_bucket),
+        "jupyter": ("_JUPYTER_STATE_BUCKET", app.config.jupyter_state_bucket),
+        "rstudio": ("_RSTUDIO_STATE_BUCKET", app.config.rstudio_state_bucket),
+        "sharing": ("_SHARING_STATE_BUCKET", app.config.sharing_state_bucket),
+    }
+    return dict(buckets[k] for k in kinds)
+
+
 def _base_build() -> cloudbuild_v1.Build:
     cloud_build = cloudbuild_v1.Build()
     cloud_build.service_account = app.config.cloud_build_service_account_name
@@ -75,6 +88,7 @@ def create_jupyter_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
         "_ZONE": zone,
@@ -116,6 +130,7 @@ def update_jupyter_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
         "_INSTANCE_NAME": instance_name,
@@ -152,6 +167,7 @@ def destroy_jupyter_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
@@ -185,6 +201,7 @@ def create_workspace_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_WORKSPACE_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("workspace", "vpc"),
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
@@ -207,6 +224,7 @@ def create_shared_workspace_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_SHARED_WORKSPACE_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("sharing", "vpc"),
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
@@ -240,6 +258,7 @@ def create_collaborative_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_COLLABORATIVE_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
         "_ZONE": zone,
@@ -281,6 +300,7 @@ def update_collaborative_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.UPDATE_COLLABORATIVE_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
         "_INSTANCE_NAME": instance_name,
@@ -317,6 +337,7 @@ def destroy_collaborative_workbench_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_COLLABORATIVE_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("jupyter"),
         "_MACHINE_TYPE": machine_type.value,
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
@@ -347,6 +368,7 @@ def destroy_workspace_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_WORKSPACE_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("workspace", "vpc"),
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
@@ -368,6 +390,7 @@ def destroy_shared_workspace_build(
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_SHARED_WORKSPACE_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("sharing", "vpc"),
         "_BILLING_ACCOUNT": billing_account_id,
         "_PROJECT_ID": workspace_project_id,
         "_EMAIL_ID": user_email,
@@ -415,6 +438,7 @@ def create_rstudio_workbench_build(
     cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.CREATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("rstudio"),
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
         "_ZONE": zone,
@@ -472,6 +496,7 @@ def update_rstudio_workbench_build(
     cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.UPDATE_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("rstudio"),
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
         "_ZONE": zone,
@@ -527,6 +552,7 @@ def destroy_rstudio_workbench_build(
     cloud_build = _rstudio_base_build()
     cloud_build.steps = build_templates.DESTROY_RSTUDIO_WORKBENCH_STEPS
     cloud_build.substitutions = {
+        **_state_bucket_substitutions("rstudio"),
         "_PROJECT_ID": workspace_project_id,
         "_REGION": region.value,
         "_ZONE": zone,
