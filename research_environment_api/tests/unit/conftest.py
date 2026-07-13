@@ -49,6 +49,13 @@ def mock_config(mocker):
     config_mock.organization_id = "test-org-id"
     config_mock.rstudio_image_url = "test-image-url"
     config_mock.organization_domain = "healthdatanexus.ai"
+    # Substitution values must be real strings: they are assigned into the
+    # cloudbuild proto's map<string, string>.
+    config_mock.workspace_state_bucket = "test-workspace-states"
+    config_mock.vpc_state_bucket = "test-vpc-states"
+    config_mock.jupyter_state_bucket = "test-jupyter-states"
+    config_mock.rstudio_state_bucket = "test-rstudio-states"
+    config_mock.sharing_state_bucket = "test-sharing-states"
 
     mocker.patch(
         "research_environment_api.modules.app.create_config", return_value=config_mock

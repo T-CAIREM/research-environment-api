@@ -51,6 +51,7 @@ def _assert_jupyter_like_substitutions(
     subs, gpu_accelerator, vm_image, sharing_dict, permissions_list, collaborative
 ):
     """Assert substitutions common to Jupyter and Collaborative workbenches."""
+    assert subs["_JUPYTER_STATE_BUCKET"] == "test-jupyter-states"
     assert subs["_GPU_ACCELERATOR"] == gpu_accelerator
     assert subs["_VM_IMAGE"] == vm_image
     assert subs["_JUPYTER_STARTUP_SCRIPT_BUCKET"] == "gs://script"

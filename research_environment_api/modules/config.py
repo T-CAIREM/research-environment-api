@@ -52,6 +52,23 @@ class Config:
         self.vpc_secure_perimeter_name = environ["VPC_SECURE_PERIMETER_NAME"]
         self.terraform_branch_name = environ["TERRAFORM_BRANCH_NAME"]
         self.terraform_repo_name = environ["TERRAFORM_REPO_NAME"]
+        # Which GCS bucket each workbench terraform root stores its
+        # per-instance state in. Defaults are the buckets in the legacy
+        # research-environment-api-{dev,prod} projects; migrated environments
+        # override these to their own hdn-{env}-*-tf-states buckets.
+        self.workspace_state_bucket = environ.get(
+            "WORKSPACE_STATE_BUCKET", "workspace_states_prod"
+        )
+        self.vpc_state_bucket = environ.get("VPC_STATE_BUCKET", "vpc_states_prod")
+        self.jupyter_state_bucket = environ.get(
+            "JUPYTER_STATE_BUCKET", "jupyter_states_prod"
+        )
+        self.rstudio_state_bucket = environ.get(
+            "RSTUDIO_STATE_BUCKET", "rstudiocreation_terraform_states"
+        )
+        self.sharing_state_bucket = environ.get(
+            "SHARING_STATE_BUCKET", "shared_workspace_terraform_states"
+        )
         self.jupyter_startup_script = environ["JUPYTER_STARTUP_SCRIPT"]
         self.rstudio_startup_script = environ["RSTUDIO_STARTUP_SCRIPT"]
         self.cloud_build_service_account_name = environ[
