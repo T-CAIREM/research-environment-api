@@ -1,0 +1,25 @@
+# Automated image build: on push to the primary branch (master), Cloud Build
+# builds the RE-API core image, tags it with the commit SHA, and pushes it to
+# Artifact Registry. Runs as image-builder@healthdatanexus-dev
+# (artifactregistry.writer on the repo).
+#
+# Deploying a built image is a separate step: point the RE-API deploy at the SHA.
+substitutions:
+  _IMAGE: northamerica-northeast2-docker.pkg.dev/healthdatanexus-dev/research-environment-api/core
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: build
+    args:
+      - build
+      - -t
+      - ${_IMAGE}:$COMMIT_SHA
+      - -t
+      - ${_IMAGE}:latest
+      - .
+images:
+  - ${_IMAGE}:$COMMIT_SHA
+  - ${_IMAGE}:latest
+timeout: 3600s
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
