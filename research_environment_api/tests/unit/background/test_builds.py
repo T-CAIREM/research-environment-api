@@ -240,7 +240,11 @@ class TestBuilds:
         assert subs["_RSTUDIO_DNS_ZONE"] == "dns-zone"
         assert subs["_RSTUDIO_DOMAIN_NAME"] == "example.com"
         assert subs["_RSTUDIO_SSL_PRIVATE_KEY"] == "fake-key"
-        assert subs["_RSTUDIO_SSL_CERTIFICATE"] == "fake-crt"
+        # The full certificate chain exceeds the 4000-char Cloud Build
+        # substitution limit, so it is delivered via Secret Manager
+        # (available_secrets -> RSTUDIO_CERTIFICATE_SECRET env) rather than as a
+        # substitution. Asserted below via available_secrets.
+        assert "_RSTUDIO_SSL_CERTIFICATE" not in subs
         assert subs["_RSTUDIO_SSL_EXPIRATION_DATE"] == "2025-01-01"
         assert subs["_WORKBENCH_TYPE"] == WorkbenchType.RSTUDIO
         assert subs["_SHARING_BUCKET_IDENTIFIERS"] == ",".join(sharing_dict.keys())
@@ -251,5 +255,12 @@ class TestBuilds:
         mock_config.google_secret_manager_client.access_secret_version.assert_called_with(
             request={"name": "secret-id"}
         )
+
+        # The certificate chain is exposed to the build as a secret env, not a
+        # substitution.
+        secret_envs = {
+            s.env: s.version_name for s in build.available_secrets.secret_manager
+        }
+        assert secret_envs.get("RSTUDIO_CERTIFICATE_SECRET") == "secret-id"
 
         _assert_build_configuration(build)
