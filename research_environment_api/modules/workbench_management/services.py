@@ -36,6 +36,16 @@ from google.cloud.notebooks_v2.types import AcceleratorConfig
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
 
+class WorkbenchNotFoundError(Exception):
+    """Raised when a workbench's GCE instance cannot be located.
+
+    This covers two cases, both of which mean the workbench no longer exists:
+    the instance is gone from an existing project, or the whole GCP project
+    has been deleted (``safe_google_service_call`` swallows the resulting 404
+    and returns an empty list of instances).
+    """
+
+
 def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
@@ -101,8 +111,14 @@ def get_compute_engine_workbench(
         default_return=[]
     )
     gce_instance = next(
-        filter(lambda instance: instance.name == instance_name, gce_instances)
+        filter(lambda instance: instance.name == instance_name, gce_instances),
+        None,
     )
+    if gce_instance is None:
+        raise WorkbenchNotFoundError(
+            f"Workbench instance '{instance_name}' not found in project "
+            f"'{gcp_project_id}'."
+        )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
