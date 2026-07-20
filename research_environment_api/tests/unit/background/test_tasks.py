@@ -128,6 +128,7 @@ class TestTasks:
         must be marked deleted (not raise StopIteration), and a failure on one
         entry must not stop the remaining entries from being processed.
         """
+
         # Arrange: three still-active monitoring entries.
         def _entry(workbench_id):
             entry = MagicMock(spec=models.WorkbenchMonitoringData)
