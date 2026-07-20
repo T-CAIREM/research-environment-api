@@ -455,11 +455,32 @@ def mark_monitoring_entry_for_stale_workbenches():
             )
 
             for monitoring_data, workspace_id in all_active_workbenches:
-                workbench = workbench_services.get_compute_engine_workbench(
-                    gcp_project_id=workspace_id,
-                    instance_name=monitoring_data.workbench_id,
-                    user_email=monitoring_data.user_email,
-                )
+                try:
+                    workbench = workbench_services.get_compute_engine_workbench(
+                        gcp_project_id=workspace_id,
+                        instance_name=monitoring_data.workbench_id,
+                        user_email=monitoring_data.user_email,
+                    )
+                except workbench_services.WorkbenchNotFoundError:
+                    # The instance, or its whole GCP project, is gone: the
+                    # workbench is definitively stale. Mark it deleted rather
+                    # than letting the raised error abort the entire batch.
+                    logging.info(
+                        f"Workbench {monitoring_data.workbench_id} in "
+                        f"{workspace_id} no longer exists; marking monitoring "
+                        f"entry as deleted."
+                    )
+                    monitoring_data.deleted_at = datetime.now()
+                    continue
+                except Exception:
+                    # An unexpected failure on one entry must not prevent the
+                    # remaining entries from being processed.
+                    logging.exception(
+                        f"Failed to check workbench {monitoring_data.workbench_id} "
+                        f"in {workspace_id}; skipping this entry."
+                    )
+                    continue
+
                 if workbench.status == WorkbenchStatus.STOPPED:
                     monitoring_data.deleted_at = datetime.now()
 

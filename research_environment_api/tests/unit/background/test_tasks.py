@@ -4,6 +4,9 @@ from google.cloud.devtools.cloudbuild_v1 import Build
 
 from research_environment_api.background import tasks, enums
 from research_environment_api.modules.monitoring_management import models
+from research_environment_api.modules.workbench_management.entities import (
+    WorkbenchStatus,
+)
 
 
 class TestTasks:
@@ -116,6 +119,59 @@ class TestTasks:
         call_kwargs = mock_create_workflow.call_args[1]
         assert call_kwargs["instance_zone"] == "us-central1-b"
         assert call_kwargs["fallback_zones"] == ["us-central1-c"]
+
+    def test_mark_stale_workbenches_marks_deleted_project_and_continues(
+        self, mocker, mock_config, mock_db_session
+    ):
+        """
+        Regression: a monitoring entry whose workbench/project no longer exists
+        must be marked deleted (not raise StopIteration), and a failure on one
+        entry must not stop the remaining entries from being processed.
+        """
+
+        # Arrange: three still-active monitoring entries.
+        def _entry(workbench_id):
+            entry = MagicMock(spec=models.WorkbenchMonitoringData)
+            entry.workbench_id = workbench_id
+            entry.user_email = "u@t.com"
+            entry.deleted_at = None
+            return entry
+
+        gone, stopped, running = (
+            _entry("wb-gone"),
+            _entry("wb-stopped"),
+            _entry("wb-running"),
+        )
+        rows = [(gone, "proj-gone"), (stopped, "proj-a"), (running, "proj-a")]
+        (
+            mock_db_session.query.return_value.join.return_value
+        ).filter.return_value.all.return_value = rows
+
+        stopped_workbench = MagicMock()
+        stopped_workbench.status = WorkbenchStatus.STOPPED
+        running_workbench = MagicMock()
+        running_workbench.status = WorkbenchStatus.RUNNING
+
+        # First lookup raises (deleted project), the rest resolve normally.
+        mocker.patch.object(
+            tasks.workbench_services,
+            "get_compute_engine_workbench",
+            side_effect=[
+                tasks.workbench_services.WorkbenchNotFoundError("gone"),
+                stopped_workbench,
+                running_workbench,
+            ],
+        )
+
+        # Act
+        tasks.mark_monitoring_entry_for_stale_workbenches()
+
+        # Assert: the gone project and the stopped workbench are marked deleted;
+        # the running one is left active; the batch was not aborted early.
+        assert gone.deleted_at is not None
+        assert stopped.deleted_at is not None
+        assert running.deleted_at is None
+        assert mock_db_session.commit.called
 
     def test_check_and_process_cloud_build_operation_success(
         self, mocker, mock_config, mock_db_session

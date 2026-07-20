@@ -36,6 +36,16 @@ from google.cloud.notebooks_v2.types import AcceleratorConfig
 DEFAULT_APP_ENGINE_SERVICE_ID = "default"
 
 
+class WorkbenchNotFoundError(Exception):
+    """Raised when a workbench's GCE instance cannot be located.
+
+    This covers two cases, both of which mean the workbench no longer exists:
+    the instance is gone from an existing project, or the whole GCP project
+    has been deleted (``safe_google_service_call`` swallows the resulting 404
+    and returns an empty list of instances).
+    """
+
+
 def list_workbenches(
     gcp_project_id: str,
     workflows_in_progress: Iterable[models.WorkbenchActivity],
@@ -44,7 +54,7 @@ def list_workbenches(
 ) -> Iterable[Union[entities.Workbench, EntityScaffolding]]:
     """
     List workbenches for a project.
-    
+
     Note: This function maintains its original signature for API compatibility.
     Google Cloud service errors will bubble up to be handled by the caller.
     """
@@ -82,7 +92,7 @@ def list_workbenches(
         and workflow.build_type == enums.BuildType.WORKBENCH_CREATION
         and workflow.workbench_id not in provisioned_workbench_ids
     ]
-    
+
     return provisioned_workbenches + workbench_scaffoldings
 
 
@@ -98,11 +108,17 @@ def get_compute_engine_workbench(
         resource_id=gcp_project_id,
         service_name="Compute Engine",
         operation="get_instance",
-        default_return=[]
+        default_return=[],
     )
     gce_instance = next(
-        filter(lambda instance: instance.name == instance_name, gce_instances)
+        filter(lambda instance: instance.name == instance_name, gce_instances),
+        None,
     )
+    if gce_instance is None:
+        raise WorkbenchNotFoundError(
+            f"Workbench instance '{instance_name}' not found in project "
+            f"'{gcp_project_id}'."
+        )
     workflows_in_progress = monitoring_services.list_active_workflows(user_email)
     return entities.Workbench.from_gce_instance(gce_instance, workflows_in_progress)
 
@@ -110,7 +126,7 @@ def get_compute_engine_workbench(
 def _fetch_gce_instances_raw(gcp_project_id: str) -> Iterable[ComputeEngineInstance]:
     """
     Fetch GCE instances from Google Cloud without error handling.
-    
+
     This function is called by the centralized error handling framework.
     All Google Cloud service errors (billing, API not enabled, permissions, etc.)
     are handled by the safe_google_service_call wrapper.
