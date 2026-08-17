@@ -57,6 +57,12 @@ def _create_cloud_identity_in_google_workspace(
         google_workspace_client.create_user(google_workspace_user)
     except google_workspace.UserAlreadyExistsError:
         raise exceptions.GoogleWorkspaceUserAlreadyExistsError
+    except google_workspace.WorkspaceAuthorizationError as error:
+        logger.error(
+            f"Google Workspace refused the creation of "
+            f"{cloud_identity_creation.primary_email}: {error.__cause__}"
+        )
+        raise exceptions.GoogleWorkspaceAuthorizationError
 
 
 def _add_membership_to_group(
@@ -72,6 +78,13 @@ def _add_membership_to_group(
         )
     except google_workspace.GroupMembershipAlreadyExistsError:
         raise exceptions.BillingCreatorGroupMembershipAlreadyExistsError
+    except google_workspace.WorkspaceAuthorizationError as error:
+        logger.error(
+            f"Google Workspace refused adding "
+            f"{cloud_identity_creation.primary_email} to group {group_id}: "
+            f"{error.__cause__}"
+        )
+        raise exceptions.GoogleWorkspaceAuthorizationError
 
 
 def _build_google_workspace_client() -> google_workspace.WorkspaceClient:

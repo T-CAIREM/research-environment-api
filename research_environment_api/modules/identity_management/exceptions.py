@@ -11,3 +11,12 @@ class GoogleWorkspaceUserAlreadyExistsError(Exception):
 class BillingCreatorGroupMembershipAlreadyExistsError(Exception):
     description = "Billing Creator role has already been added to the user"
     pass
+
+
+class GoogleWorkspaceAuthorizationError(Exception):
+    description = (
+        "The platform is not authorized to manage Google Workspace identities. "
+        "An administrator must verify the service account's domain-wide "
+        "delegation registration and its scopes"
+    )
+    pass

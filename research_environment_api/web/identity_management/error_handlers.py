@@ -10,5 +10,12 @@ def handle_validation_error(error):
 
 
 @identity_management_bp.errorhandler(exceptions.CloudIdentityAlreadyConfiguredError)
-def handle_validation_error(error):
+def handle_cloud_identity_already_configured_error(error):
     return str(error), 409
+
+
+@identity_management_bp.errorhandler(exceptions.GoogleWorkspaceAuthorizationError)
+def handle_google_workspace_authorization_error(error):
+    # 502 rather than 403: the caller is authorised, the upstream Google
+    # Workspace dependency rejected this service's credentials.
+    return error.description, 502
