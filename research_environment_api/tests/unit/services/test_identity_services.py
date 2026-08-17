@@ -85,3 +85,58 @@ class TestIdentityServices:
         # Assert
         mock_logger.warning.assert_called()
         assert "already a member" in mock_logger.warning.call_args[0][0]
+
+    def test_create_user_translates_authorization_error(self, mocker):
+        """A Workspace 403 surfaces as a typed error, not a bare 500."""
+        # Arrange
+        mock_client = MagicMock()
+        mock_client.create_user.side_effect = (
+            google_workspace.WorkspaceAuthorizationError()
+        )
+
+        mocker.patch(
+            "research_environment_api.modules.identity_management.services._build_google_workspace_client",
+            return_value=mock_client,
+        )
+        mock_logger = mocker.patch(
+            "research_environment_api.modules.identity_management.services.logger"
+        )
+
+        request = entities.CloudIdentityCreation(
+            user_name="test",
+            password="pw",
+            recovery_email="rec@test.com",
+            given_name="A",
+            family_name="B",
+        )
+
+        # Act / Assert: must NOT be swallowed like the already-exists case
+        with pytest.raises(exceptions.GoogleWorkspaceAuthorizationError):
+            services._create_google_workspace_user(request)
+
+        mock_logger.error.assert_called()
+
+    def test_add_to_group_translates_authorization_error(self, mocker, mock_config):
+        """The group-membership path surfaces a 403 as the same typed error."""
+        # Arrange
+        mock_client = MagicMock()
+        mock_client.add_user_to_group.side_effect = (
+            google_workspace.WorkspaceAuthorizationError()
+        )
+
+        mocker.patch(
+            "research_environment_api.modules.identity_management.services._build_google_workspace_client",
+            return_value=mock_client,
+        )
+        mock_logger = mocker.patch(
+            "research_environment_api.modules.identity_management.services.logger"
+        )
+        mock_config.billing_account_creator_group_id = "billing-group"
+
+        request = MagicMock(primary_email="test@healthdatanexus.ai")
+
+        # Act / Assert
+        with pytest.raises(exceptions.GoogleWorkspaceAuthorizationError):
+            services._allow_to_create_billing_accounts(request)
+
+        mock_logger.error.assert_called()

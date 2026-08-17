@@ -13,6 +13,16 @@ class GroupMembershipAlreadyExistsError(Exception):
     pass
 
 
+class WorkspaceAuthorizationError(Exception):
+    description = (
+        "Not authorized to call Google Workspace. The service account needs a "
+        "Workspace admin role assigned to it directly (Admin console > Account > "
+        "Admin roles > Assign service accounts); GCP project IAM grants no "
+        "Workspace privileges"
+    )
+    pass
+
+
 class WorkspaceClient:
     def __init__(self, credentials: service_account.Credentials):
         self.admin_directory_client = build(
@@ -31,6 +41,8 @@ class WorkspaceClient:
         except errors.HttpError as error:
             if error.status_code == 409:
                 raise UserAlreadyExistsError
+            if error.status_code in (401, 403):
+                raise WorkspaceAuthorizationError from error
             raise error
 
     def add_user_to_group(self, user_email: str, group_id: str) -> dict:
@@ -48,4 +60,6 @@ class WorkspaceClient:
         except errors.HttpError as error:
             if error.status_code == 409:
                 raise GroupMembershipAlreadyExistsError
+            if error.status_code in (401, 403):
+                raise WorkspaceAuthorizationError from error
             raise error
