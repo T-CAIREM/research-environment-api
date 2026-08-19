@@ -39,6 +39,15 @@ def create_cloud_sql_engine(
         "postgresql+pg8000://",
         creator=getconn,
         echo=True,
+        # Cloud SQL closes pooled connections out from under us: IAM auth tokens
+        # expire after roughly an hour, and idle sockets get reaped by the network
+        # in between. Without these two options SQLAlchemy hands the dead socket to
+        # the next request, which surfaces as `SSLEOFError` -> `pg8000
+        # InterfaceError: network error` and a 500 rather than a retry.
+        # pre_ping validates on checkout and transparently replaces a dead
+        # connection; recycle retires connections before the token can expire.
+        pool_pre_ping=True,
+        pool_recycle=1800,
     )
     return engine
 
@@ -47,4 +56,6 @@ def create_sql_engine(database_url: str) -> sqlalchemy.engine.base.Engine:
     return sqlalchemy.create_engine(
         database_url,
         echo=True,
+        pool_pre_ping=True,
+        pool_recycle=1800,
     )
