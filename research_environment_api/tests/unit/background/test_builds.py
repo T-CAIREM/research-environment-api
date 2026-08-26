@@ -119,7 +119,38 @@ class TestBuilds:
             subs, "NVIDIA_TESLA_T4", "img-1", sharing_dict, permissions_list, "true"
         )
         assert subs["_WORKBENCH_TYPE"] == WorkbenchType.JUPYTER
+        assert subs["_OBJECT_PREFIX"] == ""
         _assert_build_configuration(build)
+
+    def test_create_jupyter_workbench_build_object_prefix(self, common_config_setup):
+        """Verify that an object prefix is passed to the build as a substitution."""
+        # Arrange
+        mock_config = common_config_setup
+        mock_config.jupyter_startup_script = "gs://script"
+
+        # Act
+        build = builds.create_jupyter_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            instance_name="wb-1",
+            service_account_name="sa-1",
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            vm_image="img-1",
+            sharing_bucket_permission_dict={},
+            user_permissions_list=[],
+            collaborative="false",
+            associated_event=None,
+            object_prefix="active-projects/my-draft",
+        )
+
+        # Assert
+        assert build.substitutions["_OBJECT_PREFIX"] == "active-projects/my-draft"
 
     def test_create_collaborative_workbench_build_substitutions(
         self, common_config_setup

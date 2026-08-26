@@ -84,6 +84,7 @@ def create_jupyter_workbench_build(
     user_permissions_list: list[str],
     collaborative: str,
     associated_event: str,
+    object_prefix: str = "",
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -113,6 +114,7 @@ def create_jupyter_workbench_build(
         "_COLLABORATIVE": collaborative,
         "_ORGANIZATION_ID": app.config.organization_id,
         "_ASSOCIATED_EVENT": normalize_associated_event(associated_event),
+        "_OBJECT_PREFIX": object_prefix,
     }
 
     return cloud_build

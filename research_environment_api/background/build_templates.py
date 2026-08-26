@@ -55,6 +55,7 @@ CREATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "${_BUCKET_NAME}",
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
+            "${_OBJECT_PREFIX}",
         ],
         "dir_": "terraform-workbench-creation",
     },

@@ -62,6 +62,7 @@ def create_jupyter_workbench(
         user_permissions_list=user_permissions_list,
         collaborative=workbench_creation_request.collaborative,
         associated_event=workbench_creation_request.associated_event,
+        object_prefix=workbench_creation_request.object_prefix,
     )
 
     monitoring_services.clear_quotas_cache(

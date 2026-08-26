@@ -30,6 +30,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     collaborators = fields.List(fields.Str(), allow_none=True)
     associated_event = fields.Str(required=False)
     region = fields.Enum(Region, by_value=True, required=True)
+    object_prefix = fields.Str(required=False, load_default="")
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):

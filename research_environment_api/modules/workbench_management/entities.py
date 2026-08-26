@@ -201,6 +201,7 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     rstudio_image_url: str = field(init=False)
     collaborators: Optional[List[str]] = None
     associated_event: Optional[str] = None
+    object_prefix: str = ""
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
