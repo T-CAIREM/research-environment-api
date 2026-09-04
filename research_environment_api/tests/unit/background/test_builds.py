@@ -76,6 +76,31 @@ class TestBuilds:
         mock_config.terraform_branch_name = "main"
         return mock_config
 
+    @pytest.fixture
+    def rstudio_config_setup(self, common_config_setup):
+        """RStudio config plus the Secret Manager stub the builders require."""
+        mock_config = common_config_setup
+        mock_config.rstudio_certificate_secret_id = "secret-id"
+        mock_config.rstudio_image_url = "gcr.io/img"
+        mock_config.rstudio_startup_script = "gs://script"
+        mock_config.network_name = "default"
+        mock_config.rstudio_dns_project = "dns-proj"
+        mock_config.rstudio_dns_zone = "dns-zone"
+        mock_config.rstudio_domain_name = "example.com"
+
+        mock_secret_payload = MagicMock()
+        mock_secret_payload.payload.data.decode.return_value = json.dumps(
+            {
+                "tls_key": "fake-key",
+                "tls_crt": "fake-crt",
+                "expiration_date": "2025-01-01",
+            }
+        )
+        mock_config.google_secret_manager_client.access_secret_version.return_value = (
+            mock_secret_payload
+        )
+        return mock_config
+
     def test_create_jupyter_workbench_build_substitutions(self, common_config_setup):
         """Verify that all Terraform variables are correctly populated."""
         # Arrange
@@ -470,6 +495,10 @@ class TestBuilds:
         assert subs["_SHARING_BUCKET_IDENTIFIERS"] == ",".join(sharing_dict.keys())
         assert subs["_SHARING_BUCKET_PERMISSIONS"] == ",".join(sharing_dict.values())
         assert subs["_USER_PERMISSIONS_LIST"] == ",".join(permissions_list)
+        # Defaults must reproduce today's behaviour: whole-bucket, read-only
+        # mount for a published dataset.
+        assert subs["_OBJECT_PREFIX"] == ""
+        assert subs["_WRITABLE"] == "false"
 
         # Verify Secret Manager was called correctly
         mock_config.google_secret_manager_client.access_secret_version.assert_called_with(
@@ -484,3 +513,223 @@ class TestBuilds:
         assert secret_envs.get("RSTUDIO_CERTIFICATE_SECRET") == "secret-id"
 
         _assert_build_configuration(build)
+
+    def test_create_rstudio_workbench_build_writable_draft(self, rstudio_config_setup):
+        """A draft-backed RStudio workbench mounts its own prefix read-write."""
+        # Act
+        build = builds.create_rstudio_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            workspace_numeric_id="12345",
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            instance_name="rs-1",
+            service_account_name="sa-1",
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            sharing_bucket_permission_dict={},
+            user_permissions_list=[],
+            associated_event=None,
+            object_prefix="active-projects/my-draft",
+            writable=True,
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        # Cloud Build substitutions are strings; terraform parses "true"/"false"
+        # into var.writable (bool).
+        assert subs["_WRITABLE"] == "true"
+
+    def test_create_rstudio_workbench_build_ensures_managed_folder(
+        self, rstudio_config_setup
+    ):
+        """The managed folder is created before terraform binds IAM to it."""
+        # Act
+        build = builds.create_rstudio_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            workspace_numeric_id="12345",
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            instance_name="rs-1",
+            service_account_name="sa-1",
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            sharing_bucket_permission_dict={},
+            user_permissions_list=[],
+            associated_event=None,
+            object_prefix="active-projects/my-draft",
+            writable=True,
+        )
+
+        # Assert
+        step_ids = [step.id for step in build.steps]
+        assert "rstudio_workbench_creation_ensure_managed_folder" in step_ids
+        assert step_ids.index(
+            "rstudio_workbench_creation_ensure_managed_folder"
+        ) < step_ids.index("rstudio_workbench_creation_terraform_init")
+
+        ensure_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_creation_ensure_managed_folder"
+        )
+        script = ensure_step.args[1]
+        assert "managed-folders describe" in script
+        assert "managed-folders create" in script
+        # Trailing slash is required by GCS for managed folder names.
+        assert 'gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/"' in script
+
+        # python4.py receives the prefix and the mount mode as its 4th and 5th
+        # positional arguments.
+        set_config_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_creation_set_config"
+        )
+        assert list(set_config_step.args)[-2:] == [
+            "${_OBJECT_PREFIX}",
+            "${_WRITABLE}",
+        ]
+
+        plan_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_creation_terraform_plan"
+        )
+        assert "TF_VAR_object_prefix=${_OBJECT_PREFIX}" in plan_step.env
+        assert "TF_VAR_writable=${_WRITABLE}" in plan_step.env
+
+    def _update_rstudio_build(self, **overrides):
+        kwargs = {
+            "workspace_project_id": COMMON_EXPECTED_VALUES["workspace_project_id"],
+            "region": COMMON_EXPECTED_VALUES["region"],
+            "zone": COMMON_EXPECTED_VALUES["zone"],
+            "machine_type": COMMON_EXPECTED_VALUES["machine_type"],
+            "disk_size": COMMON_EXPECTED_VALUES["disk_size"],
+            "instance_name": "rs-1",
+            "service_account_name": "sa-1",
+            "gpu_accelerator_type": None,
+            "dataset_identifier": COMMON_EXPECTED_VALUES["dataset_identifier"],
+            "user_email": COMMON_EXPECTED_VALUES["user_email"],
+            "bucket_name": COMMON_EXPECTED_VALUES["bucket_name"],
+            "vm_image": "img-1",
+            "brand_name": "projects/12345/brands/12345",
+            "sharing_bucket_permission_dict": {},
+            "user_permissions_list": [],
+        }
+        kwargs.update(overrides)
+        return builds.update_rstudio_workbench_build(**kwargs)
+
+    def test_update_rstudio_workbench_build_substitutions(self, rstudio_config_setup):
+        """Update defaults reproduce today's behaviour (no prefix, read-only)."""
+        # Act
+        build = self._update_rstudio_build()
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == ""
+        assert subs["_WRITABLE"] == "false"
+        _assert_build_configuration(build)
+
+    def test_update_rstudio_workbench_build_carries_draft_mount(
+        self, rstudio_config_setup
+    ):
+        """Unlike Jupyter's, the RStudio update runs terraform apply.
+
+        It re-renders the startup script and re-applies the root, so without the
+        mount settings a resize would drop the managed-folder grant and put the
+        bucket-wide read roles back.
+        """
+        # Act
+        build = self._update_rstudio_build(
+            object_prefix="active-projects/my-draft", writable=True
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        assert subs["_WRITABLE"] == "true"
+
+        set_config_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_update_set_config"
+        )
+        assert list(set_config_step.args)[-2:] == [
+            "${_OBJECT_PREFIX}",
+            "${_WRITABLE}",
+        ]
+
+        apply_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_update_terraform_apply"
+        )
+        assert "TF_VAR_object_prefix=${_OBJECT_PREFIX}" in apply_step.env
+        assert "TF_VAR_writable=${_WRITABLE}" in apply_step.env
+
+    def _destroy_rstudio_build(self, **overrides):
+        kwargs = {
+            "workspace_project_id": COMMON_EXPECTED_VALUES["workspace_project_id"],
+            "region": COMMON_EXPECTED_VALUES["region"],
+            "zone": COMMON_EXPECTED_VALUES["zone"],
+            "machine_type": COMMON_EXPECTED_VALUES["machine_type"],
+            "disk_size": COMMON_EXPECTED_VALUES["disk_size"],
+            "instance_name": "rs-1",
+            "service_account_name": "sa-1",
+            "gpu_accelerator_type": None,
+            "dataset_identifier": COMMON_EXPECTED_VALUES["dataset_identifier"],
+            "user_email": COMMON_EXPECTED_VALUES["user_email"],
+            "bucket_name": COMMON_EXPECTED_VALUES["bucket_name"],
+            "vm_image": "img-1",
+            "brand_name": "projects/12345/brands/12345",
+            "sharing_bucket_identifiers": [],
+        }
+        kwargs.update(overrides)
+        return builds.destroy_rstudio_workbench_build(**kwargs)
+
+    def test_destroy_rstudio_workbench_build_substitutions(self, rstudio_config_setup):
+        """Destroy defaults reproduce today's behaviour (no prefix, read-only)."""
+        # Act
+        build = self._destroy_rstudio_build()
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == ""
+        assert subs["_WRITABLE"] == "false"
+
+        destroy_step = next(
+            step
+            for step in build.steps
+            if step.id == "rstudio_workbench_destruction_terraform_destroy"
+        )
+        assert "TF_VAR_object_prefix=${_OBJECT_PREFIX}" in destroy_step.env
+        assert "TF_VAR_writable=${_WRITABLE}" in destroy_step.env
+        _assert_build_configuration(build)
+
+    def test_destroy_rstudio_workbench_build_carries_draft_mount(
+        self, rstudio_config_setup
+    ):
+        """Destroy rebuilds the mount inputs from instance metadata.
+
+        RE-API keeps no per-workbench record, so the prefix and mode read off
+        the GCE instance have to be replayed as TF_VARs or terraform would plan
+        a diff instead of a clean destroy.
+        """
+        # Act
+        build = self._destroy_rstudio_build(
+            object_prefix="active-projects/my-draft", writable=True
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        assert subs["_WRITABLE"] == "true"

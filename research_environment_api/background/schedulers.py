@@ -773,6 +773,8 @@ def create_rstudio_workbench(
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
         associated_event=workbench_creation_request.associated_event,
+        object_prefix=workbench_creation_request.object_prefix,
+        writable=workbench_creation_request.writable,
     )
 
     with app.database_session() as session:
@@ -889,6 +891,8 @@ def update_rstudio_workbench(
         service_account_name=workbench.service_account_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        object_prefix=workbench.object_prefix,
+        writable=workbench.writable,
     )
 
     with app.database_session() as session:
@@ -936,6 +940,8 @@ def destroy_rstudio_workbench_flow(
         brand_name=workbench.brand_name,
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
+        object_prefix=workbench.object_prefix,
+        writable=workbench.writable,
     )
 
     with app.database_session() as session:
@@ -1020,6 +1026,8 @@ def renew_rstudio_ssl_certificate(
         service_account_name=workbench.service_account_name,
         sharing_bucket_permission_dict=shared_bucket_user_permissions_dict,
         user_permissions_list=user_permissions_list,
+        object_prefix=workbench.object_prefix,
+        writable=workbench.writable,
     )
 
     with app.database_session() as session:

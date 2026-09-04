@@ -441,6 +441,8 @@ def create_rstudio_workbench_build(
     sharing_bucket_permission_dict: dict[str, str],
     user_permissions_list: list[str],
     associated_event: str,
+    object_prefix: str = "",
+    writable: bool = False,
 ) -> cloudbuild_v1.Build:
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
@@ -478,6 +480,8 @@ def create_rstudio_workbench_build(
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
         "_ASSOCIATED_EVENT": normalize_associated_event(associated_event),
+        "_OBJECT_PREFIX": object_prefix,
+        "_WRITABLE": "true" if writable else "false",
     }
 
     return cloud_build
@@ -499,6 +503,8 @@ def update_rstudio_workbench_build(
     brand_name: str,
     sharing_bucket_permission_dict: dict[str, str],
     user_permissions_list: list[str],
+    object_prefix: str = "",
+    writable: bool = False,
 ) -> cloudbuild_v1.Build:
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
@@ -535,6 +541,8 @@ def update_rstudio_workbench_build(
         "_USER_PERMISSIONS_LIST": ",".join(user_permissions_list),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_OBJECT_PREFIX": object_prefix,
+        "_WRITABLE": "true" if writable else "false",
     }
 
     return cloud_build
@@ -555,6 +563,8 @@ def destroy_rstudio_workbench_build(
     vm_image: str,
     brand_name: str,
     sharing_bucket_identifiers: list[str],
+    object_prefix: str = "",
+    writable: bool = False,
 ) -> cloudbuild_v1.Build:
     rstudio_certificate_data = _fetch_rstudio_certificate(
         secret_resource_name=app.config.rstudio_certificate_secret_id
@@ -587,6 +597,8 @@ def destroy_rstudio_workbench_build(
         "_SHARING_BUCKET_IDENTIFIERS": ",".join(sharing_bucket_identifiers),
         "_TERRAFORM_REPO_NAME": app.config.terraform_repo_name,
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
+        "_OBJECT_PREFIX": object_prefix,
+        "_WRITABLE": "true" if writable else "false",
     }
 
     return cloud_build
