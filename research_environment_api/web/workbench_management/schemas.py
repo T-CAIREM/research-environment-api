@@ -31,6 +31,7 @@ class WorkbenchCreateRequest(WorkbenchBase):
     associated_event = fields.Str(required=False)
     region = fields.Enum(Region, by_value=True, required=True)
     object_prefix = fields.Str(required=False, load_default="")
+    writable = fields.Bool(required=False, load_default=False)
 
 
 class WorkbenchToggleStateRequest(WorkbenchBase):
@@ -67,6 +68,8 @@ class Workbench(Schema):
     rstudio_ssl_certificate_expiration_date = fields.Str(
         required=False, allow_none=True
     )
+    object_prefix = fields.Str(required=False)
+    writable = fields.Bool(required=False)
 
 
 class WorkbenchWorkflowIdentifier(Schema):

@@ -56,6 +56,34 @@ CREATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "${_SHARING_BUCKET_IDENTIFIERS}",
             "${_SHARING_BUCKET_PERMISSIONS}",
             "${_OBJECT_PREFIX}",
+            "${_WRITABLE}",
+        ],
+        "dir_": "terraform-workbench-creation",
+    },
+    {
+        # Draft mounts scope their IAM to a GCS managed folder instead of the
+        # whole media bucket, so the folder has to exist before terraform binds
+        # a role to it. Created here rather than as a terraform resource: two
+        # workbenches can share one draft prefix, and destroying either one must
+        # not delete the folder. Managed folders are never deleted by us.
+        "id": "jupyter_workbench_creation_ensure_managed_folder",
+        "name": "gcr.io/cloud-builders/gcloud",
+        "entrypoint": "bash",
+        "args": [
+            "-c",
+            "set -e\n"
+            'if [ -z "${_OBJECT_PREFIX}" ]; then\n'
+            '  echo "No object prefix: published dataset mount, nothing to do."\n'
+            "  exit 0\n"
+            "fi\n"
+            'if gcloud storage managed-folders describe "gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/" >/dev/null 2>&1; then\n'
+            '  echo "Managed folder gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/ already exists."\n'
+            "else\n"
+            "  # A concurrent build for the same draft may create it first: treat\n"
+            "  # 'create' failing as success if the folder exists afterwards.\n"
+            '  gcloud storage managed-folders create "gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/" \\\n'
+            '    || gcloud storage managed-folders describe "gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/" >/dev/null\n'
+            "fi\n",
         ],
         "dir_": "terraform-workbench-creation",
     },
@@ -90,6 +118,9 @@ CREATE_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_collaborative=${_COLLABORATIVE}",
             "TF_VAR_organization_id=${_ORGANIZATION_ID}",
             "TF_VAR_associated_event_slug=${_ASSOCIATED_EVENT}",
+            "TF_VAR_object_prefix=${_OBJECT_PREFIX}",
+            "TF_VAR_writable=${_WRITABLE}",
+            "TF_VAR_vm_image_family=${_VM_IMAGE_FAMILY}",
         ],
         "dir_": "terraform-workbench-creation",
     },
@@ -600,6 +631,8 @@ DESTROY_JUPYTER_WORKBENCH_STEPS_PARTIAL = [
             "TF_VAR_sharing_bucket_identifiers=${_SHARING_BUCKET_IDENTIFIERS}",
             "TF_VAR_collaborative=${_COLLABORATIVE}",
             "TF_VAR_organization_id=${_ORGANIZATION_ID}",
+            "TF_VAR_object_prefix=${_OBJECT_PREFIX}",
+            "TF_VAR_writable=${_WRITABLE}",
         ],
         "dir_": "terraform-workbench-creation",
     },

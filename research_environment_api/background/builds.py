@@ -85,6 +85,8 @@ def create_jupyter_workbench_build(
     collaborative: str,
     associated_event: str,
     object_prefix: str = "",
+    writable: bool = False,
+    vm_image_family: str = "",
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.CREATE_JUPYTER_WORKBENCH_STEPS
@@ -115,6 +117,8 @@ def create_jupyter_workbench_build(
         "_ORGANIZATION_ID": app.config.organization_id,
         "_ASSOCIATED_EVENT": normalize_associated_event(associated_event),
         "_OBJECT_PREFIX": object_prefix,
+        "_WRITABLE": "true" if writable else "false",
+        "_VM_IMAGE_FAMILY": vm_image_family,
     }
 
     return cloud_build
@@ -165,6 +169,8 @@ def destroy_jupyter_workbench_build(
     service_account_name: str,
     sharing_bucket_identifiers: list[str],
     collaborative: str,
+    object_prefix: str = "",
+    writable: bool = False,
 ) -> cloudbuild_v1.Build:
     cloud_build = _base_build()
     cloud_build.steps = build_templates.DESTROY_JUPYTER_WORKBENCH_STEPS
@@ -189,6 +195,8 @@ def destroy_jupyter_workbench_build(
         "_TERRAFORM_BRANCH_NAME": app.config.terraform_branch_name,
         "_COLLABORATIVE": collaborative,
         "_ORGANIZATION_ID": app.config.organization_id,
+        "_OBJECT_PREFIX": object_prefix,
+        "_WRITABLE": "true" if writable else "false",
     }
 
     return cloud_build

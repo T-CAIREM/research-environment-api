@@ -120,6 +120,10 @@ class TestBuilds:
         )
         assert subs["_WORKBENCH_TYPE"] == WorkbenchType.JUPYTER
         assert subs["_OBJECT_PREFIX"] == ""
+        # Defaults must reproduce today's behaviour: read-only mount, pinned
+        # vm_image (no image family override).
+        assert subs["_WRITABLE"] == "false"
+        assert subs["_VM_IMAGE_FAMILY"] == ""
         _assert_build_configuration(build)
 
     def test_create_jupyter_workbench_build_object_prefix(self, common_config_setup):
@@ -151,6 +155,191 @@ class TestBuilds:
 
         # Assert
         assert build.substitutions["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        assert build.substitutions["_WRITABLE"] == "false"
+
+    def test_create_jupyter_workbench_build_writable(self, common_config_setup):
+        """A writable draft mount sends _WRITABLE=true and the VM image family."""
+        # Arrange
+        mock_config = common_config_setup
+        mock_config.jupyter_startup_script = "gs://script"
+
+        # Act
+        build = builds.create_jupyter_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            instance_name="wb-1",
+            service_account_name="sa-1",
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            vm_image="img-1",
+            sharing_bucket_permission_dict={},
+            user_permissions_list=[],
+            collaborative="false",
+            associated_event=None,
+            object_prefix="active-projects/my-draft",
+            writable=True,
+            vm_image_family="workbench-instances",
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        # Cloud Build substitutions are strings; terraform parses "true"/"false"
+        # into var.writable (bool).
+        assert subs["_WRITABLE"] == "true"
+        assert subs["_VM_IMAGE_FAMILY"] == "workbench-instances"
+        # The pinned image name is still sent; terraform picks the family when
+        # the family is non-empty.
+        assert subs["_VM_IMAGE"] == "img-1"
+
+    def test_create_jupyter_workbench_build_ensures_managed_folder(
+        self, common_config_setup
+    ):
+        """The managed folder is created before terraform binds IAM to it."""
+        # Arrange
+        mock_config = common_config_setup
+        mock_config.jupyter_startup_script = "gs://script"
+
+        # Act
+        build = builds.create_jupyter_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            instance_name="wb-1",
+            service_account_name="sa-1",
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            vm_image="img-1",
+            sharing_bucket_permission_dict={},
+            user_permissions_list=[],
+            collaborative="false",
+            associated_event=None,
+            object_prefix="active-projects/my-draft",
+            writable=True,
+        )
+
+        # Assert
+        step_ids = [step.id for step in build.steps]
+        assert "jupyter_workbench_creation_ensure_managed_folder" in step_ids
+        assert step_ids.index(
+            "jupyter_workbench_creation_ensure_managed_folder"
+        ) < step_ids.index("jupyter_workbench_creation_terraform_init")
+
+        ensure_step = next(
+            step
+            for step in build.steps
+            if step.id == "jupyter_workbench_creation_ensure_managed_folder"
+        )
+        script = ensure_step.args[1]
+        assert "managed-folders describe" in script
+        assert "managed-folders create" in script
+        # Trailing slash is required by GCS for managed folder names.
+        assert 'gs://${_BUCKET_NAME}/${_OBJECT_PREFIX}/"' in script
+
+        # python4.py receives writable as its 5th positional argument.
+        set_config_step = next(
+            step
+            for step in build.steps
+            if step.id == "jupyter_workbench_creation_set_config"
+        )
+        assert list(set_config_step.args)[-2:] == [
+            "${_OBJECT_PREFIX}",
+            "${_WRITABLE}",
+        ]
+
+        plan_step = next(
+            step
+            for step in build.steps
+            if step.id == "jupyter_workbench_creation_terraform_plan"
+        )
+        assert "TF_VAR_object_prefix=${_OBJECT_PREFIX}" in plan_step.env
+        assert "TF_VAR_writable=${_WRITABLE}" in plan_step.env
+        assert "TF_VAR_vm_image_family=${_VM_IMAGE_FAMILY}" in plan_step.env
+
+    def test_destroy_jupyter_workbench_build_substitutions(self, common_config_setup):
+        """Destroy defaults reproduce today's behaviour (no prefix, read-only)."""
+        # Arrange
+        mock_config = common_config_setup
+        mock_config.jupyter_startup_script = "gs://script"
+
+        # Act
+        build = builds.destroy_jupyter_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            vm_image="img-1",
+            instance_name="wb-1",
+            service_account_name="sa-1",
+            sharing_bucket_identifiers=[],
+            collaborative="false",
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == ""
+        assert subs["_WRITABLE"] == "false"
+
+        destroy_step = next(
+            step
+            for step in build.steps
+            if step.id == "jupyter_workbench_destruction_terraform_destroy"
+        )
+        assert "TF_VAR_object_prefix=${_OBJECT_PREFIX}" in destroy_step.env
+        assert "TF_VAR_writable=${_WRITABLE}" in destroy_step.env
+        _assert_build_configuration(build)
+
+    def test_destroy_jupyter_workbench_build_carries_draft_mount(
+        self, common_config_setup
+    ):
+        """Destroy rebuilds the mount inputs from instance metadata.
+
+        RE-API keeps no per-workbench record, so the prefix and mode read off
+        the GCE instance have to be replayed as TF_VARs or terraform would plan
+        a diff instead of a clean destroy.
+        """
+        # Arrange
+        mock_config = common_config_setup
+        mock_config.jupyter_startup_script = "gs://script"
+
+        # Act
+        build = builds.destroy_jupyter_workbench_build(
+            workspace_project_id=COMMON_EXPECTED_VALUES["workspace_project_id"],
+            region=COMMON_EXPECTED_VALUES["region"],
+            zone=COMMON_EXPECTED_VALUES["zone"],
+            machine_type=COMMON_EXPECTED_VALUES["machine_type"],
+            disk_size=COMMON_EXPECTED_VALUES["disk_size"],
+            gpu_accelerator_type=None,
+            dataset_identifier=COMMON_EXPECTED_VALUES["dataset_identifier"],
+            user_email=COMMON_EXPECTED_VALUES["user_email"],
+            bucket_name=COMMON_EXPECTED_VALUES["bucket_name"],
+            vm_image="img-1",
+            instance_name="wb-1",
+            service_account_name="sa-1",
+            sharing_bucket_identifiers=[],
+            collaborative="false",
+            object_prefix="active-projects/my-draft",
+            writable=True,
+        )
+
+        # Assert
+        subs = build.substitutions
+        assert subs["_OBJECT_PREFIX"] == "active-projects/my-draft"
+        assert subs["_WRITABLE"] == "true"
 
     def test_create_collaborative_workbench_build_substitutions(
         self, common_config_setup

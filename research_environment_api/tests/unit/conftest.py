@@ -56,6 +56,7 @@ def mock_config(mocker):
     config_mock.jupyter_state_bucket = "test-jupyter-states"
     config_mock.rstudio_state_bucket = "test-rstudio-states"
     config_mock.sharing_state_bucket = "test-sharing-states"
+    config_mock.workbench_vm_image_family = "workbench-instances"
 
     mocker.patch(
         "research_environment_api.modules.app.create_config", return_value=config_mock

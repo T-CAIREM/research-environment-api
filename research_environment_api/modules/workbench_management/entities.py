@@ -85,6 +85,8 @@ class Workbench:
     rstudio_ssl_certificate_expiration_date: Optional[str] = None
     associated_event: Optional[str] = None
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
+    object_prefix: str = ""
+    writable: bool = False
 
     @classmethod
     def from_gce_instance(
@@ -140,6 +142,11 @@ class Workbench:
         )
         workbench_owner_username = instance.labels.get("owner")
         associated_event = instance.labels.get("associated_event_slug")
+        # Written by the workbench terraform root as instance metadata. Absent
+        # on workbenches created before draft mounts existed, which are
+        # published-dataset (whole-bucket, read-only) mounts.
+        object_prefix = metadata.get("object_prefix", "")
+        writable = metadata.get("writable", "false") == "true"
         return cls(
             id=name,
             resource_id=instance.id,
@@ -162,6 +169,8 @@ class Workbench:
             workbench_owner_username=workbench_owner_username,
             rstudio_ssl_certificate_expiration_date=rstudio_ssl_certificate_expiration_date,
             associated_event=associated_event,
+            object_prefix=object_prefix,
+            writable=writable,
         )
 
 
@@ -198,14 +207,17 @@ class WorkbenchCreate(BaseWorkbenchEntity):
     sharing_bucket_identifiers: List[str] = field(default_factory=list)
     organization_id: str = field(init=False)
     vm_image: str = field(init=False)
+    vm_image_family: str = field(init=False)
     rstudio_image_url: str = field(init=False)
     collaborators: Optional[List[str]] = None
     associated_event: Optional[str] = None
     object_prefix: str = ""
+    writable: bool = False
 
     def __post_init__(self):
         self.rstudio_image_url = app.config.rstudio_image_url
         self.vm_image = "workbench-instances-v20240214"
+        self.vm_image_family = app.config.workbench_vm_image_family
         self.organization_id = app.config.organization_id
 
 

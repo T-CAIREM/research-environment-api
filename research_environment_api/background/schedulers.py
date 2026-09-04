@@ -63,6 +63,8 @@ def create_jupyter_workbench(
         collaborative=workbench_creation_request.collaborative,
         associated_event=workbench_creation_request.associated_event,
         object_prefix=workbench_creation_request.object_prefix,
+        writable=workbench_creation_request.writable,
+        vm_image_family=workbench_creation_request.vm_image_family,
     )
 
     monitoring_services.clear_quotas_cache(
@@ -485,6 +487,8 @@ def destroy_jupyter_workbench_flow(
         service_account_name=workbench.service_account_name,
         sharing_bucket_identifiers=workbench.sharing_bucket_identifiers,
         collaborative=workbench_destroy_request.collaborative,
+        object_prefix=workbench.object_prefix,
+        writable=workbench.writable,
     )
     with app.database_session() as session:
         with session.begin():
