@@ -65,6 +65,10 @@ def share_billing_account():
           content:
             application/json:
               schema:
+        503:
+          description: The access policy kept changing concurrently or Google
+            Cloud Billing returned a transient error. Safe to retry after the
+            Retry-After delay.
     """
     body = request.get_json()
     share_billing_account_request = schemas.ShareBillingAccountRequest().load(body)
@@ -101,6 +105,10 @@ def revoke_billing_account_access():
           content:
             application/json:
               schema:
+        503:
+          description: The access policy kept changing concurrently or Google
+            Cloud Billing returned a transient error. Safe to retry after the
+            Retry-After delay.
     """
     body = request.get_json()
     revoke_billing_account_access_request = (

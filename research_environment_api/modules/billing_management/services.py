@@ -3,7 +3,11 @@ from typing import List, Mapping, Optional
 
 import research_environment_api.library.google.billing as billing_api
 from research_environment_api.modules.app import app
-from research_environment_api.modules.billing_management import entities, enums
+from research_environment_api.modules.billing_management import (
+    entities,
+    enums,
+    exceptions,
+)
 
 IAM_ROLE_MAPPING = {
     billing_api.IamBillingRole.ADMIN: enums.BillingAccountRole.OWNER,
@@ -97,11 +101,14 @@ def _give_user_billing_account_permission(
 ):
     billing_client = app.config.google_billing_client
 
-    return billing_client.create_membership_binding_for_billing_account(
-        owner_email=owner_email,
-        user_email=user_email,
-        billing_account_id=billing_account_id,
-    )
+    try:
+        return billing_client.create_membership_binding_for_billing_account(
+            owner_email=owner_email,
+            user_email=user_email,
+            billing_account_id=billing_account_id,
+        )
+    except billing_api.BillingPolicyUpdateError as error:
+        raise exceptions.BillingAccessUpdateUnavailableError from error
 
 
 def _remove_user_billing_account_permission(
@@ -111,11 +118,14 @@ def _remove_user_billing_account_permission(
 ):
     billing_client = app.config.google_billing_client
 
-    return billing_client.remove_membership_binding_for_billing_account(
-        owner_email=owner_email,
-        user_email=user_email,
-        billing_account_id=billing_account_id,
-    )
+    try:
+        return billing_client.remove_membership_binding_for_billing_account(
+            owner_email=owner_email,
+            user_email=user_email,
+            billing_account_id=billing_account_id,
+        )
+    except billing_api.BillingPolicyUpdateError as error:
+        raise exceptions.BillingAccessUpdateUnavailableError from error
 
 
 def _billing_account_cloud_link(billing_account_id: str) -> str:
