@@ -75,6 +75,12 @@ class Config:
             "CLOUD_BUILD_SERVICE_ACCOUNT_NAME"
         ]
         self.rstudio_image_url = environ["RSTUDIO_IMAGE_URL"]
+        # Jupyter workbenches boot from the newest image in this family rather
+        # than the pinned image name. Set to "" to fall back to the pinned
+        # var.vm_image in the workbench terraform root.
+        self.workbench_vm_image_family = environ.get(
+            "WORKBENCH_VM_IMAGE_FAMILY", "workbench-instances"
+        )
         self.data_project_name = environ["DATA_PROJECT_NAME"]
         self.network_name = environ["NETWORK_NAME"]
         self.rstudio_dns_project = environ["RSTUDIO_DNS_PROJECT"]
