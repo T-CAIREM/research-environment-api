@@ -1,6 +1,10 @@
 import pytest
 from unittest.mock import MagicMock
-from research_environment_api.modules.billing_management import services, enums
+from research_environment_api.modules.billing_management import (
+    enums,
+    exceptions,
+    services,
+)
 from research_environment_api.library.google import billing as billing_api
 
 
@@ -73,3 +77,31 @@ class TestBillingServices:
 
         # Assert
         assert result == "https://console.cloud.google.com/billing/test-account-id"
+
+    @pytest.mark.parametrize(
+        "service, client_method",
+        [
+            (
+                services.share_billing_account_to,
+                "create_membership_binding_for_billing_account",
+            ),
+            (
+                services.revoke_billing_account_access,
+                "remove_membership_binding_for_billing_account",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "library_error",
+        [billing_api.BillingPolicyConflictError, billing_api.BillingPolicyUpdateError],
+    )
+    def test_exhausted_policy_update_becomes_retryable_domain_error(
+        self, mocker, mock_config, service, client_method, library_error
+    ):
+        """Retries exhausted in the library surface as a retryable domain error."""
+        mock_client = MagicMock()
+        getattr(mock_client, client_method).side_effect = library_error()
+        mocker.patch.object(mock_config, "google_billing_client", mock_client)
+
+        with pytest.raises(exceptions.BillingAccessUpdateUnavailableError):
+            service("owner@example.com", "user@example.com", "000000-000000-000000")
