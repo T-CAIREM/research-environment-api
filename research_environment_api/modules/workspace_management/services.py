@@ -2,7 +2,7 @@ import random
 import string
 from typing import Iterable, Optional, Union
 
-from google.cloud import monitoring_v3, service_usage_v1, billing_v1
+from google.cloud import billing_v1
 from google.cloud.resourcemanager_v3.types.projects import Project as GoogleProject
 
 from research_environment_api.background import enums, schedulers

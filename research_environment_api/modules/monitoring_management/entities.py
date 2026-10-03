@@ -42,13 +42,32 @@ class QuotaInfo:
     region: str
 
 
-@dataclass
-class GeneralQuotaMetrics(StrEnum):
-    IN_USE_IP_ADDRESSES = "compute.googleapis.com/regional_in_use_addresses"
-    PERSISTENT_DISK_TOTAL = "compute.googleapis.com/disks_total_storage"
-    VM_INSTANCES = "compute.googleapis.com/instances"
-    CPUS = "compute.googleapis.com/cpus"
-    NVIDIA_T4_GPUS = "compute.googleapis.com/nvidia_t4_gpus"
+# Human-readable names for the Compute Engine regional quota metrics we
+# report. Keys are the metric names returned in `Region.quotas` by the
+# Compute Engine Regions API.
+QUOTA_METRIC_DISPLAY_NAMES = {
+    "CPUS": "CPUs",
+    "NVIDIA_T4_GPUS": "NVIDIA T4 GPUs",
+    "INSTANCES": "VM instances",
+    "IN_USE_ADDRESSES": "In-use IP addresses",
+    "DISKS_TOTAL_GB": "Persistent disk total (GB)",
+}
+
+
+class ComputeQuotaMetric(StrEnum):
+    """Base for enums whose values are Compute Engine regional quota metrics."""
+
+    @property
+    def display_name(self) -> str:
+        return QUOTA_METRIC_DISPLAY_NAMES.get(self.value, self.value)
+
+
+class GeneralQuotaMetrics(ComputeQuotaMetric):
+    IN_USE_IP_ADDRESSES = "IN_USE_ADDRESSES"
+    PERSISTENT_DISK_TOTAL = "DISKS_TOTAL_GB"
+    VM_INSTANCES = "INSTANCES"
+    CPUS = "CPUS"
+    NVIDIA_T4_GPUS = "NVIDIA_T4_GPUS"
 
 
 @dataclass
@@ -56,6 +75,5 @@ class BaseQuotaMetricsEntity:
     workspace_project_id: str
 
 
-@dataclass
-class WorkbenchUpdateQuotaMetricsEntity(StrEnum):
-    CPUS = "compute.googleapis.com/cpus"
+class WorkbenchUpdateQuotaMetricsEntity(ComputeQuotaMetric):
+    CPUS = "CPUS"
