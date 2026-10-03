@@ -1,9 +1,5 @@
 from datetime import datetime
-import time
-from typing import List, Tuple
-
-from google.cloud import monitoring_v3, service_usage_v1, billing_v1
-from google.cloud.service_usage_v1.types import resources
+from typing import Dict, List, Tuple
 
 from research_environment_api.modules.monitoring_management import (
     entities,
@@ -128,79 +124,53 @@ def check_google_quotas(
     quota_metrics_entity,
     region: str,
 ) -> List[entities.QuotaInfo]:
-    project_id = base_quota_entity.workspace_project_id
-    service_info = _get_service_info(project_id)
-    quotas_to_list = [metric.value for metric in quota_metrics_entity]
+    return list(
+        _get_quotas_by_metric(
+            base_quota_entity.workspace_project_id, quota_metrics_entity, region
+        ).values()
+    )
 
-    return [
-        entities.QuotaInfo(
-            metric_name=limit.display_name,
-            limit=limit.values["DEFAULT"],
-            usage=_get_current_metric_usage(project_id, region, limit.metric),
+
+def _get_quotas_by_metric(
+    project_id: str, quota_metrics_entity, region: str
+) -> Dict[entities.ComputeQuotaMetric, entities.QuotaInfo]:
+    region_quotas = _get_region_quotas(project_id, region)
+
+    quotas = {}
+    for metric in quota_metrics_entity:
+        # Metrics the region does not report, or that have no allowance in
+        # it, are skipped rather than reported as a zero limit.
+        if metric.value not in region_quotas:
+            continue
+        limit, usage = region_quotas[metric.value]
+        if limit <= 0:
+            continue
+        quotas[metric] = entities.QuotaInfo(
+            metric_name=metric.display_name,
+            limit=int(limit),
+            usage=int(usage),
             region=region,
         )
-        for limit in service_info.config.quota.limits
-        if limit.metric in quotas_to_list and limit.values["DEFAULT"] > 0
-    ]
+    return quotas
 
 
 @cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
-def _get_service_info(project_id: str) -> resources.Service:
-    client = app.config.google_service_usage_client
-    service_name = f"projects/{project_id}/services/compute.googleapis.com"
+def _get_region_quotas(project_id: str, region: str) -> Dict[str, Tuple[float, float]]:
+    """Returns {quota metric: (limit, usage)} for a project in a Compute region.
 
-    request = service_usage_v1.GetServiceRequest(name=service_name)
-    return client.get_service(request=request)
-
-
-@cache.memoize(timeout=QUOTAS_CACHE_TIMEOUT)
-def _get_current_metric_usage(project_id: str, region: str, metric: str) -> int:
-    client = app.config.google_metric_service_client
-
-    # Query current usage for the given metric
-    project_name = f"projects/{project_id}"
-    interval = monitoring_v3.TimeInterval(
-        {
-            "end_time": {"seconds": int(time.time())},
-            "start_time": {"seconds": int(time.time()) - 604800},  # one week
-        }
-    )
-    aggregation = monitoring_v3.Aggregation(
-        alignment_period={"seconds": 60},
-        cross_series_reducer=monitoring_v3.Aggregation.Reducer.REDUCE_SUM,
-        per_series_aligner=monitoring_v3.Aggregation.Aligner.ALIGN_NEXT_OLDER,
-    )
-    request = monitoring_v3.ListTimeSeriesRequest(
-        name=project_name,
-        filter=_build_filter(project_id, region, metric),
-        interval=interval,
-        aggregation=aggregation,
-        view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-    )
-
-    client.list_time_series(request)
-    results = list(client.list_time_series(request))
-
-    return 0 if len(results) == 0 else results[0].points[0].value.int64_value
-
-
-def _build_filter(project_id: str, region: str, metric: str) -> str:
-    return (
-        'resource.type="consumer_quota" AND '
-        'metric.type="serviceruntime.googleapis.com/quota/allocation/usage" AND '
-        f'resource.label.project_id="{project_id}" AND '
-        'resource.label.service="compute.googleapis.com" AND '
-        f'metric.label.quota_metric="{metric}" AND '
-        f'resource.label.location="{region}"'
-    )
+    `regions.get` reports the project's effective regional limits (including
+    any approved quota adjustments) together with current usage, so a single
+    call covers both. A plain dict is returned so the value is cacheable.
+    """
+    client = app.config.google_compute_engine_regions_client
+    compute_region = client.get(project=project_id, region=region)
+    return {quota.metric: (quota.limit, quota.usage) for quota in compute_region.quotas}
 
 
 def clear_quotas_cache(project_id: str, region: str, quota_metrics_entity) -> None:
-    for metric in quota_metrics_entity:
-        cache.delete_memoized(
-            _get_current_metric_usage, project_id, region, metric.value
-        )
-    cache.delete_memoized(_get_service_info, project_id)
+    # All metrics for a region come from one cached `regions.get` result, so
+    # `quota_metrics_entity` does not narrow what is invalidated.
+    cache.delete_memoized(_get_region_quotas, project_id, region)
 
 
 def check_workbench_update_quotas(
@@ -209,17 +179,22 @@ def check_workbench_update_quotas(
     machine_type: MachineType,
     current_machine_type: MachineType,
 ):
-    base_quota_metrics_entity = entities.BaseQuotaMetricsEntity(
-        workspace_project_id=workspace_project_id
-    )
-    quotas = check_google_quotas(
-        base_quota_metrics_entity, entities.WorkbenchUpdateQuotaMetricsEntity, region
-    )
     new_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(machine_type.value)
     current_resources = MACHINE_TYPE_TO_RESOURCE_MAP.get(current_machine_type.value)
-    additional_quotas_dict = {"CPUs": new_resources.cpu - current_resources.cpu}
-    for quota in quotas:
-        estimated_usage = quota.usage + additional_quotas_dict[quota.metric_name]
+    additional_usage = {
+        entities.WorkbenchUpdateQuotaMetricsEntity.CPUS: (
+            new_resources.cpu - current_resources.cpu
+        ),
+    }
+
+    quotas = _get_quotas_by_metric(
+        workspace_project_id, entities.WorkbenchUpdateQuotaMetricsEntity, region
+    )
+    for metric, additional in additional_usage.items():
+        quota = quotas.get(metric)
+        if quota is None:
+            continue
+        estimated_usage = quota.usage + additional
         if quota.limit < estimated_usage:
             raise exceptions.QuotaExceededError(
                 f"Quota {quota.metric_name} has been exceeded - estimated usage: {estimated_usage}, when limit is {quota.limit}"
